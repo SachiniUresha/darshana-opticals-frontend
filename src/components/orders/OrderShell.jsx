@@ -36,11 +36,7 @@ export default function OrderShell({ children }) {
             </NavLink>
             <NavLink
               to="/orders"
-              className={({ isActive }) =>
-                isActive || window.location.pathname.startsWith('/orders/')
-                  ? 'active'
-                  : ''
-              }
+              className={({ isActive }) => (isActive ? 'active' : '')}
             >
               Order History <span aria-hidden="true">&rsaquo;</span>
             </NavLink>
