@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { OPTOMETRIST } from '../src/config/roles';
 import App from '../src/App';
 import AuthProvider from '../src/context/AuthProvider';
+import useCart from '../src/hooks/useCart';
 import ProtectedRoute from '../src/routes/ProtectedRoute';
 import authService from '../src/services/auth/authService';
 import profileService from '../src/services/profile/profileService';
-import { OPTOMETRIST } from '../src/config/roles';
 
 vi.mock('../src/services/auth/authService', () => ({
   default: {
@@ -29,6 +30,8 @@ vi.mock('../src/services/profile/profileService', () => ({
     updateProfile: vi.fn(),
   },
 }));
+
+vi.mock('../src/hooks/useCart');
 
 function setAuthenticatedUser(user) {
   authService.getCurrentUser.mockReturnValue(user);
@@ -56,6 +59,7 @@ function renderTestProtectedRoute(initialRoute, user, allowedRoles) {
         <Routes>
           <Route path="/" element={<h1>Safe home</h1>} />
           <Route path="/login" element={<h1>Login destination</h1>} />
+
           <Route
             element={
               <ProtectedRoute
@@ -75,7 +79,24 @@ function renderTestProtectedRoute(initialRoute, user, allowedRoles) {
 beforeEach(() => {
   authService.getCurrentUser.mockReturnValue(null);
   authService.isAuthenticated.mockReturnValue(false);
+
   profileService.getProfile.mockClear();
+
+  useCart.mockReturnValue({
+    items: [],
+    cartCount: 0,
+    cartTotal: 0,
+    hasUnavailableItems: false,
+    isLoading: false,
+    isMutating: false,
+    error: '',
+    canUseCart: false,
+    addItem: vi.fn().mockResolvedValue(true),
+    updateItemQuantity: vi.fn().mockResolvedValue(true),
+    removeItem: vi.fn().mockResolvedValue(true),
+    refreshCart: vi.fn().mockResolvedValue(true),
+    clearError: vi.fn(),
+  });
 });
 
 describe('Application shell', () => {
@@ -93,7 +114,9 @@ describe('Routing', () => {
     renderAppAt('/');
 
     expect(
-      screen.getByRole('heading', { name: /darshana opticals/i }),
+      screen.getByRole('heading', {
+        name: /darshana opticals/i,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -101,7 +124,9 @@ describe('Routing', () => {
     renderAppAt('/some/unknown/route');
 
     expect(
-      screen.getByRole('heading', { name: /page not found/i }),
+      screen.getByRole('heading', {
+        name: /page not found/i,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -109,7 +134,9 @@ describe('Routing', () => {
     renderAppAt('/signup');
 
     expect(
-      screen.getByRole('heading', { name: /create account/i }),
+      screen.getByRole('heading', {
+        name: /create account/i,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -117,7 +144,9 @@ describe('Routing', () => {
     renderAppAt('/login');
 
     expect(
-      screen.getByRole('heading', { name: /welcome back/i }),
+      screen.getByRole('heading', {
+        name: /welcome back/i,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -129,8 +158,11 @@ describe('Routing', () => {
     });
 
     expect(
-      await screen.findByRole('heading', { name: /personal information/i }),
+      await screen.findByRole('heading', {
+        name: /personal information/i,
+      }),
     ).toBeInTheDocument();
+
     expect(profileService.getProfile).toHaveBeenCalledTimes(1);
   });
 
@@ -142,35 +174,51 @@ describe('Routing', () => {
     });
 
     expect(
-      await screen.findByRole('heading', { name: /darshana opticals/i }),
+      await screen.findByRole('heading', {
+        name: /darshana opticals/i,
+      }),
     ).toBeInTheDocument();
+
     expect(profileService.getProfile).not.toHaveBeenCalled();
   });
 
   it('allows Optometrist through an authenticated test-only Clinical route', () => {
     renderTestProtectedRoute(
       '/clinical',
-      { id: 'optometrist-1', role: OPTOMETRIST },
+      {
+        id: 'optometrist-1',
+        role: OPTOMETRIST,
+      },
       [OPTOMETRIST],
     );
 
     expect(
-      screen.getByRole('heading', { name: /clinical test route/i }),
+      screen.getByRole('heading', {
+        name: /clinical test route/i,
+      }),
     ).toBeInTheDocument();
   });
 
   it('rejects Customer from the test-only Optometrist route', () => {
     renderTestProtectedRoute(
       '/clinical',
-      { id: 'customer-1', role: 'CUSTOMER' },
+      {
+        id: 'customer-1',
+        role: 'CUSTOMER',
+      },
       [OPTOMETRIST],
     );
 
     expect(
-      screen.getByRole('heading', { name: /safe home/i }),
+      screen.getByRole('heading', {
+        name: /safe home/i,
+      }),
     ).toBeInTheDocument();
+
     expect(
-      screen.queryByRole('heading', { name: /clinical test route/i }),
+      screen.queryByRole('heading', {
+        name: /clinical test route/i,
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -181,7 +229,9 @@ describe('Routing', () => {
     });
 
     expect(
-      screen.getByRole('heading', { name: /protected test route/i }),
+      screen.getByRole('heading', {
+        name: /protected test route/i,
+      }),
     ).toBeInTheDocument();
   });
 
@@ -189,8 +239,71 @@ describe('Routing', () => {
     renderAppAt('/profile');
 
     expect(
-      screen.getByRole('heading', { name: /welcome back/i }),
+      screen.getByRole('heading', {
+        name: /welcome back/i,
+      }),
     ).toBeInTheDocument();
+
     expect(profileService.getProfile).not.toHaveBeenCalled();
+  });
+
+  it('allows Customer to access the cart page', () => {
+    renderAppAt('/cart', {
+      id: 'customer-1',
+      email: 'jane@example.com',
+      role: 'CUSTOMER',
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Your cart is empty',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Browse Products',
+      }),
+    ).toHaveAttribute('href', '/products');
+  });
+
+  it('redirects an unauthenticated cart request to Login', () => {
+    renderAppAt('/cart');
+
+    expect(
+      screen.getByRole('heading', {
+        name: /welcome back/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('allows Customer to access the checkout entry page', () => {
+    renderAppAt('/checkout', {
+      id: 'customer-1',
+      email: 'jane@example.com',
+      role: 'CUSTOMER',
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Checkout',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Back to cart',
+      }),
+    ).toHaveAttribute('href', '/cart');
+  });
+
+  it('redirects an unauthenticated checkout request to Login', () => {
+    renderAppAt('/checkout');
+
+    expect(
+      screen.getByRole('heading', {
+        name: /welcome back/i,
+      }),
+    ).toBeInTheDocument();
   });
 });

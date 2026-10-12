@@ -1,0 +1,36 @@
+.add-to-cart {
+  margin-top: 0.85rem;
+}
+
+.add-to-cart__button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: #173d92;
+  padding: 0.75rem 1rem;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-to-cart__button:hover:not(:disabled),
+.add-to-cart__button:focus-visible {
+  background: #102f73;
+}
+
+.add-to-cart__button:focus-visible {
+  outline: 3px solid #f4b400;
+  outline-offset: 2px;
+}
+
+.add-to-cart__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.add-to-cart__message {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-size: 0.8rem;
+}

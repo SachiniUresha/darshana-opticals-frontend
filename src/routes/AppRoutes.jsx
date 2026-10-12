@@ -9,6 +9,8 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import ProfilePage from '../pages/ProfilePage';
 import ProtectedRoute from './ProtectedRoute';
 import { CUSTOMER } from '../config/roles';
+import CartPage from '../pages/CartPage';
+import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 
 function AppRoutes() {
   return (
@@ -23,6 +25,8 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutEntryPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

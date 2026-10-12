@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/formatCurrency';
 import './ProductCard.css';
+import AddToCartButton from '../cart/AddToCartButton';
 
 function ProductCard({ product }) {
   const hasImage = Boolean(product.imageUrl);
@@ -51,6 +52,10 @@ function ProductCard({ product }) {
           <span className="product-card__details">View details</span>
         </div>
       </Link>
+
+      <div className="product-card__cart-action">
+        <AddToCartButton product={product} />
+      </div>
     </article>
   );
 }
