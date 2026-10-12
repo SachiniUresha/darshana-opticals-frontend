@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
 import SignupPage from '../pages/SignupPage';
@@ -7,6 +7,8 @@ import NotFoundPage from '../pages/NotFoundPage';
 import ProductsPage from '../pages/ProductsPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
 import ProfilePage from '../pages/ProfilePage';
+import OrderHistoryPage from '../pages/OrderHistoryPage';
+import OrderDetailsPage from '../pages/OrderDetailsPage';
 import ProtectedRoute from './ProtectedRoute';
 import { CUSTOMER } from '../config/roles';
 
@@ -23,6 +25,8 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders/:id" element={<OrderDetailsPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
