@@ -31,17 +31,20 @@ describe('OrderDetailsPage', () => {
     getOrder.mockResolvedValue({
       id: 'OS-1024',
       status: 'PROCESSING',
-      totalAmount: 18500,
-      createdAt: '2026-10-08T10:30:00Z',
+      orderAmount: 18500,
+      orderDate: '2026-10-08T10:30:00Z',
       statusHistory: [
-        { id: 1, status: 'PROCESSING', createdAt: '2026-10-09T10:30:00Z' },
+        {
+          status: 'PROCESSING',
+          changedAt: '2026-10-09T10:30:00Z',
+        },
       ],
       items: [
         {
           id: 1,
           itemName: 'Classic Black Frame',
           quantity: 1,
-          unitPrice: 12500,
+          price: 12500,
         },
       ],
     });
@@ -59,7 +62,7 @@ describe('OrderDetailsPage', () => {
     getOrder.mockResolvedValue({
       id: 'OS-1024',
       status: 'PROCESSING',
-      totalAmount: 10,
+      orderAmount: 10,
     });
     show();
     expect(

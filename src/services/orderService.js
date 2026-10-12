@@ -1,6 +1,5 @@
 import apiClient from './apiClient';
 
-// Provisional endpoints/fields: verify with backend DDP-043 Swagger before merge.
 export async function getOrders() {
   const result = await apiClient.get('/orders');
   if (!Array.isArray(result?.data)) throw new Error('Invalid orders response');

@@ -114,7 +114,7 @@ export default function OrderDetailsPage() {
                           item.name ??
                           'Order item'}
                       </span>
-                      <small>Qty {item.quantity ?? 'â€”'}</small>
+                      <small>Qty {item.quantity ?? 'Unavailable'}</small>
                       <strong>
                         {moneyLabel(item.unitPrice ?? item.price)}
                       </strong>

@@ -84,7 +84,7 @@ export default function OrderHistoryPage() {
               return (
                 <li key={id ?? index} className="orders-order">
                   <div>
-                    <h3>Order {id == null ? 'â€”' : `#${id}`}</h3>
+                    <h3>Order {id == null ? 'Unavailable' : `#${id}`}</h3>
                     <p>{dateLabel(orderDate(order))}</p>
                     <p>
                       {Array.isArray(order.items)

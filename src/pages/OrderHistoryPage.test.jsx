@@ -38,8 +38,8 @@ describe('OrderHistoryPage', () => {
       {
         id: 'OS-1024',
         status: 'PROCESSING',
-        totalAmount: 18500,
-        createdAt: '2026-10-08T10:30:00Z',
+        orderAmount: 18500,
+        orderDate: '2026-10-08T10:30:00Z',
       },
     ]);
     expect(await screen.findByText('Order #OS-1024')).toBeTruthy();
