@@ -232,4 +232,38 @@ describe('Navbar authentication controls', () => {
       '/products?category=Sunglasses',
     );
   });
+  it('shows prescription recording link to OPTOMETRIST', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: OPTOMETRIST },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Record Prescription',
+      }),
+    ).toHaveAttribute('href', '/clinical/prescriptions/new');
+  });
+
+  it.each([CUSTOMER, BRANCH_MANAGER])(
+    'hides prescription recording link from %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.queryByRole('link', {
+          name: 'Record Prescription',
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

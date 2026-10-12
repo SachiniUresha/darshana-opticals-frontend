@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
-import { CUSTOMER } from '../../config/roles';
+import { CUSTOMER, OPTOMETRIST } from '../../config/roles';
 import SearchBar from '../products/SearchBar';
 import './Navbar.css';
 
@@ -99,7 +99,13 @@ function Navbar() {
                   <Link to="/profile">Profile</Link>
                 </li>
               ) : null}
-
+              {user?.role === OPTOMETRIST ? (
+                <li>
+                  <Link to="/clinical/prescriptions/new">
+                    Record Prescription
+                  </Link>
+                </li>
+              ) : null}
               <li>
                 <button
                   type="button"

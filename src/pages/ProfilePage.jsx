@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import profileService from '../services/profile/profileService';
 import './ProfilePage.css';
@@ -306,6 +306,12 @@ function ProfilePage() {
             <span className="profile-sidebar__nav-item" aria-current="page">
               My Profile
             </span>
+            <Link
+              to="/profile/prescriptions"
+              className="profile-sidebar__nav-link"
+            >
+              Prescription History
+            </Link>
           </nav>
 
           <button

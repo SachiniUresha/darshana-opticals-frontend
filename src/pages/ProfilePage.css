@@ -119,6 +119,25 @@
   padding: 0.9rem 1rem;
 }
 
+.profile-sidebar__nav-link {
+  display: block;
+  padding: 0.9rem 1rem;
+  border-left: 4px solid transparent;
+  color: #344054;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profile-sidebar__nav-link:hover {
+  background: #eff6ff;
+  color: #1c398e;
+}
+
+.profile-sidebar__nav-link:focus-visible {
+  outline: 3px solid #87a7ee;
+  outline-offset: -3px;
+}
+
 .profile-sidebar__sign-out {
   width: 100%;
   border: 1px solid var(--profile-border);
