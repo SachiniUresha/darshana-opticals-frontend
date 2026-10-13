@@ -119,18 +119,31 @@ describe('OrderDetailsPage', () => {
           },
         ],
       });
-
     show();
 
-    expect((await screen.findAllByText('PROCESSING')).length).toBeGreaterThan(
-      0,
-    );
+    // Check the CURRENT status badge before refresh
+    expect(
+      await screen.findByText('PROCESSING', {
+        selector: '.orders-card-header .orders-status',
+      }),
+    ).toBeTruthy();
 
+    // Refresh tracking from backend
     fireEvent.click(screen.getByRole('button', { name: /refresh tracking/i }));
 
+    // Check the CURRENT status badge shows the latest backend status
     expect(
-      (await screen.findAllByText('READY FOR PICKUP')).length,
-    ).toBeGreaterThan(0);
+      await screen.findByText('READY FOR PICKUP', {
+        selector: '.orders-card-header .orders-status',
+      }),
+    ).toBeTruthy();
+
+    // Ensure the CURRENT status badge no longer shows PROCESSING
+    expect(
+      screen.queryByText('PROCESSING', {
+        selector: '.orders-card-header .orders-status',
+      }),
+    ).toBeNull();
 
     expect(getOrder).toHaveBeenCalledTimes(2);
   });
