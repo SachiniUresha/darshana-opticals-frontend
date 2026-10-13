@@ -1,0 +1,129 @@
+.clinical-entry {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.clinical-entry__customer {
+  margin-bottom: 0.5rem;
+}
+
+.clinical-entry__note {
+  margin: 0 0 1.5rem;
+  color: #667085;
+  font-size: 0.9rem;
+}
+
+.clinical-entry__eyes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.clinical-entry__eye {
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.85rem;
+  background: #f9fafb;
+}
+
+.clinical-entry__eye legend {
+  padding: 0 0.4rem;
+  color: #1c398e;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.clinical-entry__eye h3 {
+  margin: 1rem 0;
+  font-size: 1rem;
+}
+
+.clinical-entry__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.clinical-entry__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.clinical-entry__field label,
+.clinical-entry__remarks label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.clinical-entry__field input,
+.clinical-entry__remarks textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #101828;
+  font: inherit;
+}
+
+.clinical-entry__field input[aria-invalid='true'],
+.clinical-entry__remarks textarea[aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.clinical-entry__field-error,
+.clinical-entry__error {
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.clinical-entry__field-error {
+  margin: 0;
+}
+
+.clinical-entry__remarks {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.clinical-entry__remarks textarea {
+  resize: vertical;
+}
+
+.clinical-entry__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.clinical-entry__success {
+  padding: 1rem;
+  border: 1px solid #a6e0c2;
+  border-radius: 0.75rem;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.clinical-entry__success p {
+  margin: 0 0 0.5rem;
+}
+
+.clinical-entry__success button {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 700px) {
+  .clinical-entry__eyes {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 400px) {
+  .clinical-entry__fields {
+    grid-template-columns: 1fr;
+  }
+}
