@@ -5,7 +5,13 @@ import AppRoutes from '../src/routes/AppRoutes';
 import useAuth from '../src/hooks/useAuth';
 import profileService from '../src/services/profile/profileService';
 import prescriptionService from '../src/services/prescription/prescriptionService';
-import { CUSTOMER, OPTOMETRIST, BRANCH_MANAGER } from '../src/config/roles';
+import {
+  CUSTOMER,
+  OPTOMETRIST,
+  BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
+  SYSTEM_ADMIN,
+} from '../src/config/roles';
 
 vi.mock('../src/hooks/useAuth');
 vi.mock('../src/services/profile/profileService');
@@ -114,7 +120,7 @@ describe('Prescription frontend integration', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/login');
   });
 
-  it.each([CUSTOMER, BRANCH_MANAGER])(
+  it.each([CUSTOMER, BRANCH_MANAGER, BRANCH_ASSISTANT, SYSTEM_ADMIN])(
     'blocks %s from recording prescriptions',
     (role) => {
       renderApp('/clinical/prescriptions/new', role);

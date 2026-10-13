@@ -43,6 +43,8 @@ async function searchCustomers(query) {
 }
 
 // OPTOMETRIST: Retrieve a selected customer's prescription history.
+// Not currently used by the recording UI. Retained for potential future
+// Optometrist history-view functionality using the existing backend API.
 async function getCustomerPrescriptions(customerId) {
   if (!customerId) {
     throw new Error('A customer must be selected.');

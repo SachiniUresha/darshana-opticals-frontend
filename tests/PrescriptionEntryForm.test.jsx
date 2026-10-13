@@ -197,9 +197,26 @@ describe('PrescriptionEntryForm', () => {
     ).toBeInTheDocument();
   });
 
-  it('prevents repeat submission after success until a new form is started', async () => {
+  it('creates a second historical prescription without changing the first record', async () => {
     const user = userEvent.setup();
+
+    prescriptionService.createPrescription
+      .mockResolvedValueOnce({
+        id: 'prescription-1',
+        recordedAt: '2026-10-12T10:00:00.000Z',
+      })
+      .mockResolvedValueOnce({
+        id: 'prescription-2',
+        recordedAt: '2026-10-13T10:00:00.000Z',
+      });
+
     renderForm();
+
+    // Step 1: Enter and save the first prescription
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Right Eye SPH' }),
+      '-1.5',
+    );
 
     await user.click(
       screen.getByRole('button', { name: 'Record Prescription' }),
@@ -209,10 +226,20 @@ describe('PrescriptionEntryForm', () => {
       await screen.findByText('Prescription recorded successfully.'),
     ).toBeInTheDocument();
 
+    expect(prescriptionService.createPrescription).toHaveBeenCalledTimes(1);
+
+    const firstPayload =
+      prescriptionService.createPrescription.mock.calls[0][0];
+
+    expect(firstPayload.customerId).toBe(customer.id);
+    expect(firstPayload.rightEye.distance.sph).toBe(-1.5);
+
+    // Prevent another submission while the saved result is displayed
     expect(
       screen.getByRole('button', { name: 'Record Prescription' }),
     ).toBeDisabled();
 
+    // Step 2: Start a new historical record
     await user.click(
       screen.getByRole('button', {
         name: 'Record Another Prescription',
@@ -222,6 +249,49 @@ describe('PrescriptionEntryForm', () => {
     expect(
       screen.getByRole('button', { name: 'Record Prescription' }),
     ).toBeEnabled();
+
+    // The new form must start with empty measurements
+    expect(
+      screen.getByRole('spinbutton', { name: 'Right Eye SPH' }),
+    ).toHaveValue(null);
+
+    // Step 3: Enter corrected measurements
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Right Eye SPH' }),
+      '-2.0',
+    );
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Remarks' }),
+      'Corrected prescription',
+    );
+
+    // Step 4: Save the second prescription
+    await user.click(
+      screen.getByRole('button', { name: 'Record Prescription' }),
+    );
+
+    expect(
+      await screen.findByText('Prescription recorded successfully.'),
+    ).toBeInTheDocument();
+
+    // Step 5: Verify two separate CREATE operations
+    expect(prescriptionService.createPrescription).toHaveBeenCalledTimes(2);
+
+    const secondPayload =
+      prescriptionService.createPrescription.mock.calls[1][0];
+
+    expect(secondPayload.customerId).toBe(customer.id);
+    expect(secondPayload.rightEye.distance.sph).toBe(-2);
+    expect(secondPayload.remarks).toBe('Corrected prescription');
+
+    // Original historical data must remain unchanged
+    expect(firstPayload.rightEye.distance.sph).toBe(-1.5);
+    expect(firstPayload.remarks).toBe('');
+
+    // Neither submission should attempt to identify a record to overwrite
+    expect(firstPayload).not.toHaveProperty('id');
+    expect(secondPayload).not.toHaveProperty('id');
   });
 
   it('preserves form values after validation errors', async () => {

@@ -2,7 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '../src/routes/ProtectedRoute';
 import useAuth from '../src/hooks/useAuth';
-import { CUSTOMER, OPTOMETRIST, SYSTEM_ADMIN } from '../src/config/roles';
+import {
+  CUSTOMER,
+  OPTOMETRIST,
+  SYSTEM_ADMIN,
+  BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
+} from '../src/config/roles';
 
 vi.mock('../src/hooks/useAuth');
 
@@ -146,6 +152,46 @@ describe('ProtectedRoute', () => {
 
       expect(
         screen.getByRole('heading', { name: /safe home/i }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each(['INVENTORY_MANAGER', 'MANAGEMENT', 'SALES_ASSISTANT_CASHIER'])(
+    'denies retired role %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+      });
+
+      renderProtectedRoute({
+        allowedRoles: [BRANCH_MANAGER, BRANCH_ASSISTANT],
+      });
+
+      expect(
+        screen.getByRole('heading', { name: /safe home/i }),
+      ).toBeInTheDocument();
+
+      expect(
+        screen.queryByRole('heading', { name: /protected content/i }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([BRANCH_MANAGER, BRANCH_ASSISTANT])(
+    'allows authorized role %s through a multi-role route',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+      });
+
+      renderProtectedRoute({
+        allowedRoles: [BRANCH_MANAGER, BRANCH_ASSISTANT],
+      });
+
+      expect(
+        screen.getByRole('heading', { name: /protected content/i }),
       ).toBeInTheDocument();
     },
   );

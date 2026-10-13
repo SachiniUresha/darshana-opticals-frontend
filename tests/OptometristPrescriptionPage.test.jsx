@@ -156,4 +156,136 @@ describe('Optometrist customer selection', () => {
 
     expect(logout).toHaveBeenCalledOnce();
   });
+
+  it('submits the newly selected customer instead of the previous customer', async () => {
+    const user = userEvent.setup();
+
+    prescriptionService.searchCustomers
+      .mockResolvedValueOnce([customers[0]])
+      .mockResolvedValueOnce([customers[1]]);
+
+    prescriptionService.createPrescription.mockResolvedValue({
+      id: 'new-prescription-b',
+    });
+
+    renderPage();
+
+    const searchBox = screen.getByRole('searchbox');
+
+    // Step 1: Search and select Customer A
+    await user.type(searchBox, 'Kamal Perera');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Select Kamal Perera',
+      }),
+    );
+
+    expect(screen.getByText(/recording for:/i)).toHaveTextContent(
+      'Kamal Perera',
+    );
+
+    // Step 2: Change the search
+    await user.clear(searchBox);
+
+    // Old customer selection and form must be cleared
+    expect(
+      screen.queryByRole('heading', { name: 'New Prescription' }),
+    ).not.toBeInTheDocument();
+
+    // Step 3: Search and select Customer B
+    await user.type(searchBox, 'Kamal Silva');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Select Kamal Silva',
+      }),
+    );
+
+    expect(screen.getByText(/recording for:/i)).toHaveTextContent(
+      'Kamal Silva',
+    );
+
+    // Step 4: Submit prescription for Customer B
+    await user.type(
+      screen.getByRole('textbox', { name: 'Remarks' }),
+      'New prescription for Customer B',
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'Record Prescription' }),
+    );
+
+    expect(
+      await screen.findByText('Prescription recorded successfully.'),
+    ).toBeInTheDocument();
+
+    // Step 5: Verify only Customer B's authoritative ID was submitted
+    expect(prescriptionService.createPrescription).toHaveBeenCalledOnce();
+
+    const submittedPayload =
+      prescriptionService.createPrescription.mock.calls[0][0];
+
+    expect(submittedPayload.customerId).toBe(customers[1].id);
+    expect(submittedPayload.customerId).not.toBe(customers[0].id);
+  });
+
+  it('handles a lookup network failure without retaining stale customer selection', async () => {
+    const user = userEvent.setup();
+
+    prescriptionService.searchCustomers
+      .mockResolvedValueOnce([customers[0]])
+      .mockRejectedValueOnce(new Error('Internal server connection details'));
+
+    renderPage();
+
+    const searchBox = screen.getByRole('searchbox');
+
+    // Step 1: Search and select Customer A
+    await user.type(searchBox, 'Kamal');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Select Kamal Perera',
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'New Prescription' }),
+    ).toBeInTheDocument();
+
+    // Step 2: Change search and trigger a network failure
+    await user.clear(searchBox);
+    await user.type(searchBox, 'Silva');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+
+    // Step 3: Safe error message is displayed
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Unable to search customers. Please try again.',
+    );
+
+    // Step 4: Internal details are not exposed
+    expect(
+      screen.queryByText('Internal server connection details'),
+    ).not.toBeInTheDocument();
+
+    // Step 5: Previous customer selection is cleared
+    expect(
+      screen.queryByRole('heading', { name: 'Selected Customer' }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', { name: 'New Prescription' }),
+    ).not.toBeInTheDocument();
+
+    // Step 6: Search is no longer loading
+    expect(
+      screen.queryByText('Searching for customers...'),
+    ).not.toBeInTheDocument();
+
+    expect(prescriptionService.searchCustomers).toHaveBeenCalledTimes(2);
+  });
 });

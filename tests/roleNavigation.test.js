@@ -3,11 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 import {
   BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
   CUSTOMER,
-  INVENTORY_MANAGER,
-  MANAGEMENT,
   OPTOMETRIST,
-  SALES_ASSISTANT_CASHIER,
   SYSTEM_ADMIN,
   isCanonicalRole,
 } from '../src/config/roles';
@@ -16,11 +14,9 @@ import { getPostLoginRoute } from '../src/routes/roleNavigation';
 const canonicalRoles = [
   CUSTOMER,
   SYSTEM_ADMIN,
-  INVENTORY_MANAGER,
   BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
   OPTOMETRIST,
-  MANAGEMENT,
-  SALES_ASSISTANT_CASHIER,
 ];
 
 describe('canonical roles', () => {
@@ -37,8 +33,15 @@ describe('canonical roles', () => {
 });
 
 describe('post-login routing', () => {
-  it.each(canonicalRoles)('safely falls back to Home for %s', (role) => {
-    expect(getPostLoginRoute(role)).toBe('/');
+  it.each(canonicalRoles.filter((role) => role !== OPTOMETRIST))(
+    'safely falls back to Home for %s',
+    (role) => {
+      expect(getPostLoginRoute(role)).toBe('/');
+    },
+  );
+
+  it('directs OPTOMETRIST to the Clinical recording workspace', () => {
+    expect(getPostLoginRoute(OPTOMETRIST)).toBe('/clinical/prescriptions/new');
   });
 
   it.each([undefined, null, '', 'optometrist', 'ADMIN'])(
@@ -91,4 +94,10 @@ describe('post-login routing', () => {
       screen.getByRole('heading', { name: /clinical test route/i }),
     ).toBeInTheDocument();
   });
+  it.each(['INVENTORY_MANAGER', 'MANAGEMENT', 'SALES_ASSISTANT_CASHIER'])(
+    'rejects retired role %s',
+    (role) => {
+      expect(isCanonicalRole(role)).toBe(false);
+    },
+  );
 });
