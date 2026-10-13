@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import OrderHistoryPage from './OrderHistoryPage';
 import { getOrders } from '../services/orderService';
 
@@ -16,8 +16,11 @@ vi.mock('../components/orders/OrderShell', () => ({
 
 function show() {
   return render(
-    <MemoryRouter>
-      <OrderHistoryPage />
+    <MemoryRouter initialEntries={['/orders']}>
+      <Routes>
+        <Route path="/orders" element={<OrderHistoryPage />} />
+        <Route path="/login" element={<h1>Login destination</h1>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -88,5 +91,21 @@ describe('OrderHistoryPage', () => {
     expect(
       await screen.findByText(/permission to view your order history/i),
     ).toBeTruthy();
+  });
+
+  it('logs out and redirects to login when the API returns 401', async () => {
+    getOrders.mockRejectedValue(
+      Object.assign(new Error('Unauthorized'), { status: 401 }),
+    );
+
+    show();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Login destination' }),
+    ).toBeTruthy();
+
+    expect(stableLogout).toHaveBeenCalledTimes(1);
+
+    expect(screen.queryByText('Order #OS-1024')).toBeNull();
   });
 });

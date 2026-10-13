@@ -1,6 +1,6 @@
 export const orderId = (o) => o?.id ?? o?.orderId;
 export const orderTotal = (o) => o?.orderAmount ?? o?.totalAmount ?? o?.total;
-export const orderDate = (o) => o?.createdAt ?? o?.orderDate;
+export const orderDate = (o) => o?.orderDate ?? o?.createdAt;
 export function dateLabel(value) {
   if (!value) return 'Date unavailable';
   const date = new Date(value);
@@ -11,6 +11,23 @@ export function dateLabel(value) {
         month: 'long',
         year: 'numeric',
       });
+}
+
+export function dateTimeLabel(value) {
+  if (!value) return 'Date unavailable';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Colombo',
+  });
 }
 export function moneyLabel(value) {
   if (value === undefined || value === null || value === '')

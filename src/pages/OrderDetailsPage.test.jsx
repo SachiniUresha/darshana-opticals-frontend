@@ -92,4 +92,46 @@ describe('OrderDetailsPage', () => {
     ).toBeTruthy();
     expect(getOrder).toHaveBeenCalledTimes(2);
   });
+
+  it('refreshes tracking with the latest backend status', async () => {
+    getOrder
+      .mockResolvedValueOnce({
+        id: 'OS-1024',
+        status: 'PROCESSING',
+        statusHistory: [
+          {
+            status: 'PROCESSING',
+            changedAt: '2026-10-13T04:00:00Z',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 'OS-1024',
+        status: 'READY_FOR_PICKUP',
+        statusHistory: [
+          {
+            status: 'PROCESSING',
+            changedAt: '2026-10-13T04:00:00Z',
+          },
+          {
+            status: 'READY_FOR_PICKUP',
+            changedAt: '2026-10-13T05:00:00Z',
+          },
+        ],
+      });
+
+    show();
+
+    expect((await screen.findAllByText('PROCESSING')).length).toBeGreaterThan(
+      0,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /refresh tracking/i }));
+
+    expect(
+      (await screen.findAllByText('READY FOR PICKUP')).length,
+    ).toBeGreaterThan(0);
+
+    expect(getOrder).toHaveBeenCalledTimes(2);
+  });
 });

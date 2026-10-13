@@ -40,18 +40,6 @@ export default function OrderShell({ children }) {
             >
               Order History <span aria-hidden="true">&rsaquo;</span>
             </NavLink>
-            {[
-              'Saved Prescriptions',
-              'Wishlist',
-              'Addresses',
-              'Security',
-              'Notifications',
-            ].map((label) => (
-              <span className="orders-nav-disabled" key={label}>
-                {label}
-                <span aria-hidden="true">&rsaquo;</span>
-              </span>
-            ))}
             <button
               type="button"
               onClick={() => {

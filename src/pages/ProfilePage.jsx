@@ -310,23 +310,6 @@ function ProfilePage() {
             <Link to="/orders" className="profile-sidebar__order-link">
               Order History <span aria-hidden="true">&rsaquo;</span>
             </Link>
-
-            {[
-              'Saved Prescriptions',
-              'Wishlist',
-              'Addresses',
-              'Security',
-              'Notifications',
-            ].map((label) => (
-              <span
-                key={label}
-                className="profile-sidebar__nav-link profile-sidebar__nav-link--disabled"
-                aria-disabled="true"
-              >
-                {label}
-                <span aria-hidden="true">&rsaquo;</span>
-              </span>
-            ))}
           </nav>
 
           <button

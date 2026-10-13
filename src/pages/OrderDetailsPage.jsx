@@ -8,6 +8,7 @@ import {
   orderTotal,
   orderDate,
   dateLabel,
+  dateTimeLabel,
   moneyLabel,
   statusLabel,
   errorLabel,
@@ -89,8 +90,8 @@ export default function OrderDetailsPage() {
                     <li key={event.id ?? index}>
                       <strong>{statusLabel(event.status)}</strong>
                       <span>
-                        {dateLabel(
-                          event.createdAt ?? event.timestamp ?? event.changedAt,
+                        {dateTimeLabel(
+                          event.changedAt ?? event.createdAt ?? event.timestamp,
                         )}
                       </span>
                     </li>
@@ -116,7 +117,7 @@ export default function OrderDetailsPage() {
                       </span>
                       <small>Qty {item.quantity ?? 'Unavailable'}</small>
                       <strong>
-                        {moneyLabel(item.unitPrice ?? item.price)}
+                        {moneyLabel(item.price ?? item.unitPrice)}
                       </strong>
                     </li>
                   ))}
