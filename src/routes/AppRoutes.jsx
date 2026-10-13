@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
 import SignupPage from '../pages/SignupPage';
@@ -7,10 +7,12 @@ import NotFoundPage from '../pages/NotFoundPage';
 import ProductsPage from '../pages/ProductsPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
 import ProfilePage from '../pages/ProfilePage';
+import PrescriptionHistoryPage from '../pages/PrescriptionHistoryPage';
+import ProtectedRoute from './ProtectedRoute';
+import { CUSTOMER, OPTOMETRIST } from '../config/roles';
+import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailsPage from '../pages/OrderDetailsPage';
-import ProtectedRoute from './ProtectedRoute';
-import { CUSTOMER } from '../config/roles';
 
 function AppRoutes() {
   return (
@@ -25,10 +27,19 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route
+            path="/profile/prescriptions"
+            element={<PrescriptionHistoryPage />}
+          />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />
         </Route>
-
+        <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>
+          <Route
+            path="/clinical/prescriptions/new"
+            element={<OptometristPrescriptionPage />}
+          />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
