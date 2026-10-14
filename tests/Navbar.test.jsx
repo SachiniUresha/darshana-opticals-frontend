@@ -1,4 +1,4 @@
-﻿import { render, screen } from '@testing-library/react';
+﻿import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -277,6 +277,7 @@ describe('Navbar authentication controls', () => {
       '/products?category=Sunglasses',
     );
   });
+
   it('shows prescription recording link to OPTOMETRIST', () => {
     useAuth.mockReturnValue({
       isAuthenticated: true,
@@ -311,4 +312,58 @@ describe('Navbar authentication controls', () => {
       ).not.toBeInTheDocument();
     },
   );
+
+  it('shows the appointments link to authenticated customers', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: CUSTOMER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Appointments',
+      }),
+    ).toHaveAttribute('href', '/appointments');
+  });
+
+  it('toggles the customer account menu accessibly', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: CUSTOMER },
+      logout: vi.fn(),
+    });
+
+    const { container } = renderNavbar();
+
+    const menuButton = container.querySelector('.navbar__menu-button');
+    const accountMenu = container.querySelector('#navbar-account-menu');
+
+    expect(menuButton).toBeInTheDocument();
+    expect(menuButton).toHaveAttribute('aria-label', 'Toggle account menu');
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+    expect(accountMenu).toBeInTheDocument();
+    expect(accountMenu).not.toHaveClass('navbar__account-links--open');
+
+    fireEvent.click(menuButton);
+
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+    expect(accountMenu).toHaveClass('navbar__account-links--open');
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Appointments',
+      }),
+    ).toHaveAttribute('href', '/appointments');
+
+    fireEvent.click(menuButton);
+
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    expect(accountMenu).not.toHaveClass('navbar__account-links--open');
+  });
 });

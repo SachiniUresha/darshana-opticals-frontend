@@ -15,6 +15,9 @@ import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailsPage from '../pages/OrderDetailsPage';
 import CartPage from '../pages/CartPage';
 import CheckoutEntryPage from '../pages/CheckoutEntryPage';
+import AppointmentBookingPage from '../pages/AppointmentBookingPage';
+import AppointmentHistoryPage from '../pages/AppointmentHistoryPage';
+import AppointmentDetailsPage from '../pages/AppointmentDetailsPage';
 
 function AppRoutes() {
   return (
@@ -29,14 +32,29 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+
           <Route
             path="/profile/prescriptions"
             element={<PrescriptionHistoryPage />}
           />
+
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutEntryPage />} />
+
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />
+
+          <Route path="/appointments" element={<AppointmentHistoryPage />} />
+
+          <Route
+            path="/appointments/book"
+            element={<AppointmentBookingPage />}
+          />
+
+          <Route
+            path="/appointments/:id"
+            element={<AppointmentDetailsPage />}
+          />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>
