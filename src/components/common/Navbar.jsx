@@ -16,6 +16,7 @@ function Navbar() {
   const { cartCount } = useCart();
 
   const currentParams = new URLSearchParams(location.search);
+
   const currentSearch = location.pathname.startsWith('/products')
     ? currentParams.get('q') || ''
     : '';
@@ -113,10 +114,15 @@ function Navbar() {
                   </li>
 
                   <li>
+                    <Link to="/appointments">Appointments</Link>
+                  </li>
+
+                  <li>
                     <Link to="/profile">Profile</Link>
                   </li>
                 </>
               ) : null}
+
               {user?.role === OPTOMETRIST ? (
                 <li>
                   <Link to="/clinical/prescriptions/new">
@@ -124,6 +130,7 @@ function Navbar() {
                   </Link>
                 </li>
               ) : null}
+
               <li>
                 <button
                   type="button"

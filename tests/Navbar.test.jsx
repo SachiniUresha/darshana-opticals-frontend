@@ -277,6 +277,7 @@ describe('Navbar authentication controls', () => {
       '/products?category=Sunglasses',
     );
   });
+
   it('shows prescription recording link to OPTOMETRIST', () => {
     useAuth.mockReturnValue({
       isAuthenticated: true,
@@ -311,4 +312,22 @@ describe('Navbar authentication controls', () => {
       ).not.toBeInTheDocument();
     },
   );
+
+  it('shows the appointments link to authenticated customers', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: CUSTOMER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Appointments',
+      }),
+    ).toHaveAttribute('href', '/appointments');
+  });
 });

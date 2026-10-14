@@ -274,4 +274,14 @@ describe('ProfilePage', () => {
 
     expect(historyLink).toHaveAttribute('href', '/profile/prescriptions');
   });
+
+  it('provides access to My Appointments from the profile sidebar', async () => {
+    renderProfilePage();
+
+    const appointmentsLink = await screen.findByRole('link', {
+      name: 'My Appointments',
+    });
+
+    expect(appointmentsLink).toHaveAttribute('href', '/appointments');
+  });
 });
