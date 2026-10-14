@@ -170,3 +170,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.product-detail__actions {
+  display: grid;
+  gap: 0.8rem;
+  max-width: 320px;
+}
+
+.product-detail__actions .add-to-cart {
+  margin-top: 0;
+}
+
+.product-detail__actions .product-detail__back {
+  text-align: center;
+}

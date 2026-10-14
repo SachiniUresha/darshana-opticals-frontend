@@ -1,3 +1,5 @@
+import useAuth from '../src/hooks/useAuth';
+import useCart from '../src/hooks/useCart';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,6 +9,8 @@ import { getProductById } from '../src/services/productService';
 vi.mock('../src/services/productService', () => ({
   getProductById: vi.fn(),
 }));
+vi.mock('../src/hooks/useAuth');
+vi.mock('../src/hooks/useCart');
 
 const testProduct = {
   id: 'austen-classic',
@@ -36,6 +40,18 @@ function renderDetail(path) {
 describe('ProductDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: 'CUSTOMER',
+      },
+    });
+
+    useCart.mockReturnValue({
+      addItem: vi.fn().mockResolvedValue(true),
+      isMutating: false,
+    });
   });
 
   it('renders the selected product details without duplicated description text', async () => {

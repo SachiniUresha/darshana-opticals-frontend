@@ -5,6 +5,7 @@ import useAuth from '../../hooks/useAuth';
 import { CUSTOMER, OPTOMETRIST } from '../../config/roles';
 import SearchBar from '../products/SearchBar';
 import './Navbar.css';
+import useCart from '../../hooks/useCart';
 
 const categoryLinks = ['Men', 'Women', 'Kids', 'Sunglasses'];
 
@@ -12,6 +13,7 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const { cartCount } = useCart();
 
   const currentParams = new URLSearchParams(location.search);
   const currentSearch = location.pathname.startsWith('/products')
@@ -95,9 +97,25 @@ function Navbar() {
           {isAuthenticated ? (
             <>
               {user?.role === CUSTOMER ? (
-                <li>
-                  <Link to="/profile">Profile</Link>
-                </li>
+                <>
+                  <li>
+                    <Link className="navbar__cart-link" to="/cart">
+                      Cart
+                      {cartCount > 0 ? (
+                        <span
+                          className="navbar__cart-count"
+                          aria-label={`${cartCount} items`}
+                        >
+                          {cartCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+
+                  <li>
+                    <Link to="/profile">Profile</Link>
+                  </li>
+                </>
               ) : null}
               {user?.role === OPTOMETRIST ? (
                 <li>

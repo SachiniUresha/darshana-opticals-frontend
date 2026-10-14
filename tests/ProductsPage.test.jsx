@@ -1,3 +1,5 @@
+import useAuth from '../src/hooks/useAuth';
+import useCart from '../src/hooks/useCart';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -16,6 +18,8 @@ vi.mock('../src/services/productService', () => ({
   getProducts: vi.fn(),
   getProductById: vi.fn(),
 }));
+vi.mock('../src/hooks/useAuth');
+vi.mock('../src/hooks/useCart');
 
 const testProducts = [
   {
@@ -148,6 +152,17 @@ function renderCatalog(initialEntry = '/products') {
 describe('ProductsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: 'CUSTOMER',
+      },
+    });
+
+    useCart.mockReturnValue({
+      addItem: vi.fn().mockResolvedValue(true),
+      isMutating: false,
+    });
 
     buildCatalogOptions.mockImplementation((products = []) => {
       const brands = [...new Set(products.map((product) => product.brand))]

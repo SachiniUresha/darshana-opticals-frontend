@@ -4,6 +4,7 @@ import LoadingState from '../components/products/LoadingState';
 import { getProductById } from '../services/productService';
 import { formatCurrency } from '../utils/formatCurrency';
 import './ProductDetailPage.css';
+import AddToCartButton from '../components/cart/AddToCartButton';
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -157,9 +158,13 @@ function ProductDetailPage() {
             </div>
           </dl>
 
-          <Link className="product-detail__back" to="/products">
-            Back to products
-          </Link>
+          <div className="product-detail__actions">
+            <AddToCartButton product={product} />
+
+            <Link className="product-detail__back" to="/products">
+              Back to products
+            </Link>
+          </div>
         </div>
       </div>
 

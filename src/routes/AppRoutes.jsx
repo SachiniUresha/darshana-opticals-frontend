@@ -13,6 +13,8 @@ import { CUSTOMER, OPTOMETRIST } from '../config/roles';
 import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailsPage from '../pages/OrderDetailsPage';
+import CartPage from '../pages/CartPage';
+import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 
 function AppRoutes() {
   return (
@@ -31,15 +33,19 @@ function AppRoutes() {
             path="/profile/prescriptions"
             element={<PrescriptionHistoryPage />}
           />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutEntryPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />
         </Route>
+
         <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>
           <Route
             path="/clinical/prescriptions/new"
             element={<OptometristPrescriptionPage />}
           />
         </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

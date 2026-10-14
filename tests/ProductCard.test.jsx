@@ -2,6 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import ProductCard from '../src/components/products/ProductCard';
+import useAuth from '../src/hooks/useAuth';
+import useCart from '../src/hooks/useCart';
+
+vi.mock('../src/hooks/useAuth');
+vi.mock('../src/hooks/useCart');
 
 const product = {
   id: 'test-frame',
@@ -32,6 +37,22 @@ function renderCard(productToRender = product) {
 }
 
 describe('ProductCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: 'CUSTOMER',
+      },
+    });
+
+    useCart.mockReturnValue({
+      addItem: vi.fn().mockResolvedValue(true),
+      isMutating: false,
+    });
+  });
+
   it('renders core product information and meaningful alt text', () => {
     renderCard();
 
@@ -39,6 +60,7 @@ describe('ProductCard', () => {
     expect(screen.getByText('Test Brand')).toBeInTheDocument();
     expect(screen.getByText('Rs.12,500')).toBeInTheDocument();
     expect(screen.getByText('Men | Full Rim')).toBeInTheDocument();
+
     expect(
       screen.getByAltText('Black rectangular test frame'),
     ).toBeInTheDocument();
@@ -67,13 +89,25 @@ describe('ProductCard', () => {
     const links = screen.getAllByRole('link');
 
     expect(links).toHaveLength(1);
+
     expect(
       screen.getByRole('link', { name: 'View Test Frame' }),
     ).toHaveAttribute('href', '/products/test-frame');
   });
 
-  it('has a single keyboard focus stop for product navigation', async () => {
+  it('provides an Add to Cart action', () => {
+    renderCard();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Add Test Frame to cart',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('provides separate keyboard controls for details and Add to Cart', async () => {
     const user = userEvent.setup();
+
     renderCard();
 
     await user.tab();
@@ -83,7 +117,9 @@ describe('ProductCard', () => {
     await user.tab();
 
     expect(
-      screen.getByRole('link', { name: 'View Test Frame' }),
-    ).not.toHaveFocus();
+      screen.getByRole('button', {
+        name: 'Add Test Frame to cart',
+      }),
+    ).toHaveFocus();
   });
 });
