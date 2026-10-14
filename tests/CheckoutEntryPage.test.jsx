@@ -93,6 +93,7 @@ function mockCart(overrides = {}) {
     cartTotal: 30000,
     hasUnavailableItems: false,
     isLoading: false,
+    error: '',
     refreshCart,
     ...overrides,
   });
@@ -175,6 +176,42 @@ describe('CheckoutEntryPage', () => {
         name: 'Browse Products',
       }),
     ).toHaveAttribute('href', '/products');
+  });
+
+  it('shows a cart load error with retry instead of an empty-cart message', async () => {
+    const user = userEvent.setup();
+
+    mockCart({
+      items: [],
+      cartTotal: 0,
+      error: "We couldn't load your cart. Please try again.",
+    });
+
+    renderCheckout();
+
+    expect(
+      screen.getByRole('heading', {
+        name: "We couldn't load your cart",
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      "We couldn't load your cart. Please try again.",
+    );
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Your cart is empty',
+      }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Retry',
+      }),
+    );
+
+    expect(refreshCart).toHaveBeenCalledTimes(1);
   });
 
   it('prevents checkout when product information is unavailable', () => {

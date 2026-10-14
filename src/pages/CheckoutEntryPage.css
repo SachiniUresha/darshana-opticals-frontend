@@ -459,6 +459,12 @@
   margin-top: 1rem;
 }
 
+button.checkout-empty__button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
 .checkout-page a:focus-visible,
 .checkout-page button:focus-visible {
   outline: 3px solid #8eb8ff;

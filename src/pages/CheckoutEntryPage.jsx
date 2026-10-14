@@ -71,8 +71,14 @@ function checkoutErrorMessage(error) {
 function CheckoutEntryPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { items, cartTotal, hasUnavailableItems, isLoading, refreshCart } =
-    useCart();
+  const {
+    items,
+    cartTotal,
+    hasUnavailableItems,
+    isLoading,
+    error: cartError,
+    refreshCart,
+  } = useCart();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
@@ -211,6 +217,28 @@ function CheckoutEntryPage() {
       <section className="checkout-page">
         <div className="checkout-status" role="status">
           Loading checkout...
+        </div>
+      </section>
+    );
+  }
+
+  if (cartError && items.length === 0) {
+    return (
+      <section className="checkout-page">
+        <div className="checkout-empty">
+          <h1>We couldn&apos;t load your cart</h1>
+
+          <p className="checkout-error" role="alert">
+            {cartError}
+          </p>
+
+          <button
+            type="button"
+            className="checkout-empty__button"
+            onClick={refreshCart}
+          >
+            Retry
+          </button>
         </div>
       </section>
     );
