@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Outlet, useLocation } from 'react-router-dom';
 import AppRoutes from './AppRoutes';
-import { BRANCH_MANAGER, CUSTOMER } from '../config/roles';
+import {
+  BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
+  CUSTOMER,
+  OPTOMETRIST,
+  SYSTEM_ADMIN,
+} from '../config/roles';
 
 const mockAuth = vi.hoisted(() => ({
   current: {
@@ -29,6 +35,14 @@ vi.mock('../pages/OrderDetailsPage', () => ({
 
 vi.mock('../pages/LoginPage', () => ({
   default: () => <div>Login page</div>,
+}));
+
+vi.mock('../pages/StaffOrdersPage', () => ({
+  default: () => <div>Staff orders page</div>,
+}));
+
+vi.mock('../pages/StaffOrderDetailsPage', () => ({
+  default: () => <div>Staff order details page</div>,
 }));
 
 vi.mock('../pages/HomePage', () => ({
@@ -103,4 +117,77 @@ describe('Customer order route protection', () => {
       expect(screen.queryByText('Customer order details page')).toBeNull();
     },
   );
+});
+
+describe('Staff order route protection', () => {
+  const staffPaths = [
+    ['/staff/orders', 'Staff orders page'],
+    ['/staff/orders/507f1f77bcf86cd799439021', 'Staff order details page'],
+  ];
+
+  beforeEach(() => {
+    mockAuth.current = {
+      isAuthenticated: true,
+      user: { role: BRANCH_ASSISTANT },
+    };
+  });
+
+  it.each([BRANCH_ASSISTANT, BRANCH_MANAGER])(
+    'allows %s to access staff order pages',
+    (role) => {
+      mockAuth.current = {
+        isAuthenticated: true,
+        user: { role },
+      };
+
+      for (const [path, expectedPage] of staffPaths) {
+        const view = show(path);
+
+        expect(screen.getByText(expectedPage)).toBeTruthy();
+        expect(screen.getByTestId('current-path').textContent).toBe(path);
+
+        view.unmount();
+      }
+    },
+  );
+
+  it.each([CUSTOMER, OPTOMETRIST, SYSTEM_ADMIN])(
+    'denies %s access to staff orders',
+    (role) => {
+      mockAuth.current = {
+        isAuthenticated: true,
+        user: { role },
+      };
+
+      show('/staff/orders');
+
+      expect(screen.getByText('Home page')).toBeTruthy();
+      expect(screen.getByTestId('current-path').textContent).toBe('/');
+      expect(screen.queryByText('Staff orders page')).toBeNull();
+    },
+  );
+
+  it('redirects unauthenticated users to login', () => {
+    mockAuth.current = {
+      isAuthenticated: false,
+      user: null,
+    };
+
+    show('/staff/orders');
+
+    expect(screen.getByText('Login page')).toBeTruthy();
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
+  });
+
+  it('prevents customers from accessing staff order details', () => {
+    mockAuth.current = {
+      isAuthenticated: true,
+      user: { role: CUSTOMER },
+    };
+
+    show('/staff/orders/507f1f77bcf86cd799439021');
+
+    expect(screen.getByText('Home page')).toBeTruthy();
+    expect(screen.queryByText('Staff order details page')).toBeNull();
+  });
 });
