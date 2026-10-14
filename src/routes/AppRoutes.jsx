@@ -11,6 +11,8 @@ import PrescriptionHistoryPage from '../pages/PrescriptionHistoryPage';
 import ProtectedRoute from './ProtectedRoute';
 import { CUSTOMER, OPTOMETRIST } from '../config/roles';
 import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
+import OrderHistoryPage from '../pages/OrderHistoryPage';
+import OrderDetailsPage from '../pages/OrderDetailsPage';
 
 function AppRoutes() {
   return (
@@ -29,6 +31,8 @@ function AppRoutes() {
             path="/profile/prescriptions"
             element={<PrescriptionHistoryPage />}
           />
+          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders/:id" element={<OrderDetailsPage />} />
         </Route>
         <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>
           <Route

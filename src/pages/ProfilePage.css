@@ -1,4 +1,4 @@
-﻿.profile-page {
+.profile-page {
   --profile-navy: #1c398e;
   --profile-navy-dark: #101828;
   --profile-blue-soft: #eff6ff;
@@ -457,4 +457,51 @@
   .profile-page__spinner {
     animation: none;
   }
+}
+
+.profile-sidebar__nav-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  color: #344054;
+  text-decoration: none;
+  font-weight: 500;
+  border-left: 4px solid transparent;
+}
+.profile-sidebar__nav-link:hover {
+  background: #f9fafb;
+}
+.profile-sidebar__nav-link:focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: -3px;
+}
+
+.profile-sidebar__order-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  color: #344054;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.profile-sidebar__order-link:hover {
+  background: #f3f6fc;
+  color: #1c398e;
+}
+
+.profile-sidebar__order-link:focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: -3px;
+}
+
+.profile-sidebar__nav-link--disabled {
+  color: #98a2b3;
+  cursor: default;
+}
+
+.profile-sidebar__nav-link--disabled:hover {
+  background: transparent;
 }
