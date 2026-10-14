@@ -306,11 +306,16 @@ function ProfilePage() {
             <span className="profile-sidebar__nav-item" aria-current="page">
               My Profile
             </span>
+
             <Link
               to="/profile/prescriptions"
               className="profile-sidebar__nav-link"
             >
               Prescription History
+            </Link>
+
+            <Link to="/orders" className="profile-sidebar__order-link">
+              Order History <span aria-hidden="true">&rsaquo;</span>
             </Link>
           </nav>
 
