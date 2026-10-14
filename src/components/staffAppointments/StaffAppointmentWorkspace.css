@@ -1,0 +1,188 @@
+.staff-appointment-workspace {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  color: #172033;
+}
+
+.staff-appointment-workspace__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.staff-appointment-workspace__breadcrumb {
+  margin: 0 0 0.7rem;
+  color: #b26a00;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.staff-appointment-workspace__header h1 {
+  margin: 0 0 0.45rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.1;
+}
+
+.staff-appointment-workspace__header > div > p:last-child {
+  margin: 0;
+  color: #667085;
+}
+
+.staff-appointment-workspace__header-action {
+  flex: 0 0 auto;
+}
+
+.staff-appointment-location {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #dfe4ec;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.staff-appointment-location > div {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  min-width: 0;
+}
+
+.staff-appointment-location__label {
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.staff-appointment-location strong {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.staff-appointment-location__badge {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #234aa5;
+  padding: 0.35rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.staff-appointment-access {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.staff-appointment-access--operational {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.staff-appointment-access--readonly {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.staff-appointment-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 1rem;
+  padding: 0.25rem;
+  border: 1px solid #dfe4ec;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.staff-appointment-tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #344054;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.staff-appointment-tabs button:hover {
+  background: #f8fafc;
+}
+
+.staff-appointment-tabs__active {
+  background: #eef4ff !important;
+  color: #234aa5 !important;
+}
+
+.staff-appointment-workspace__content {
+  min-width: 0;
+}
+
+.staff-appointment-workspace button:focus-visible,
+.staff-appointment-workspace a:focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .staff-appointment-workspace {
+    width: min(100% - 1rem, 1180px);
+    padding-top: 1.25rem;
+  }
+
+  .staff-appointment-workspace__header {
+    flex-direction: column;
+  }
+
+  .staff-appointment-workspace__header-action {
+    width: 100%;
+  }
+
+  .staff-appointment-workspace__header-action > * {
+    width: 100%;
+  }
+
+  .staff-appointment-location {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .staff-appointment-location > div {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .staff-appointment-location__badge {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .staff-appointment-workspace__header h1 {
+    font-size: 2rem;
+  }
+
+  .staff-appointment-location {
+    padding: 0.85rem;
+  }
+
+  .staff-appointment-tabs button {
+    padding: 0.65rem 0.35rem;
+    font-size: 0.85rem;
+  }
+}

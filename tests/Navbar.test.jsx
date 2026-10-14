@@ -6,6 +6,7 @@ import Navbar from '../src/components/common/Navbar';
 import useAuth from '../src/hooks/useAuth';
 import useCart from '../src/hooks/useCart';
 import {
+  BRANCH_ASSISTANT,
   BRANCH_MANAGER,
   CUSTOMER,
   INVENTORY_MANAGER,
@@ -329,6 +330,51 @@ describe('Navbar authentication controls', () => {
         name: 'Appointments',
       }),
     ).toHaveAttribute('href', '/appointments');
+  });
+
+  it.each([BRANCH_ASSISTANT, BRANCH_MANAGER])(
+    'shows the staff appointments link to %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: {
+          role,
+        },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.getByRole('link', {
+          name: 'Appointments',
+        }),
+      ).toHaveAttribute('href', '/staff/appointments');
+    },
+  );
+
+  it('does not expose the staff appointments route to customers', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: CUSTOMER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Appointments',
+      }),
+    ).toHaveAttribute('href', '/appointments');
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Staff Appointments',
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('toggles the customer account menu accessibly', () => {

@@ -1,0 +1,459 @@
+.staff-appointment-details-page {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  color: #172033;
+}
+
+.staff-appointment-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.staff-appointment-details-breadcrumb {
+  margin: 0 0 0.7rem;
+  color: #b26a00;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.staff-appointment-details-header h1 {
+  margin: 0 0 0.45rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+}
+
+.staff-appointment-details-header > div > p:last-child,
+.staff-appointment-details-actions p,
+.staff-appointment-details-integrity p,
+.staff-appointment-cancel-modal p {
+  color: #667085;
+}
+
+.staff-appointment-details-header > div > p:last-child,
+.staff-appointment-details-actions p,
+.staff-appointment-details-integrity p {
+  margin: 0;
+}
+
+.staff-appointment-details-back {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.55rem;
+  background: #ffffff;
+  color: #172033;
+  padding: 0.65rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.staff-appointment-details-summary,
+.staff-appointment-details-card,
+.staff-appointment-details-actions {
+  border: 1px solid #dfe4ec;
+  border-radius: 0.9rem;
+  background: #ffffff;
+}
+
+.staff-appointment-details-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.2rem 1.4rem;
+}
+
+.staff-appointment-details-summary > div {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.staff-appointment-details-summary span:first-child {
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+.staff-appointment-details-summary strong {
+  overflow-wrap: anywhere;
+}
+
+.staff-appointment-details-status {
+  display: inline-flex;
+  min-width: 100px;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.staff-appointment-details-status--confirmed {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.staff-appointment-details-status--cancelled {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.staff-appointment-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.staff-appointment-details-card {
+  margin-bottom: 1rem;
+  padding: 1.4rem;
+}
+
+.staff-appointment-details-card h2,
+.staff-appointment-details-actions h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.staff-appointment-details-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.staff-appointment-details-card dl div {
+  min-width: 0;
+}
+
+.staff-appointment-details-card dt {
+  margin-bottom: 0.25rem;
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.staff-appointment-details-card dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.staff-appointment-details-muted {
+  margin: 0;
+  color: #667085;
+}
+
+.staff-appointment-details-restricted {
+  border-left: 4px solid #667085;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  padding: 1rem;
+}
+
+.staff-appointment-details-restricted p {
+  margin: 0.35rem 0 0;
+  color: #667085;
+}
+
+.staff-appointment-details-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 1.4rem;
+}
+
+.staff-appointment-details-actions h2 {
+  margin-bottom: 0.4rem;
+}
+
+.staff-appointment-details-actions__buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.staff-appointment-details-actions__buttons a,
+.staff-appointment-details-actions__buttons button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.55rem;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.staff-appointment-details-actions__buttons a {
+  border: 1px solid #2347a5;
+  background: #2347a5;
+  color: #ffffff;
+}
+
+.staff-appointment-details-cancel {
+  border: 1px solid #d92d20;
+  background: #ffffff;
+  color: #b42318;
+}
+
+.staff-appointment-details-integrity {
+  border-left: 4px solid #2347a5;
+  border-radius: 0.55rem;
+  background: #eef4ff;
+  padding: 0.9rem 1rem;
+}
+
+.staff-appointment-details-integrity strong {
+  color: #2347a5;
+}
+
+.staff-appointment-details-integrity p {
+  margin-top: 0.3rem;
+}
+
+.staff-appointment-details-message {
+  margin-bottom: 1rem;
+  border-radius: 0.7rem;
+  padding: 0.9rem 1rem;
+}
+
+.staff-appointment-details-message--success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.staff-appointment-details-message--error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.staff-appointment-details-state {
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  align-content: center;
+  gap: 1rem;
+  border: 1px solid #dfe4ec;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  padding: 2rem;
+  text-align: center;
+}
+
+.staff-appointment-details-state h1,
+.staff-appointment-details-state p {
+  margin: 0;
+}
+
+.staff-appointment-details-state p {
+  max-width: 620px;
+  color: #667085;
+}
+
+.staff-appointment-details-state a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border-radius: 0.55rem;
+  background: #2347a5;
+  color: #ffffff;
+  padding: 0.65rem 1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.staff-appointment-details-state--error {
+  color: #b42318;
+}
+
+.staff-appointment-cancel-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(23 32 51 / 45%);
+  padding: 1rem;
+}
+
+.staff-appointment-cancel-modal {
+  width: min(620px, 100%);
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 20%);
+}
+
+.staff-appointment-cancel-modal__heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.staff-appointment-cancel-modal__heading > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #fef3f2;
+  color: #b42318;
+  font-weight: 800;
+}
+
+.staff-appointment-cancel-modal__heading h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.staff-appointment-cancel-modal__heading p {
+  margin: 0.35rem 0 0;
+}
+
+.staff-appointment-cancel-modal__details {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.25rem 0;
+  border: 1px solid #dfe4ec;
+  border-radius: 0.8rem;
+  padding: 1rem;
+}
+
+.staff-appointment-cancel-modal__details div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.staff-appointment-cancel-modal__details span {
+  color: #667085;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.staff-appointment-cancel-modal__warning {
+  border-left: 4px solid #b26a00;
+  border-radius: 0.55rem;
+  background: #fff4df;
+  padding: 0.9rem 1rem;
+}
+
+.staff-appointment-cancel-modal__warning strong {
+  color: #9a5b00;
+}
+
+.staff-appointment-cancel-modal__warning p {
+  margin: 0.3rem 0 0;
+}
+
+.staff-appointment-cancel-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.staff-appointment-cancel-modal__actions button {
+  min-height: 44px;
+  border-radius: 0.55rem;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.staff-appointment-cancel-modal__actions button:first-child {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #172033;
+}
+
+.staff-appointment-cancel-modal__actions button:last-child {
+  border: 1px solid #d92d20;
+  background: #d92d20;
+  color: #ffffff;
+}
+
+.staff-appointment-cancel-modal__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.staff-appointment-details-page :focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .staff-appointment-details-header,
+  .staff-appointment-details-actions {
+    flex-direction: column;
+  }
+
+  .staff-appointment-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-appointment-details-actions__buttons {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .staff-appointment-details-page {
+    width: min(100% - 1rem, 1180px);
+    padding-top: 1.25rem;
+  }
+
+  .staff-appointment-details-back {
+    width: 100%;
+  }
+
+  .staff-appointment-details-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .staff-appointment-details-card {
+    padding: 1rem;
+  }
+
+  .staff-appointment-details-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-appointment-details-actions__buttons {
+    flex-direction: column;
+  }
+
+  .staff-appointment-details-actions__buttons a,
+  .staff-appointment-details-actions__buttons button {
+    width: 100%;
+  }
+
+  .staff-appointment-cancel-modal__actions {
+    flex-direction: column-reverse;
+  }
+
+  .staff-appointment-cancel-modal__actions button {
+    width: 100%;
+  }
+}

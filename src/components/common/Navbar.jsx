@@ -2,7 +2,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
-import { CUSTOMER, OPTOMETRIST } from '../../config/roles';
+import {
+  BRANCH_ASSISTANT,
+  BRANCH_MANAGER,
+  CUSTOMER,
+  OPTOMETRIST,
+} from '../../config/roles';
 import SearchBar from '../products/SearchBar';
 import './Navbar.css';
 import useCart from '../../hooks/useCart';
@@ -60,6 +65,9 @@ function Navbar() {
   function toggleAccountMenu() {
     setIsAccountMenuOpen((current) => !current);
   }
+
+  const canViewStaffAppointments =
+    user?.role === BRANCH_ASSISTANT || user?.role === BRANCH_MANAGER;
 
   return (
     <header className="site-header">
@@ -150,6 +158,12 @@ function Navbar() {
                     <Link to="/profile">Profile</Link>
                   </li>
                 </>
+              ) : null}
+
+              {canViewStaffAppointments ? (
+                <li>
+                  <Link to="/staff/appointments">Appointments</Link>
+                </li>
               ) : null}
 
               {user?.role === OPTOMETRIST ? (
