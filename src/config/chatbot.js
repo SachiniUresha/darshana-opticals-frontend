@@ -2,6 +2,7 @@
 // These values support UI validation; backend validation remains authoritative.
 export const CHATBOT_MAX_MESSAGE_LENGTH = 500;
 export const CHATBOT_MAX_CONTEXT_MESSAGES = 6;
+export const CHATBOT_MAX_SESSION_MESSAGES = 20;
 
 export const CHATBOT_RESPONSE_STATUSES = Object.freeze({
   ANSWERED: 'ANSWERED',

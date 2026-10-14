@@ -4,6 +4,8 @@
 
 ### Added
 
+- DDP-061 / #29: Added Customer-scoped active-tab chatbot history, login/logout cleanup, stale-write guards, and storage/auth lifecycle tests.
+
 - DDP-061 / #29: Added the shared-client chatbot service with documented request limits, canonical response validation, and service/API-client integration tests.
 
 - DDP-021: Integrated the product catalog with backend APIs for product listing, product details, search, category, brand, minimum price, and maximum price filtering.

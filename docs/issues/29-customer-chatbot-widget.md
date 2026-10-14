@@ -171,3 +171,46 @@ Validation: 84 new service/client tests passed; the full frontend suite passed
 statement, branch, function and line coverage. Repository lint, formatting and
 production build passed. Shared-client integration tests mock transport; live
 backend/provider and browser-widget verification remain pending.
+
+## Step 3 implementation
+
+Added `src/services/chatHistoryStorage.js` and connected cleanup to the existing
+shared authentication service. Successful login starts a fresh chat session; logout
+purges chat history before clearing authentication. A failed login leaves the
+current authenticated conversation intact.
+
+The storage API provides `createChatHistorySession()`, `loadChatHistory(session)`,
+`saveChatHistory(session, messages)` and `clearChatHistory()`. Capture the history
+session before async work and retain that handle for writes. Owner/version checks
+reject writes after logout, role/account changes and same-Customer re-login.
+These are frontend lifecycle guards; backend authentication remains authoritative.
+
+The active-tab `osms_chat_history` envelope contains schema version, Customer ID
+and safe messages only. User messages contain `id`, `role` and `text`.
+Assistant messages additionally retain `chatId`, `inquiryType` and
+`responseStatus` so restored fallbacks keep their backend status. Extra fields are
+discarded. Complete assistant responses, including text longer than 500 characters,
+remain intact; the API-context length mismatch documented above remains unresolved.
+
+Transcript validation follows the ADR's 20-message session bound and 500-character
+Customer message bound. Oversized or malformed transcripts are rejected rather
+than trimmed. This frontend storage bound does not enforce the missing backend
+session-wide request limit.
+
+Foreign, malformed or incompatible stored transcripts are discarded. Storage read
+failures restore no messages. Failed writes return false so the future widget can
+retain its in-memory state; quota/storage errors do not crash login or logout.
+Cleanup touches only the chatbot key. If removal is blocked, restoration is
+suppressed in the current module lifetime and pending writers are invalidated;
+the browser's denied storage operation cannot guarantee physical deletion.
+
+The storage layer restores within the same authenticated tab after module reload
+and reopen. Widget mounting, in-memory state and visible refresh/minimize behaviour
+will be wired and verified in the forthcoming UI steps. No server history endpoint,
+new authentication context, permanent localStorage transcript or provider calls
+were added.
+
+Validation: 54 new storage/auth lifecycle tests passed. The full frontend suite
+passed 484 tests across 40 files; the history storage module achieved 100%
+statement, branch, function and line coverage. Lint, repository formatting and
+production build passed.
