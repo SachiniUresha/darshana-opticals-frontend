@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CUSTOMER } from '../config/roles';
 import useAuth from '../hooks/useAuth';
 import {
@@ -51,6 +51,35 @@ function CartProvider({ children }) {
   const canUseCart = isAuthenticated && user?.role === CUSTOMER;
   const customerId = user?.id || '';
 
+  /*
+   * Each authentication/customer transition creates a new cart-session
+   * version. Async work remembers the version it started with and ignores
+   * its result if the active session has changed before it completes.
+   *
+   * This prevents a late response belonging to Customer A from overwriting
+   * Customer B's cart after logout/login or an account switch.
+   */
+  const cartIdentity = `${isAuthenticated ? 'authenticated' : 'anonymous'}:${
+    user?.role || ''
+  }:${customerId}`;
+
+  const cartSessionRef = useRef({
+    identity: cartIdentity,
+    version: 0,
+  });
+
+  if (cartSessionRef.current.identity !== cartIdentity) {
+    cartSessionRef.current = {
+      identity: cartIdentity,
+      version: cartSessionRef.current.version + 1,
+    };
+  }
+
+  const isCurrentCartSession = useCallback(
+    (version) => cartSessionRef.current.version === version,
+    [],
+  );
+
   useEffect(() => {
     let active = true;
 
@@ -64,6 +93,10 @@ function CartProvider({ children }) {
         active = false;
       };
     }
+
+    // Do not leave a previous customer's cart visible while the new cart loads.
+    setItems([]);
+    setIsMutating(false);
 
     async function loadCustomerCart() {
       setIsLoading(true);
@@ -101,25 +134,42 @@ function CartProvider({ children }) {
       return false;
     }
 
+    const requestSession = cartSessionRef.current.version;
+
     setIsLoading(true);
     setError('');
 
     try {
       const cart = await getCart();
+
+      if (!isCurrentCartSession(requestSession)) {
+        return false;
+      }
+
       const hydratedItems = await hydrateCartItems(cart);
+
+      if (!isCurrentCartSession(requestSession)) {
+        return false;
+      }
 
       setItems(hydratedItems);
 
       return true;
     } catch {
+      if (!isCurrentCartSession(requestSession)) {
+        return false;
+      }
+
       setItems([]);
       setError(CART_LOAD_ERROR);
 
       return false;
     } finally {
-      setIsLoading(false);
+      if (isCurrentCartSession(requestSession)) {
+        setIsLoading(false);
+      }
     }
-  }, [canUseCart]);
+  }, [canUseCart, isCurrentCartSession]);
 
   const runMutation = useCallback(
     async (operation) => {
@@ -128,24 +178,41 @@ function CartProvider({ children }) {
         return false;
       }
 
+      const requestSession = cartSessionRef.current.version;
+
       setIsMutating(true);
       setError('');
 
       try {
         const cart = await operation();
+
+        if (!isCurrentCartSession(requestSession)) {
+          return false;
+        }
+
         const hydratedItems = await hydrateCartItems(cart);
+
+        if (!isCurrentCartSession(requestSession)) {
+          return false;
+        }
 
         setItems(hydratedItems);
 
         return true;
       } catch {
+        if (!isCurrentCartSession(requestSession)) {
+          return false;
+        }
+
         setError(CART_UPDATE_ERROR);
         return false;
       } finally {
-        setIsMutating(false);
+        if (isCurrentCartSession(requestSession)) {
+          setIsMutating(false);
+        }
       }
     },
-    [canUseCart],
+    [canUseCart, isCurrentCartSession],
   );
 
   const addItem = useCallback(

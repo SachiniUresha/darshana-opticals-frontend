@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CUSTOMER, SYSTEM_ADMIN } from '../src/config/roles';
@@ -25,6 +25,22 @@ vi.mock('../src/services/cartService', () => ({
 vi.mock('../src/services/productService', () => ({
   getProductById: vi.fn(),
 }));
+
+function createDeferred() {
+  let resolve;
+  let reject;
+
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return {
+    promise,
+    resolve,
+    reject,
+  };
+}
 
 function CartProbe() {
   const {
@@ -77,12 +93,16 @@ function CartProbe() {
   );
 }
 
-function renderCartProvider() {
-  return render(
+function cartProviderTree() {
+  return (
     <CartProvider>
       <CartProbe />
-    </CartProvider>,
+    </CartProvider>
   );
+}
+
+function renderCartProvider() {
+  return render(cartProviderTree());
 }
 
 describe('CartProvider', () => {
@@ -319,5 +339,170 @@ describe('CartProvider', () => {
 
     expect(getCart).toHaveBeenCalledTimes(2);
     expect(getProductById).toHaveBeenCalledWith('inventory-1');
+  });
+
+  it('ignores a stale refresh response after the authenticated customer changes', async () => {
+    const user = userEvent.setup();
+    const staleRefresh = createDeferred();
+
+    getCart
+      .mockResolvedValueOnce({
+        items: [],
+      })
+      .mockReturnValueOnce(staleRefresh.promise)
+      .mockResolvedValueOnce({
+        items: [
+          {
+            inventoryId: 'inventory-b',
+            quantity: 2,
+          },
+        ],
+      });
+
+    getProductById.mockResolvedValueOnce({
+      id: 'inventory-b',
+      name: 'Customer B Frame',
+      brand: 'Brand B',
+      price: 10000,
+    });
+
+    const view = renderCartProvider();
+
+    await waitFor(() => {
+      expect(getCart).toHaveBeenCalledTimes(1);
+    });
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /retry cart/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(getCart).toHaveBeenCalledTimes(2);
+    });
+
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        id: 'customer-2',
+        role: CUSTOMER,
+      },
+    });
+
+    view.rerender(cartProviderTree());
+
+    await waitFor(() => {
+      expect(getCart).toHaveBeenCalledTimes(3);
+    });
+
+    expect(await screen.findByText('Customer B Frame')).toBeInTheDocument();
+
+    expect(screen.getByTestId('cart-count')).toHaveTextContent('2');
+
+    await act(async () => {
+      staleRefresh.resolve({
+        items: [
+          {
+            inventoryId: 'inventory-a',
+            quantity: 9,
+          },
+        ],
+      });
+
+      await staleRefresh.promise;
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('product-name')).toHaveTextContent(
+        'Customer B Frame',
+      );
+    });
+
+    expect(screen.getByTestId('cart-count')).toHaveTextContent('2');
+
+    expect(getProductById).not.toHaveBeenCalledWith('inventory-a');
+  });
+
+  it('ignores a stale mutation response after the authenticated customer changes', async () => {
+    const user = userEvent.setup();
+    const staleMutation = createDeferred();
+
+    getCart
+      .mockResolvedValueOnce({
+        items: [],
+      })
+      .mockResolvedValueOnce({
+        items: [
+          {
+            inventoryId: 'inventory-b',
+            quantity: 3,
+          },
+        ],
+      });
+
+    addCartItem.mockReturnValueOnce(staleMutation.promise);
+
+    getProductById.mockResolvedValueOnce({
+      id: 'inventory-b',
+      name: 'Customer B Frame',
+      brand: 'Brand B',
+      price: 10000,
+    });
+
+    const view = renderCartProvider();
+
+    await waitFor(() => {
+      expect(getCart).toHaveBeenCalledTimes(1);
+    });
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /add item/i,
+      }),
+    );
+
+    expect(addCartItem).toHaveBeenCalledWith('inventory-1', 1);
+
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        id: 'customer-2',
+        role: CUSTOMER,
+      },
+    });
+
+    view.rerender(cartProviderTree());
+
+    await waitFor(() => {
+      expect(getCart).toHaveBeenCalledTimes(2);
+    });
+
+    expect(await screen.findByText('Customer B Frame')).toBeInTheDocument();
+
+    expect(screen.getByTestId('cart-count')).toHaveTextContent('3');
+
+    await act(async () => {
+      staleMutation.resolve({
+        items: [
+          {
+            inventoryId: 'inventory-a',
+            quantity: 8,
+          },
+        ],
+      });
+
+      await staleMutation.promise;
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('product-name')).toHaveTextContent(
+        'Customer B Frame',
+      );
+    });
+
+    expect(screen.getByTestId('cart-count')).toHaveTextContent('3');
+
+    expect(getProductById).not.toHaveBeenCalledWith('inventory-a');
   });
 });
