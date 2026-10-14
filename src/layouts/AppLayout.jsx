@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import ChatbotWidget from '../components/chatbot/ChatbotWidget';
 import './AppLayout.css';
 
 // Base application shell: Navbar + main content area + Footer.
@@ -13,6 +14,7 @@ function AppLayout() {
         <Outlet />
       </main>
       <Footer />
+      <ChatbotWidget />
     </div>
   );
 }

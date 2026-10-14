@@ -99,10 +99,11 @@ Requested references:
 - [Assistant panel, node 187:1550](https://www.figma.com/design/OecN23wEqdSIWsY4xjWwUQ/Darshana-Opticals?node-id=187-1550)
 - [Blue launcher, node 187:4](https://www.figma.com/design/OecN23wEqdSIWsY4xjWwUQ/Darshana-Opticals?node-id=187-4)
 
-Both design-context requests failed because the connected Figma Starter plan reached
-its MCP call limit. Exact geometry, colours, typography, icons and assets remain
-unverified. Obtain design context before implementing the visual step; do not claim
-a verified Figma match from the written description alone.
+Initial design-context requests failed because the connected Figma Starter plan
+reached its MCP call limit. The user subsequently supplied Assistant-panel and
+blue-launcher screenshots after being offered the screenshot-reference workflow.
+Step 4 uses these approved visual references and existing app typography/icons.
+Original Figma node metadata and asset matching remain unverified.
 
 The user also requires a draggable launcher on Customer pages. Separate dragging
 from activation, support pointer/touch interaction and keyboard positioning, and
@@ -128,8 +129,8 @@ contrast, mobile input access and critical page controls.
   authorize automatic browser retries. Its failure fallback invites trying again
   later; a manual retry may target a failed interaction without duplicating its
   Customer bubble. Never retry answered/unsupported interactions automatically.
-- Exact visual verification is blocked by Figma access. Service work can proceed
-  independently after the next approval.
+- Original Figma node metadata remains unavailable due to the tool quota. The user
+  supplied screenshots for the visual step; verification uses those references.
 
 ## Proposed separately approved implementation steps
 
@@ -214,3 +215,46 @@ Validation: 54 new storage/auth lifecycle tests passed. The full frontend suite
 passed 484 tests across 40 files; the history storage module achieved 100%
 statement, branch, function and line coverage. Lint, repository formatting and
 production build passed.
+
+## Step 4 implementation
+
+After Figma quota errors, the user supplied Assistant-panel and blue-launcher
+screenshots in response to the offered screenshot-reference workflow. This step
+implements those supplied references; original Figma typography/vector metadata
+was not available. Existing app typography/tokens and the shared EyeIcon are reused.
+
+Added the Customer-only chatbot once in AppLayout using the existing useAuth hook.
+The panel includes the navy header, greeting, suggested-question rows, sender-labelled
+grey/blue bubbles, plain-text history, composer and accessible close controls.
+The header identifies the store without claiming verified AI-provider availability.
+Quick questions fill ordinary input; they do not execute OSMS actions.
+
+The launcher has the blue message icon and yellow dot. Mouse/touch pointer dragging
+and Alt+arrow-key movement are bounded to the visible viewport. A drag does not
+accidentally activate the widget. Minimized position, draft and loaded transcript
+remain intact across close/reopen. The open panel/close bubble align within the
+visible viewport; on very short keyboard-height viewports only the header close
+control remains visible so the composer stays accessible.
+
+SDS-approved modal behaviour uses dialog semantics, background inert/aria-hidden
+handling, focus containment, Escape and focus return, restoring previous page
+attributes and scroll state after closing/unmounting. Messages use a polite log,
+sender labels, complete plain strings and readable canonical fallback labels.
+Long text wraps, and scrolling respects a customer reading older messages.
+
+This commit completes the visual shell only. ChatbotPanel exposes a send callback
+for Step 5; the AppLayout widget does not yet connect it, and Send remains disabled
+without that handler. No invented answers or backend/provider calls were added.
+Actual send, pending-request persistence, error/retry/auth flows remain in Step 5.
+
+Validation: 43 new UI/position tests passed. The full frontend suite passed 527
+tests across 43 files. New chatbot components/position utilities achieved 100%
+coverage; dialog/drag hooks exceeded 95% line and branch coverage. Lint, repository
+formatting and production build passed.
+
+An isolated headless Edge smoke review with fictional auth/history and mocked
+unrelated API traffic verified native mouse/touch dragging, modal focus/Escape,
+Customer/staff visibility, desktop 1024x768, mobile 390x844, narrow 320x640 and
+compact 390x280 layouts. Input and close controls stayed in view, suggested chips
+did not overflow, screenshots were visually inspected, and no runtime exceptions
+were observed. This is not a live chatbot/backend/provider end-to-end test.

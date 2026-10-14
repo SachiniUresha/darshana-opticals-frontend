@@ -4,6 +4,8 @@
 
 ### Added
 
+- DDP-061 / #29: Added the Customer-only Assistant panel and draggable launcher to the shared shell, with screenshot-based styling, keyboard/modal accessibility, responsive positioning, and UI tests.
+
 - DDP-061 / #29: Added Customer-scoped active-tab chatbot history, login/logout cleanup, stale-write guards, and storage/auth lifecycle tests.
 
 - DDP-061 / #29: Added the shared-client chatbot service with documented request limits, canonical response validation, and service/API-client integration tests.
