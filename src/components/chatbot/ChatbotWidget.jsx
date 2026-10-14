@@ -4,20 +4,15 @@ import useAuth from '../../hooks/useAuth';
 import { CUSTOMER } from '../../config/roles';
 import useDraggableChatLauncher from '../../hooks/useDraggableChatLauncher';
 import useChatbotDialog from '../../hooks/useChatbotDialog';
-import {
-  createChatHistorySession,
-  loadChatHistory,
-} from '../../services/chatHistoryStorage';
+import useChatConversation from '../../hooks/useChatConversation';
 import { getOpenChatbotPosition } from './chatbotPosition';
 import ChatbotPanel from './ChatbotPanel';
 import { ChatIcon, CloseIcon } from './ChatbotIcons';
 import './ChatbotWidget.css';
 
-function CustomerChatbot({ onSend }) {
+function CustomerChatbot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [draft, setDraft] = useState('');
-  const [session] = useState(createChatHistorySession);
-  const [messages] = useState(() => loadChatHistory(session));
+  const conversation = useChatConversation();
   const launcherRef = useRef(null);
   const inputRef = useRef(null);
   const hostRef = useRef(null);
@@ -53,10 +48,11 @@ function CustomerChatbot({ onSend }) {
             inputRef={inputRef}
             placement={openPlacement.panel}
             onClose={close}
-            messages={messages}
-            draft={draft}
-            onDraftChange={setDraft}
-            onSend={onSend}
+            messages={conversation.messages}
+            draft={conversation.draft}
+            onDraftChange={conversation.setDraft}
+            onSend={conversation.submitQuestion}
+            conversation={conversation}
           />
         </>
       )}
@@ -94,8 +90,8 @@ function CustomerChatbot({ onSend }) {
   );
 }
 
-export default function ChatbotWidget({ onSend }) {
+export default function ChatbotWidget() {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated || user?.role !== CUSTOMER || !user.id) return null;
-  return <CustomerChatbot key={user.id} onSend={onSend} />;
+  return <CustomerChatbot key={user.id} />;
 }

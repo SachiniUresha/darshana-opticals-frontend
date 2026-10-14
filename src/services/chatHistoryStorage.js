@@ -36,7 +36,7 @@ function currentCustomerId() {
   }
 }
 
-function isCurrentSession(session) {
+export function isChatHistorySessionActive(session) {
   return (
     isRecord(session) &&
     session.generation === sessionGeneration &&
@@ -111,7 +111,7 @@ export function createChatHistorySession() {
 }
 
 export function loadChatHistory(session) {
-  if (!isCurrentSession(session) || !canRestoreHistory) {
+  if (!isChatHistorySessionActive(session) || !canRestoreHistory) {
     return [];
   }
 
@@ -144,7 +144,7 @@ export function loadChatHistory(session) {
  * Invalid messages throw a safe local error. Never truncate history or response text.
  */
 export function saveChatHistory(session, messages) {
-  if (!isCurrentSession(session)) {
+  if (!isChatHistorySessionActive(session)) {
     return false;
   }
 

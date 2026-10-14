@@ -9,15 +9,23 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatbotWidget from '../src/components/chatbot/ChatbotWidget';
 import useAuth from '../src/hooks/useAuth';
+import { MemoryRouter } from 'react-router-dom';
+import { sendMessage } from '../src/services/chatbotService';
 import {
   createChatHistorySession,
   loadChatHistory,
+  saveChatHistory,
+  isChatHistorySessionActive,
 } from '../src/services/chatHistoryStorage';
 
 vi.mock('../src/hooks/useAuth');
+vi.mock('../src/services/chatbotService', () => ({ sendMessage: vi.fn() }));
 vi.mock('../src/services/chatHistoryStorage', () => ({
   createChatHistorySession: vi.fn(),
   loadChatHistory: vi.fn(),
+  saveChatHistory: vi.fn(() => true),
+  clearChatHistory: vi.fn(),
+  isChatHistorySessionActive: vi.fn(() => true),
 }));
 
 const transcript = [
@@ -31,6 +39,10 @@ const transcript = [
     responseStatus: 'ANSWERED',
   },
 ];
+
+function renderWidget(ui) {
+  return render(ui, { wrapper: MemoryRouter });
+}
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -56,6 +68,14 @@ beforeEach(() => {
     generation: 0,
   });
   loadChatHistory.mockReturnValue([]);
+  saveChatHistory.mockReturnValue(true);
+  isChatHistorySessionActive.mockReturnValue(true);
+  sendMessage.mockResolvedValue({
+    chatId: 'chat-2',
+    inquiryType: 'STORE_INFO',
+    responseStatus: 'ANSWERED',
+    responseText: 'Backend reply.',
+  });
 });
 
 afterEach(() => {
@@ -77,7 +97,7 @@ describe('Customer chatbot shell', () => {
     'hides the widget outside authenticated Customer access (%j, %s)',
     (user, isAuthenticated) => {
       useAuth.mockReturnValue({ user, isAuthenticated });
-      render(<ChatbotWidget />);
+      renderWidget(<ChatbotWidget />);
       expect(
         screen.queryByRole('button', { name: 'Open Darshana Assistant' }),
       ).not.toBeInTheDocument();
@@ -87,7 +107,7 @@ describe('Customer chatbot shell', () => {
 
   it('opens by keyboard, focuses the labelled input and closes with Escape', async () => {
     const user = userEvent.setup();
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -111,7 +131,7 @@ describe('Customer chatbot shell', () => {
   it('minimizes and reopens without losing the draft or loading another conversation', async () => {
     const user = userEvent.setup();
     loadChatHistory.mockReturnValue(transcript);
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -129,8 +149,8 @@ describe('Customer chatbot shell', () => {
 
   it('fills quick questions as ordinary input without taking an OSMS action', async () => {
     const user = userEvent.setup();
-    const onSend = vi.fn();
-    render(<ChatbotWidget onSend={onSend} />);
+    const onSend = sendMessage;
+    renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -139,20 +159,23 @@ describe('Customer chatbot shell', () => {
     expect(screen.getByRole('textbox')).toHaveFocus();
     expect(onSend).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Send question' }));
-    expect(onSend).toHaveBeenCalledWith('Track my order');
+    expect(onSend).toHaveBeenCalledWith({
+      message: 'Track my order',
+      history: [],
+    });
     expect(onSend).toHaveBeenCalledTimes(1);
   });
 
-  it('does not fabricate a send flow before the API handler is connected', async () => {
+  it('enables valid question sends through the connected service', async () => {
     const user = userEvent.setup();
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
     await user.type(screen.getByRole('textbox'), 'Question');
     expect(
       screen.getByRole('button', { name: 'Send question' }),
-    ).toBeDisabled();
+    ).not.toBeDisabled();
   });
 
   it('traps modal focus and restores existing page accessibility state on close', async () => {
@@ -161,7 +184,7 @@ describe('Customer chatbot shell', () => {
     background.setAttribute('aria-hidden', 'false');
     document.body.append(background);
     try {
-      render(<ChatbotWidget />);
+      renderWidget(<ChatbotWidget />);
       await user.click(
         screen.getByRole('button', { name: 'Open Darshana Assistant' }),
       );
@@ -193,7 +216,7 @@ describe('Customer chatbot shell', () => {
     const outside = document.createElement('button');
     document.body.append(outside);
     try {
-      render(<ChatbotWidget />);
+      renderWidget(<ChatbotWidget />);
       await user.click(
         screen.getByRole('button', { name: 'Open Darshana Assistant' }),
       );
@@ -206,7 +229,7 @@ describe('Customer chatbot shell', () => {
 
   it('closes on the transparent background without changing page navigation', async () => {
     const user = userEvent.setup();
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -216,7 +239,7 @@ describe('Customer chatbot shell', () => {
 
   it('removes the dialog and restores the page when Customer access is lost', async () => {
     const user = userEvent.setup();
-    const { rerender } = render(<ChatbotWidget />);
+    const { rerender } = renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -229,7 +252,7 @@ describe('Customer chatbot shell', () => {
   it('remounts history for a changed Customer without displaying the old transcript', async () => {
     const user = userEvent.setup();
     loadChatHistory.mockReturnValueOnce(transcript).mockReturnValueOnce([]);
-    const { rerender } = render(<ChatbotWidget />);
+    const { rerender } = renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -251,7 +274,7 @@ describe('Customer chatbot shell', () => {
 
 describe('draggable launcher', () => {
   it('moves with a pointer and suppresses the resulting click while preserving keyboard activation', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -276,7 +299,7 @@ describe('draggable launcher', () => {
   });
 
   it('allows closing after keyboard activation when a drag generated no click', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -292,7 +315,7 @@ describe('draggable launcher', () => {
   });
 
   it('allows normal clicks after small pointer movement', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -304,7 +327,7 @@ describe('draggable launcher', () => {
   });
 
   it('ignores secondary pointers/buttons and cancelled movement', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -330,7 +353,7 @@ describe('draggable launcher', () => {
   });
 
   it('offers keyboard positioning without opening the widget', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     const launcher = screen.getByRole('button', {
       name: 'Open Darshana Assistant',
     });
@@ -350,7 +373,7 @@ describe('draggable launcher', () => {
       offsetTop: 0,
     });
     vi.stubGlobal('visualViewport', viewport);
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     await user.click(
       screen.getByRole('button', { name: 'Open Darshana Assistant' }),
     );
@@ -377,7 +400,7 @@ describe('draggable launcher', () => {
   });
 
   it('reclamps a dragged launcher when the window becomes smaller', () => {
-    render(<ChatbotWidget />);
+    renderWidget(<ChatbotWidget />);
     vi.stubGlobal('innerWidth', 360);
     vi.stubGlobal('innerHeight', 640);
     fireEvent(window, new Event('resize'));

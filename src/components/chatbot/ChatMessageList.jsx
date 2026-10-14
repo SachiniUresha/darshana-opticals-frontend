@@ -26,6 +26,7 @@ export default function ChatMessageList({
   messages,
   onChooseQuestion,
   isSending = false,
+  disableQuickQuestions = false,
 }) {
   const listRef = useRef(null);
   const followLatest = useRef(true);
@@ -35,6 +36,16 @@ export default function ChatMessageList({
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, isSending]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      if (followLatest.current) list.scrollTop = list.scrollHeight;
+    });
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div
@@ -68,7 +79,7 @@ export default function ChatMessageList({
                   <button
                     type="button"
                     key={question}
-                    disabled={isSending}
+                    disabled={isSending || disableQuickQuestions}
                     onClick={() => onChooseQuestion(question)}
                   >
                     {question}
@@ -101,11 +112,6 @@ export default function ChatMessageList({
           </div>
         </div>
       ))}
-      {isSending && (
-        <p className="chatbot-processing" role="status">
-          Darshana Assistant is thinking…
-        </p>
-      )}
     </div>
   );
 }

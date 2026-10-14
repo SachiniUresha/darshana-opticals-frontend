@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { EyeIcon } from '../forms/FieldIcons';
-import { CHATBOT_MAX_MESSAGE_LENGTH } from '../../config/chatbot';
+import {
+  CHATBOT_MAX_MESSAGE_LENGTH,
+  CHATBOT_SESSION_LIMIT_NOTICE,
+} from '../../config/chatbot';
 import { CloseIcon, SendIcon } from './ChatbotIcons';
 import ChatMessageList from './ChatMessageList';
 
@@ -14,10 +17,27 @@ export default function ChatbotPanel({
   draft,
   onDraftChange,
   onSend,
-  isSending = false,
+  isSending: suppliedPending = false,
+  conversation = {},
 }) {
   const [validation, setValidation] = useState('');
   const helpId = panelId + '-input-help';
+  const isSending = conversation.isSending ?? suppliedPending;
+  const {
+    error = '',
+    storageNotice = '',
+    blocked = false,
+    standalone = false,
+    setStandalone,
+    historyNeedsStandalone = false,
+    retryNeedsStandalone = false,
+    limitReached = false,
+    canRetry = false,
+    retryQuestion,
+  } = conversation;
+  const needsChoice = historyNeedsStandalone || retryNeedsStandalone;
+  const sendBlocked =
+    blocked || limitReached || (historyNeedsStandalone && !standalone);
 
   function chooseQuestion(question) {
     onDraftChange(question);
@@ -27,7 +47,7 @@ export default function ChatbotPanel({
 
   function submit(event) {
     event.preventDefault();
-    if (isSending || !onSend) return;
+    if (isSending || blocked || !onSend) return;
     if (!draft.trim()) {
       setValidation('Enter a question before sending.');
       inputRef.current?.focus();
@@ -35,6 +55,7 @@ export default function ChatbotPanel({
     }
     setValidation('');
     onSend(draft);
+    inputRef.current?.focus({ preventScroll: true });
   }
 
   return (
@@ -72,7 +93,58 @@ export default function ChatbotPanel({
         messages={messages}
         onChooseQuestion={chooseQuestion}
         isSending={isSending}
+        disableQuickQuestions={blocked || limitReached}
       />
+      {isSending && (
+        <p className="chatbot-processing" role="status">
+          Darshana Assistant is thinking…
+        </p>
+      )}
+      {(error || storageNotice || needsChoice || limitReached || canRetry) && (
+        <div className="chatbot-feedback">
+          {error && (
+            <p role="alert" className="chatbot-request-error">
+              {error}
+            </p>
+          )}
+          {storageNotice && <p role="status">{storageNotice}</p>}
+          {limitReached && (
+            <p className="chatbot-limit-notice">
+              {CHATBOT_SESSION_LIMIT_NOTICE}
+            </p>
+          )}
+          {needsChoice && !blocked && (
+            <label className="chatbot-context-choice">
+              <input
+                type="checkbox"
+                checked={standalone}
+                disabled={isSending}
+                onChange={(event) => setStandalone?.(event.target.checked)}
+              />
+              Send this question without earlier conversation
+            </label>
+          )}
+          {needsChoice && !blocked && (
+            <p className="chatbot-context-notice">
+              Earlier replies cannot be included. You can choose to ask this
+              question on its own.
+            </p>
+          )}
+          {canRetry && (
+            <button
+              type="button"
+              className="chatbot-retry"
+              disabled={isSending || (retryNeedsStandalone && !standalone)}
+              onClick={() => {
+                retryQuestion?.();
+                inputRef.current?.focus({ preventScroll: true });
+              }}
+            >
+              Retry last question
+            </button>
+          )}
+        </div>
+      )}
       <form className="chatbot-composer" onSubmit={submit}>
         {validation && (
           <p className="chatbot-validation" role="alert">
@@ -102,7 +174,8 @@ export default function ChatbotPanel({
           }}
           rows={1}
           maxLength={CHATBOT_MAX_MESSAGE_LENGTH}
-          disabled={isSending}
+          readOnly={isSending || blocked}
+          aria-disabled={isSending || blocked}
           aria-describedby={helpId}
           placeholder="Type a message..."
         />
@@ -114,7 +187,7 @@ export default function ChatbotPanel({
           type="submit"
           className="chatbot-send"
           aria-label="Send question"
-          disabled={isSending || !draft.trim() || !onSend}
+          disabled={isSending || sendBlocked || !draft.trim() || !onSend}
         >
           <SendIcon />
         </button>

@@ -258,3 +258,58 @@ Customer/staff visibility, desktop 1024x768, mobile 390x844, narrow 320x640 and
 compact 390x280 layouts. Input and close controls stayed in view, suggested chips
 did not overflow, screenshots were visually inspected, and no runtime exceptions
 were observed. This is not a live chatbot/backend/provider end-to-end test.
+
+## Step 5 implementation
+
+Connected the AppLayout widget to the existing authenticated chatbot service through
+`useChatConversation`. Valid questions render once, show processing and display
+the exact normalized backend reply/status. A synchronous request lock prevents
+duplicate sends before React updates. The composer stays focused/read-only during
+processing, and loading uses its own live region rather than nested announcements
+inside the conversation log.
+
+Manual retry is available for a backend FAILED reply, network failure and transient
+502/503/504 transport errors. It reuses the captured question/context, replacing
+the failed assistant bubble rather than duplicating the Customer question.
+Already answered/unsupported interactions are not retried. Unsent new drafts are
+preserved when retrying an older question. Restored FAILED or unanswered interactions
+offer an explicit retry; refresh never automatically resubmits them.
+
+Backend 401 uses shared logout and login navigation. Backend 403 stops sends while
+keeping close controls usable. Validation, rate-limit, malformed-response and
+unexpected HTTP errors use safe local messages without raw payloads or automatic
+retry loops. Provider fallbacks remain backend-authored plain text.
+
+Pending results are ignored after unmount, logout, identity/session changes and
+same-Customer re-login. An older 401 cannot log out a newer signed-in Customer.
+Shared-auth storage loss clears the active transcript and stops chat requests.
+Messages persist via the scoped sessionStorage layer; quota failures retain the
+in-memory conversation and visibly explain refresh limitations.
+
+The 20-message UI bound reserves room for both question and reply. Retry replaces
+an existing reply or requires a free reply slot, preventing partial over-budget
+transcripts. This does not implement the missing authoritative backend session limit.
+
+The long-output/history-contract mismatch is handled without truncating replies.
+When earlier context cannot fit the documented history schema, the Customer must
+explicitly choose to send the next question without earlier conversation. Only then
+is the documented optional history field omitted. This choice is not a hidden
+summarization or a new backend capability. A retry in the continuing tab retains
+the original optional-history choice; after restoration, context is reconstructed
+from safe local messages and revalidated. All request bodies contain only message
+and, where selected, bounded role/text history.
+
+Added resize observation to keep latest content visible when the panel changes
+height, while respecting a Customer who is reading older messages.
+
+Validation: 40 new real-shared-client/auth conversation tests and one resize test
+passed; the full frontend suite passed 568 tests across 44 files. Conversation
+controller coverage is 97.35% lines and 94.01% branches, with all functions covered.
+Lint, repository formatting and production build passed.
+
+Isolated headless Edge tests with a mock API gateway exercised the actual browser
+request path, pending/duplicate-send state, FAILED/manual retry, unsupported fallback,
+429 messaging, 401/logout purge and compact error-state controls. Six chatbot requests
+used only documented fields, screenshots were visually inspected, and no runtime
+exceptions occurred. Live backend/test-database and provider-adapter smoke testing,
+remote CI, PR review and merge remain for final validation/review.

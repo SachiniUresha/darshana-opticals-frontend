@@ -20,3 +20,6 @@ export const CHATBOT_INQUIRY_TYPES = Object.freeze([
   'GENERAL_INQUIRY',
   'UNSUPPORTED_OTHER',
 ]);
+
+export const CHATBOT_SESSION_LIMIT_NOTICE =
+  'This conversation has reached its message limit. Contact store support for more help.';

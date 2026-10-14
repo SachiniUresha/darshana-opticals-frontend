@@ -166,4 +166,41 @@ describe('chatbot panel presentation', () => {
     rerender(<ChatMessageList {...props} isSending />);
     expect(log.scrollTop).toBe(1000);
   });
+
+  it('keeps the latest content in view after resizing without disturbing older-message reading', () => {
+    let resize;
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback) {
+          resize = callback;
+        }
+        observe() {}
+        disconnect() {
+          disconnect();
+        }
+      },
+    );
+    try {
+      const { unmount } = render(
+        <ChatMessageList messages={[]} onChooseQuestion={vi.fn()} />,
+      );
+      const log = screen.getByRole('log');
+      Object.defineProperties(log, {
+        scrollHeight: { configurable: true, value: 1000 },
+        clientHeight: { configurable: true, value: 200 },
+      });
+      resize();
+      expect(log.scrollTop).toBe(1000);
+      log.scrollTop = 100;
+      fireEvent.scroll(log);
+      resize();
+      expect(log.scrollTop).toBe(100);
+      unmount();
+      expect(disconnect).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
