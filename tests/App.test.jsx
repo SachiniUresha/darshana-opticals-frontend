@@ -286,15 +286,15 @@ describe('Routing', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: 'Checkout',
+        name: 'Your cart is empty',
       }),
     ).toBeInTheDocument();
 
     expect(
       screen.getByRole('link', {
-        name: 'Back to cart',
+        name: 'Browse Products',
       }),
-    ).toHaveAttribute('href', '/cart');
+    ).toHaveAttribute('href', '/products');
   });
 
   it('redirects an unauthenticated checkout request to Login', () => {
