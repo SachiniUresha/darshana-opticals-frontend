@@ -3,43 +3,21 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import StaffOrderDetailsPage from './StaffOrderDetailsPage';
-import { getOrder } from '../services/orderService';
+import { getOrder, updateOrderStatus } from '../services/orderService';
+import { dateTimeLabel } from '../components/orders/orderView';
 
 vi.mock('../services/orderService', () => ({
   getOrder: vi.fn(),
+  updateOrderStatus: vi.fn(),
 }));
 
 const logoutMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../hooks/useAuth', () => ({
   default: () => ({
+    user: { role: 'BRANCH_ASSISTANT' },
     logout: logoutMock,
   }),
-}));
-
-// Status control has its own separate tests.
-// Here we verify integration with the details page.
-vi.mock('../components/orders/StaffOrderStatusControl', () => ({
-  default: ({ order, onUpdated }) => (
-    <button
-      type="button"
-      onClick={() =>
-        onUpdated({
-          ...order,
-          status: 'READY_FOR_PICKUP',
-          statusHistory: [
-            ...(order.statusHistory || []),
-            {
-              status: 'READY_FOR_PICKUP',
-              changedAt: '2026-10-14T08:00:00Z',
-            },
-          ],
-        })
-      }
-    >
-      Simulate confirmed update
-    </button>
-  ),
 }));
 
 const sampleOrder = {
@@ -163,8 +141,24 @@ describe('StaffOrderDetailsPage', () => {
     expect(getOrder).toHaveBeenCalledTimes(2);
   });
 
-  it('renders a backend-confirmed status update', async () => {
+  it('replaces tracking history using the backend-confirmed update response', async () => {
+    const confirmedOrder = {
+      ...sampleOrder,
+      status: 'READY_FOR_PICKUP',
+      statusHistory: [
+        {
+          status: 'PROCESSING',
+          changedAt: '2026-10-09T11:00:00Z',
+        },
+        {
+          status: 'READY_FOR_PICKUP',
+          changedAt: '2026-10-14T08:00:00Z',
+        },
+      ],
+    };
+
     getOrder.mockResolvedValue(sampleOrder);
+    updateOrderStatus.mockResolvedValue(confirmedOrder);
 
     showPage();
 
@@ -174,16 +168,41 @@ describe('StaffOrderDetailsPage', () => {
       }),
     ).toBeTruthy();
 
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Simulate confirmed update',
+    fireEvent.change(
+      screen.getByRole('combobox', {
+        name: 'Next Order Status',
       }),
+      { target: { value: 'READY_FOR_PICKUP' } },
     );
 
+    fireEvent.click(screen.getByRole('button', { name: 'Update Status' }));
+
     expect(
-      screen.getByText('READY FOR PICKUP', {
+      await screen.findByText('READY FOR PICKUP', {
         selector: '.orders-card-header .orders-status',
       }),
     ).toBeTruthy();
+
+    expect(updateOrderStatus).toHaveBeenCalledWith(
+      sampleOrder.id,
+      'READY_FOR_PICKUP',
+    );
+
+    const historyEntries = document.querySelectorAll('.orders-timeline li');
+
+    // Render exactly the history entries returned by the backend.
+    expect(historyEntries).toHaveLength(2);
+
+    expect(historyEntries[0]).toHaveTextContent('PROCESSING');
+    expect(historyEntries[1]).toHaveTextContent('READY FOR PICKUP');
+
+    // The old timestamp must be replaced by the confirmed backend timestamp.
+    expect(historyEntries[0]).toHaveTextContent(
+      dateTimeLabel(confirmedOrder.statusHistory[0].changedAt),
+    );
+
+    expect(historyEntries[0]).not.toHaveTextContent(
+      dateTimeLabel(sampleOrder.statusHistory[0].changedAt),
+    );
   });
 });

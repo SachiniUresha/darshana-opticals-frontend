@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { BRANCH_ASSISTANT, BRANCH_MANAGER } from '../../config/roles';
@@ -24,6 +24,17 @@ export default function StaffOrderStatusControl({ order, onUpdated }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const successRef = useRef(null);
+  const errorRef = useRef(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.focus();
+    } else if (success) {
+      successRef.current?.focus();
+    }
+  }, [error, success]);
 
   const isAuthorized =
     user?.role === BRANCH_ASSISTANT || user?.role === BRANCH_MANAGER;
@@ -129,13 +140,23 @@ export default function StaffOrderStatusControl({ order, onUpdated }) {
       )}
 
       {error && (
-        <p role="alert" className="staff-status-error">
+        <p
+          ref={errorRef}
+          tabIndex={-1}
+          role="alert"
+          className="staff-status-error"
+        >
           {error}
         </p>
       )}
 
       {success && (
-        <p role="status" className="staff-status-success">
+        <p
+          ref={successRef}
+          tabIndex={-1}
+          role="status"
+          className="staff-status-success"
+        >
           {success}
         </p>
       )}

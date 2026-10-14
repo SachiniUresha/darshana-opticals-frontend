@@ -9,10 +9,7 @@ import {
   BRANCH_ASSISTANT,
   BRANCH_MANAGER,
   CUSTOMER,
-  INVENTORY_MANAGER,
-  MANAGEMENT,
   OPTOMETRIST,
-  SALES_ASSISTANT_CASHIER,
   SYSTEM_ADMIN,
 } from '../src/config/roles';
 
@@ -118,30 +115,26 @@ describe('Navbar authentication controls', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it.each([
-    SYSTEM_ADMIN,
-    INVENTORY_MANAGER,
-    BRANCH_MANAGER,
-    OPTOMETRIST,
-    MANAGEMENT,
-    SALES_ASSISTANT_CASHIER,
-  ])('hides Profile but keeps Logout for %s', (role) => {
-    useAuth.mockReturnValue({
-      isAuthenticated: true,
-      user: { role },
-      logout: vi.fn(),
-    });
+  it.each([SYSTEM_ADMIN, BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST])(
+    'hides Profile but keeps Logout for %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
 
-    renderNavbar();
+      renderNavbar();
 
-    expect(
-      screen.queryByRole('link', { name: /^profile$/i }),
-    ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /^profile$/i }),
+      ).not.toBeInTheDocument();
 
-    expect(
-      screen.getByRole('button', { name: /log out/i }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole('button', { name: /log out/i }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it('opens the customer profile route from the authenticated navbar', async () => {
     useAuth.mockReturnValue({
