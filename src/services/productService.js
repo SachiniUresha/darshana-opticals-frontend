@@ -22,6 +22,7 @@ function normalizeProduct(product) {
     category: product.category,
     brand: product.brand,
     price: product.price,
+    imageUrl: product.imageUrl || null,
   };
 }
 

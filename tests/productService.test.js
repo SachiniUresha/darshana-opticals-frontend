@@ -28,6 +28,7 @@ describe('productService', () => {
           category: 'Men',
           brand: 'Oliver Peoples',
           price: 12500,
+          imageUrl: 'https://example.com/frame.webp',
         },
       ],
     });
@@ -45,6 +46,7 @@ describe('productService', () => {
         category: 'Men',
         brand: 'Oliver Peoples',
         price: 12500,
+        imageUrl: 'https://example.com/frame.webp',
       },
     ]);
   });
@@ -158,6 +160,7 @@ describe('productService', () => {
         category: 'Men',
         brand: 'Oliver Peoples',
         price: 12500,
+        imageUrl: null,
       },
     });
 
@@ -173,6 +176,7 @@ describe('productService', () => {
       category: 'Men',
       brand: 'Oliver Peoples',
       price: 12500,
+      imageUrl: null,
     });
   });
 
