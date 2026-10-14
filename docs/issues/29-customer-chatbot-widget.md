@@ -145,3 +145,29 @@ contrast, mobile input access and critical page controls.
 Each implementation step includes its relevant tests and a commit before requesting
 approval for the next. A PR, peer review, CI, merge and moving the issue to Done
 remain pending; this review does not mark the issue complete.
+
+## Step 2 implementation
+
+Added `src/services/chatbotService.js` and shared API contract constants in
+`src/config/chatbot.js`. Call `sendMessage({ message, history })` with prior
+session messages when available. The service trims the question, selects the last
+six history entries and sends only documented fields using the existing JWT client.
+
+The return value contains only `chatId`, `inquiryType`, `responseStatus` and
+`responseText`. All four canonical response statuses are preserved, including
+FAILED responses delivered with HTTP 200. Response text remains a complete plain
+string; safe DOM rendering belongs to the forthcoming widget step.
+
+Invalid input rejects with code `INVALID_CHATBOT_REQUEST`; malformed successful
+responses reject with `INVALID_CHATBOT_RESPONSE`. API errors retain the shared
+client's status/code for later auth and safe UI handling. The UI must use safe
+error mappings rather than displaying arbitrary error.message values.
+
+History entries over 500 characters are rejected rather than silently truncated.
+No provider calls, retries, history endpoint or transcript persistence were added.
+
+Validation: 84 new service/client tests passed; the full frontend suite passed
+430 tests across 38 files. New service and contract constants achieved 100%
+statement, branch, function and line coverage. Repository lint, formatting and
+production build passed. Shared-client integration tests mock transport; live
+backend/provider and browser-widget verification remain pending.
