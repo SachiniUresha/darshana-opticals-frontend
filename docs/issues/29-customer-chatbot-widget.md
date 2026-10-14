@@ -313,3 +313,90 @@ request path, pending/duplicate-send state, FAILED/manual retry, unsupported fal
 used only documented fields, screenshots were visually inspected, and no runtime
 exceptions occurred. Live backend/test-database and provider-adapter smoke testing,
 remote CI, PR review and merge remain for final validation/review.
+
+## Step 6 validation and review preparation
+
+Fetched all four origins again. Frontend develop advanced to
+`fddabda1d6b622f958db78c9a1b02b85b613a3d7` (appointment booking/history/details
+and mobile Navbar changes). Merged that develop baseline without conflicts before
+final validation. Backend, documents and infra remain at the reviewed commits above.
+No backend implementation or runtime dependencies were changed.
+
+### Automated regression checks
+
+- Frontend: **624 tests in 50 files passed** with coverage.
+- Overall frontend coverage: **94.80% lines, 86.13% branches, 91.53% functions**.
+  Chatbot components have 100% lines; chatbot service/history remain fully covered.
+- Backend: the existing chatbot API integration, service, controller and model
+  suites passed **30 tests in four suites**.
+- Frontend lint, repository formatting and production build passed after bringing
+  in the latest develop changes.
+
+The expanded regression suite includes the newly merged appointment flows and
+existing auth, profiles, products, cart, checkout, orders, prescription and Navbar
+tests. Passing these does not claim a live payment or every staff business journey.
+
+### Browser-to-backend smoke test
+
+Used isolated headless Edge, the actual Vite application and unmodified Express
+routes on loopback, with an actual temporary MongoDB instance. The harness checked
+that MongoDB was connected rather than accepting the backend test fallback.
+Used signed synthetic JWT fixtures and the ADR-approved MockChatbotAdapter;
+no production database, customer records, provider keys or live Gemini calls.
+
+Verified:
+
+- CUSTOMER JWT requests traverse the shared client, CORS, authentication,
+  authorization, validation, retrieval, provider adapter and metadata persistence.
+- Seeded knowledge produces the backend ANSWERED text; an unrelated question and
+  deactivated knowledge produce the backend UNSUPPORTED fallback.
+- A failing mock provider produces FAILED; manual retry replaces that reply and
+  preserves a single Customer question.
+- MongoDB records contain interaction metadata without message/history/reply text.
+- Outgoing request bodies contain only message and optional role/text history.
+- Six browser POST requests included the normal replies and real 401 response;
+  the CORS preflight returned 204.
+- Backend independently returns 403 for a staff JWT, 422 for blank input and 429
+  for the eleventh request from a separate synthetic Customer within one minute.
+- Real 401 uses normal application logout, removes active history and navigates
+  to login. Staff and unauthenticated home pages contain no launcher.
+- Navigation and refresh restore only the same Customer's active-tab transcript.
+- Home, products, profile, cart, checkout, orders, appointments, appointment
+  booking and prescription-history routes each contain exactly one shared
+  Navbar, Footer and launcher. Closing leaves no inert background or body lock.
+- The newly merged mobile account menu opens and closes correctly on navigation.
+- 390x844 and 320x640 layouts keep message input and close controls accessible.
+  Failure and narrow-layout screenshots were visually inspected.
+- Browser accessibility tree includes named dialog/send/minimize controls;
+  keyboard Tab remains in the modal and Escape restores the launcher/background.
+  No JavaScript runtime exceptions occurred.
+
+Temporary smoke harness and screenshots were kept outside the repositories.
+These page-shell checks do not assert successful checkout/payment transactions,
+product-detail/order-detail journeys with real data, or complete staff workflows.
+
+### Accessibility correction
+
+Changed focus outlines on light surfaces to navy (#1e3a8a) while retaining gold
+(#fbbf24) on the navy header close control. The previous gold-on-white ratio was
+1.67:1; the new navy-on-white ratio is 10.36:1 and gold-on-navy is 6.20:1.
+Verified the browser's computed focus-visible colors, including the header
+override. Existing pointer/touch dragging, keyboard positioning, focus management
+and compact-height tests remain covered by Step 4/5 evidence.
+
+Browser accessibility-tree and keyboard checks are not a manual screen-reader
+audit or a WCAG certification. Human screen-reader review, touch-keyboard testing
+on physical mobile devices and deployment smoke remain outstanding.
+
+### Review readiness and remaining work
+
+Prepared [the PR title and description](29-customer-chatbot-pr.md) for develop.
+This step does not push, open a PR, claim remote CI success, obtain peer approval,
+merge the feature or mark the issue Done.
+
+Known backend contract constraints remain visible to reviewers: the stateless
+backend does not enforce ADR-010's session-wide 20-message limit, and assistant
+output can exceed the 500-character history-entry limit. The frontend reserves
+reply space and offers explicit omission of optional earlier context for long
+replies; these do not implement missing backend security decisions.
+Live Gemini/provider and deployed-environment checks remain unperformed.

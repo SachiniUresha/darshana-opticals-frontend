@@ -20,8 +20,11 @@
 }
 .chatbot-host button:focus-visible,
 .chatbot-host textarea:focus-visible {
-  outline: 3px solid #fbbf24;
+  outline: 3px solid var(--chatbot-navy);
   outline-offset: 3px;
+}
+.chatbot-host button.chatbot-header-close:focus-visible {
+  outline-color: #fbbf24;
 }
 .chatbot-launcher {
   position: fixed;

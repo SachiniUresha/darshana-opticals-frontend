@@ -4,6 +4,8 @@
 
 ### Added
 
+- DDP-061 / #29: Completed integration smoke and latest-develop regression review, improved chatbot focus contrast, and prepared the PR review notes.
+
 - DDP-061 / #29: Connected chatbot sending, loading, canonical replies, safe errors, manual retry, auth-expiry handling, guarded history persistence, and long-context opt-out, with integration tests.
 
 - DDP-061 / #29: Added the Customer-only Assistant panel and draggable launcher to the shared shell, with screenshot-based styling, keyboard/modal accessibility, responsive positioning, and UI tests.
