@@ -7,8 +7,10 @@ import NotFoundPage from '../pages/NotFoundPage';
 import ProductsPage from '../pages/ProductsPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
 import ProfilePage from '../pages/ProfilePage';
+import PrescriptionHistoryPage from '../pages/PrescriptionHistoryPage';
 import ProtectedRoute from './ProtectedRoute';
-import { CUSTOMER } from '../config/roles';
+import { CUSTOMER, OPTOMETRIST } from '../config/roles';
+import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import CartPage from '../pages/CartPage';
 import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 
@@ -25,8 +27,19 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route
+            path="/profile/prescriptions"
+            element={<PrescriptionHistoryPage />}
+          />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutEntryPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>
+          <Route
+            path="/clinical/prescriptions/new"
+            element={<OptometristPrescriptionPage />}
+          />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

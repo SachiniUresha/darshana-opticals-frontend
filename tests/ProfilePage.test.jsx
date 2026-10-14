@@ -264,4 +264,14 @@ describe('ProfilePage', () => {
     );
     expect(screen.queryByText(/MongoServerError/i)).not.toBeInTheDocument();
   });
+
+  it('provides access to prescription history from the profile sidebar', async () => {
+    renderProfilePage();
+
+    const historyLink = await screen.findByRole('link', {
+      name: 'Prescription History',
+    });
+
+    expect(historyLink).toHaveAttribute('href', '/profile/prescriptions');
+  });
 });
