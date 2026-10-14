@@ -16,15 +16,21 @@ function Navbar() {
   const { cartCount } = useCart();
 
   const currentParams = new URLSearchParams(location.search);
+
   const currentSearch = location.pathname.startsWith('/products')
     ? currentParams.get('q') || ''
     : '';
 
   const [query, setQuery] = useState(currentSearch);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   useEffect(() => {
     setQuery(currentSearch);
   }, [currentSearch]);
+
+  useEffect(() => {
+    setIsAccountMenuOpen(false);
+  }, [location.pathname, location.search]);
 
   const handleSearch = (value) => {
     const next = new URLSearchParams(
@@ -46,8 +52,13 @@ function Navbar() {
   };
 
   function handleLogout() {
+    setIsAccountMenuOpen(false);
     logout();
     navigate('/login', { replace: true });
+  }
+
+  function toggleAccountMenu() {
+    setIsAccountMenuOpen((current) => !current);
   }
 
   return (
@@ -71,6 +82,17 @@ function Navbar() {
           </span>
         </Link>
 
+        <button
+          type="button"
+          className="navbar__menu-button"
+          aria-label="Toggle account menu"
+          aria-expanded={isAccountMenuOpen}
+          aria-controls="navbar-account-menu"
+          onClick={toggleAccountMenu}
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+
         <ul className="navbar__categories">
           {categoryLinks.map((category) => (
             <li key={category}>
@@ -93,7 +115,15 @@ function Navbar() {
           />
         </div>
 
-        <ul className="navbar__account-links">
+        <ul
+          id="navbar-account-menu"
+          className={[
+            'navbar__account-links',
+            isAccountMenuOpen ? 'navbar__account-links--open' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {isAuthenticated ? (
             <>
               {user?.role === CUSTOMER ? (
@@ -113,10 +143,15 @@ function Navbar() {
                   </li>
 
                   <li>
+                    <Link to="/appointments">Appointments</Link>
+                  </li>
+
+                  <li>
                     <Link to="/profile">Profile</Link>
                   </li>
                 </>
               ) : null}
+
               {user?.role === OPTOMETRIST ? (
                 <li>
                   <Link to="/clinical/prescriptions/new">
@@ -124,6 +159,7 @@ function Navbar() {
                   </Link>
                 </li>
               ) : null}
+
               <li>
                 <button
                   type="button"
