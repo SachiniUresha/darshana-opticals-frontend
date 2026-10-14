@@ -419,6 +419,86 @@ describe('AppointmentBookingPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('handles the backend 24-hour booking-window rejection and allows reselection', async () => {
+    const user = userEvent.setup();
+
+    getAvailableDoctorSessions
+      .mockResolvedValueOnce(sessions)
+      .mockResolvedValueOnce([]);
+
+    createAppointment.mockRejectedValueOnce({
+      status: 409,
+      code: 'BOOKING_WINDOW',
+    });
+
+    renderPage();
+
+    await selectSessionAndContinue(user);
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /confirm booking/i,
+      }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/24 hours/i);
+
+    expect(getAvailableDoctorSessions).toHaveBeenCalledTimes(2);
+
+    expect(
+      screen.getByRole('heading', {
+        name: /pick a date & time/i,
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Appointment Booked!',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('refreshes availability when the selected provider is no longer valid', async () => {
+    const user = userEvent.setup();
+
+    getAvailableDoctorSessions
+      .mockResolvedValueOnce(sessions)
+      .mockResolvedValueOnce([]);
+
+    createAppointment.mockRejectedValueOnce({
+      status: 409,
+      code: 'PROVIDER_CHANGED',
+    });
+
+    renderPage();
+
+    await selectSessionAndContinue(user);
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /confirm booking/i,
+      }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /doctor is no longer available/i,
+    );
+
+    expect(getAvailableDoctorSessions).toHaveBeenCalledTimes(2);
+
+    expect(
+      screen.getByRole('heading', {
+        name: /pick a date & time/i,
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Appointment Booked!',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it('uses the existing authentication flow when appointment APIs return 401', async () => {
     getAppointmentProviders.mockRejectedValueOnce({
       status: 401,
