@@ -1,0 +1,435 @@
+# Customer chatbot integration review (frontend #29 / DDP-061)
+
+Review date: 2026-10-14 (Asia/Colombo).
+
+## Scope and approved workflow
+
+Implement the Customer chatbot through the existing shared application shell.
+The user approved branch `feature/29-customer-chatbot-widget`, using GitHub
+issue #29 rather than the DDP-061 number in the branch name. Each step requires
+user approval before work and a commit before the next step starts.
+
+Step 1 is documentation and branch preparation only.
+
+## Repository baseline
+
+All four origins were fetched on the review date. Each local develop HEAD matched
+its fetched origin/develop, and all four worktrees were clean before branch creation.
+
+| Repository | Reviewed develop commit                    |
+| ---------- | ------------------------------------------ |
+| frontend   | `c376d4d84163b1f71af023a30e49e9e0d7dc2145` |
+| backend    | `954861c2c005781a8999b38edeccc41f750466be` |
+| documents  | `20d126c6d3e09c84dbd087b983f38e3f748be704` |
+| infra      | `12c707f1dbee5ae96e693dd98eec3a66f6fc3dcb` |
+
+Sources inspected: frontend and backend `.standards/STANDARDS.md`, documents
+`standards/coding-standards.md`, Accepted ADR-010 and ADR-002, clinical privacy
+requirements in ADR-001, SRS FR-011 text, relevant SDS chatbot references and
+accessibility/security text, frontend auth/client/layout/routes and CI configuration,
+and backend chatbot routes, validation, controller, service, constants and tests.
+
+GitHub dependencies documents#20, documents#6, backend#55, frontend#4 and frontend#9
+are closed. Backend#55 is marked completed. This confirms dependency issue state,
+not a live deployment or provider smoke test.
+
+Standards require focused modules, shared services, safe errors, Conventional
+Commits, meaningful tests with at least 80% coverage of new code, lint/format checks,
+a PR against develop, and peer approval before merge.
+
+## Authoritative API contract
+
+Use the existing `src/services/apiClient.js` with authentication enabled.
+With the existing API base URL ending in `/api`, submit to `/v1/chatbot/query`.
+The backend also exposes an alias, but Swagger documents the versioned route.
+
+Request fields:
+
+- `message`: non-empty string, at most 500 characters.
+- `history`: optional array of at most 6 entries, each containing only
+  `role` (`user` or `assistant`) and `text` (string, at most 500 characters).
+
+Never submit customer identity, inquiry classification, response status, provider
+configuration, system instructions, profile, clinical records or payment data.
+
+The HTTP 200 envelope is `{ status: 'success', data: { chatId, inquiryType,
+responseStatus, responseText } }`. HTTP success alone does not mean the provider
+answered: inspect the returned canonical response status.
+
+| Response status              | UI responsibility                                               |
+| ---------------------------- | --------------------------------------------------------------- |
+| `ANSWERED`                   | Render the backend answer as plain text.                        |
+| `UNSUPPORTED`                | Render the backend unsupported/missing-knowledge fallback.      |
+| `FAILED`                     | Render the backend failure fallback with a clear failure state. |
+| `ESCALATED_CONTACT_PROVIDED` | Render the backend contact/escalation response.                 |
+
+Inquiry types are backend-owned: STORE_INFO, SERVICES, PRODUCT_CATALOG,
+ORDER_STATUS_GUIDANCE, POLICY_WARRANTY, GENERAL_INQUIRY and UNSUPPORTED_OTHER.
+
+Documented HTTP errors: 422 validation, 401 authentication, 403 authorization and
+429 rate limiting. The backend chatbot limit is 10 requests/minute per Customer;
+the shared general API limiter also applies. Provider failures currently become
+HTTP 200 responses with FAILED. Network, unexpected HTTP and malformed-response
+failures need safe frontend messages without raw error payloads.
+
+## Authentication, privacy and conversation lifecycle
+
+Only authenticated CUSTOMER users receive the widget. Reuse `useAuth` and
+existing role constants. Backend JWT/RBAC remains the security boundary.
+
+Reuse the existing 401 pattern: call shared logout and navigate to `/login` with
+replace. Stop sends after 403. Prevent duplicate pending sends and discard late
+responses after logout, identity changes or unmount.
+
+ADR-010 explicitly approves active-tab `sessionStorage` history and requires
+purging `osms_chat_history` on logout. Preserve state on minimize, navigation and
+refresh within the same authenticated session. Scope stored state to its owner;
+clear on identity/session changes and handle unavailable or malformed storage.
+No server history endpoint exists and no historical conversation retrieval is
+approved. Persist only the safe UI transcript, never provider payloads or secrets.
+
+Display text safely without HTML injection, Markdown execution or automatic links.
+Keep provider access, retrieval, classification and prompt construction on the backend.
+Do not add voice, uploads, provider selection, knowledge administration or OSMS actions.
+
+## Design and accessibility
+
+Requested references:
+
+- [Assistant panel, node 187:1550](https://www.figma.com/design/OecN23wEqdSIWsY4xjWwUQ/Darshana-Opticals?node-id=187-1550)
+- [Blue launcher, node 187:4](https://www.figma.com/design/OecN23wEqdSIWsY4xjWwUQ/Darshana-Opticals?node-id=187-4)
+
+Initial design-context requests failed because the connected Figma Starter plan
+reached its MCP call limit. The user subsequently supplied Assistant-panel and
+blue-launcher screenshots after being offered the screenshot-reference workflow.
+Step 4 uses these approved visual references and existing app typography/icons.
+Original Figma node metadata and asset matching remain unverified.
+
+The user also requires a draggable launcher on Customer pages. Separate dragging
+from activation, support pointer/touch interaction and keyboard positioning, and
+keep launcher/panel within the viewport after movement, resizing and mobile keyboard
+changes. Integrate once through AppLayout without duplicating pages or shells.
+
+SDS section 5.3 describes trapping focus in the open chat panel and returning it to
+the launcher on close; ADR-010 also references modal focus behaviour. Use proper
+dialog semantics and background interaction handling for that approved pattern,
+accessible open/close/send controls, Escape, visible focus, sender labels and polite
+announcements. Do not steal focus on every response. Verify wrapping, scrolling,
+contrast, mobile input access and critical page controls.
+
+## Contract details to resolve during integration
+
+- ADR-010 specifies a maximum of 20 messages per session. The current stateless
+  API does not enforce a session-wide count or define a session-reset operation.
+  UI retention is not a replacement for authoritative backend enforcement.
+  Backend follow-up: [backend #77](https://github.com/darshana-opticals-osms/backend/issues/77).
+- Assistant output is not capped to 500 characters, but every history text entry is.
+  Keep complete responses readable in the UI; do not blindly resend oversized
+  responses or silently invent a truncation/summarization policy.
+- The ADR permits one backend retry for transient provider errors. It does not
+  authorize automatic browser retries. Its failure fallback invites trying again
+  later; a manual retry may target a failed interaction without duplicating its
+  Customer bubble. Never retry answered/unsupported interactions automatically.
+- Original Figma node metadata remains unavailable due to the tool quota. The user
+  supplied screenshots for the visual step; verification uses those references.
+
+## Proposed separately approved implementation steps
+
+1. Branch and integration review (this commit).
+2. Centralized chatbot service, documented request/response mapping and service tests.
+3. Owner-scoped session history and shared logout cleanup, with lifecycle tests.
+4. Figma-based launcher/panel, dragging, accessibility and AppLayout integration.
+5. Connect message flow, canonical statuses and safe errors; add integration,
+   duplicate-send, stale-response and malicious-text tests.
+6. Run regression tests, coverage, lint, formatting and build; verify responsive
+   browser behaviour and backend smoke flows, update changelog and prepare PR.
+
+Each implementation step includes its relevant tests and a commit before requesting
+approval for the next. A PR, peer review, CI, merge and moving the issue to Done
+remain pending; this review does not mark the issue complete.
+
+## Step 2 implementation
+
+Added `src/services/chatbotService.js` and shared API contract constants in
+`src/config/chatbot.js`. Call `sendMessage({ message, history })` with prior
+session messages when available. The service trims the question, selects the last
+six history entries and sends only documented fields using the existing JWT client.
+
+The return value contains only `chatId`, `inquiryType`, `responseStatus` and
+`responseText`. All four canonical response statuses are preserved, including
+FAILED responses delivered with HTTP 200. Response text remains a complete plain
+string; safe DOM rendering belongs to the forthcoming widget step.
+
+Invalid input rejects with code `INVALID_CHATBOT_REQUEST`; malformed successful
+responses reject with `INVALID_CHATBOT_RESPONSE`. API errors retain the shared
+client's status/code for later auth and safe UI handling. The UI must use safe
+error mappings rather than displaying arbitrary error.message values.
+
+History entries over 500 characters are rejected rather than silently truncated.
+No provider calls, retries, history endpoint or transcript persistence were added.
+
+Validation: 84 new service/client tests passed; the full frontend suite passed
+430 tests across 38 files. New service and contract constants achieved 100%
+statement, branch, function and line coverage. Repository lint, formatting and
+production build passed. Shared-client integration tests mock transport; live
+backend/provider and browser-widget verification remain pending.
+
+## Step 3 implementation
+
+Added `src/services/chatHistoryStorage.js` and connected cleanup to the existing
+shared authentication service. Successful login starts a fresh chat session; logout
+purges chat history before clearing authentication. A failed login leaves the
+current authenticated conversation intact.
+
+The storage API provides `createChatHistorySession()`, `loadChatHistory(session)`,
+`saveChatHistory(session, messages)` and `clearChatHistory()`. Capture the history
+session before async work and retain that handle for writes. Owner/version checks
+reject writes after logout, role/account changes and same-Customer re-login.
+These are frontend lifecycle guards; backend authentication remains authoritative.
+
+The active-tab `osms_chat_history` envelope contains schema version, Customer ID
+and safe messages only. User messages contain `id`, `role` and `text`.
+Assistant messages additionally retain `chatId`, `inquiryType` and
+`responseStatus` so restored fallbacks keep their backend status. Extra fields are
+discarded. Complete assistant responses, including text longer than 500 characters,
+remain intact; the API-context length mismatch documented above remains unresolved.
+
+Transcript validation follows the ADR's 20-message session bound and 500-character
+Customer message bound. Oversized or malformed transcripts are rejected rather
+than trimmed. This frontend storage bound does not enforce the missing backend
+session-wide request limit.
+
+Foreign, malformed or incompatible stored transcripts are discarded. Storage read
+failures restore no messages. Failed writes return false so the future widget can
+retain its in-memory state; quota/storage errors do not crash login or logout.
+Cleanup touches only the chatbot key. If removal is blocked, restoration is
+suppressed in the current module lifetime and pending writers are invalidated;
+the browser's denied storage operation cannot guarantee physical deletion.
+
+The storage layer restores within the same authenticated tab after module reload
+and reopen. Widget mounting, in-memory state and visible refresh/minimize behaviour
+will be wired and verified in the forthcoming UI steps. No server history endpoint,
+new authentication context, permanent localStorage transcript or provider calls
+were added.
+
+Validation: 54 new storage/auth lifecycle tests passed. The full frontend suite
+passed 484 tests across 40 files; the history storage module achieved 100%
+statement, branch, function and line coverage. Lint, repository formatting and
+production build passed.
+
+## Step 4 implementation
+
+After Figma quota errors, the user supplied Assistant-panel and blue-launcher
+screenshots in response to the offered screenshot-reference workflow. This step
+implements those supplied references; original Figma typography/vector metadata
+was not available. Existing app typography/tokens and the shared EyeIcon are reused.
+
+Added the Customer-only chatbot once in AppLayout using the existing useAuth hook.
+The panel includes the navy header, greeting, suggested-question rows, sender-labelled
+grey/blue bubbles, plain-text history, composer and accessible close controls.
+The header identifies the store without claiming verified AI-provider availability.
+Quick questions fill ordinary input; they do not execute OSMS actions.
+
+The launcher has the blue message icon and yellow dot. Mouse/touch pointer dragging
+and Alt+arrow-key movement are bounded to the visible viewport. A drag does not
+accidentally activate the widget. Minimized position, draft and loaded transcript
+remain intact across close/reopen. The open panel/close bubble align within the
+visible viewport; on very short keyboard-height viewports only the header close
+control remains visible so the composer stays accessible.
+
+SDS-approved modal behaviour uses dialog semantics, background inert/aria-hidden
+handling, focus containment, Escape and focus return, restoring previous page
+attributes and scroll state after closing/unmounting. Messages use a polite log,
+sender labels, complete plain strings and readable canonical fallback labels.
+Long text wraps, and scrolling respects a customer reading older messages.
+
+This commit completes the visual shell only. ChatbotPanel exposes a send callback
+for Step 5; the AppLayout widget does not yet connect it, and Send remains disabled
+without that handler. No invented answers or backend/provider calls were added.
+Actual send, pending-request persistence, error/retry/auth flows remain in Step 5.
+
+Validation: 43 new UI/position tests passed. The full frontend suite passed 527
+tests across 43 files. New chatbot components/position utilities achieved 100%
+coverage; dialog/drag hooks exceeded 95% line and branch coverage. Lint, repository
+formatting and production build passed.
+
+An isolated headless Edge smoke review with fictional auth/history and mocked
+unrelated API traffic verified native mouse/touch dragging, modal focus/Escape,
+Customer/staff visibility, desktop 1024x768, mobile 390x844, narrow 320x640 and
+compact 390x280 layouts. Input and close controls stayed in view, suggested chips
+did not overflow, screenshots were visually inspected, and no runtime exceptions
+were observed. This is not a live chatbot/backend/provider end-to-end test.
+
+## Step 5 implementation
+
+Connected the AppLayout widget to the existing authenticated chatbot service through
+`useChatConversation`. Valid questions render once, show processing and display
+the exact normalized backend reply/status. A synchronous request lock prevents
+duplicate sends before React updates. The composer stays focused/read-only during
+processing, and loading uses its own live region rather than nested announcements
+inside the conversation log.
+
+Manual retry is available for a backend FAILED reply, network failure and transient
+502/503/504 transport errors. It reuses the captured question/context, replacing
+the failed assistant bubble rather than duplicating the Customer question.
+Already answered/unsupported interactions are not retried. Unsent new drafts are
+preserved when retrying an older question. Restored FAILED or unanswered interactions
+offer an explicit retry; refresh never automatically resubmits them.
+
+Backend 401 uses shared logout and login navigation. Backend 403 stops sends while
+keeping close controls usable. Validation, rate-limit, malformed-response and
+unexpected HTTP errors use safe local messages without raw payloads or automatic
+retry loops. Provider fallbacks remain backend-authored plain text.
+
+Pending results are ignored after unmount, logout, identity/session changes and
+same-Customer re-login. An older 401 cannot log out a newer signed-in Customer.
+Shared-auth storage loss clears the active transcript and stops chat requests.
+Messages persist via the scoped sessionStorage layer; quota failures retain the
+in-memory conversation and visibly explain refresh limitations.
+
+The 20-message UI bound reserves room for both question and reply. Retry replaces
+an existing reply or requires a free reply slot, preventing partial over-budget
+transcripts. This does not implement the missing authoritative backend session limit.
+
+The long-output/history-contract mismatch is handled without truncating replies.
+When earlier context cannot fit the documented history schema, the Customer must
+explicitly choose to send the next question without earlier conversation. Only then
+is the documented optional history field omitted. This choice is not a hidden
+summarization or a new backend capability. A retry in the continuing tab retains
+the original optional-history choice; after restoration, context is reconstructed
+from safe local messages and revalidated. All request bodies contain only message
+and, where selected, bounded role/text history.
+
+Added resize observation to keep latest content visible when the panel changes
+height, while respecting a Customer who is reading older messages.
+
+Validation: 40 new real-shared-client/auth conversation tests and one resize test
+passed; the full frontend suite passed 568 tests across 44 files. Conversation
+controller coverage is 97.35% lines and 94.01% branches, with all functions covered.
+Lint, repository formatting and production build passed.
+
+Isolated headless Edge tests with a mock API gateway exercised the actual browser
+request path, pending/duplicate-send state, FAILED/manual retry, unsupported fallback,
+429 messaging, 401/logout purge and compact error-state controls. Six chatbot requests
+used only documented fields, screenshots were visually inspected, and no runtime
+exceptions occurred. Live backend/test-database and provider-adapter smoke testing,
+remote CI, PR review and merge remain for final validation/review.
+
+## Step 6 validation and review preparation
+
+Fetched all four origins again. Frontend develop advanced to
+`fddabda1d6b622f958db78c9a1b02b85b613a3d7` (appointment booking/history/details
+and mobile Navbar changes). Merged that develop baseline without conflicts before
+final validation. Backend, documents and infra remain at the reviewed commits above.
+No backend implementation or runtime dependencies were changed.
+
+### Automated regression checks
+
+- Frontend: **624 tests in 50 files passed** with coverage.
+- Overall frontend coverage: **94.80% lines, 86.13% branches, 91.53% functions**.
+  Chatbot components have 100% lines; chatbot service/history remain fully covered.
+- Backend: the existing chatbot API integration, service, controller and model
+  suites passed **30 tests in four suites**.
+- Frontend lint, repository formatting and production build passed after bringing
+  in the latest develop changes.
+
+The expanded regression suite includes the newly merged appointment flows and
+existing auth, profiles, products, cart, checkout, orders, prescription and Navbar
+tests. Passing these does not claim a live payment or every staff business journey.
+
+### Browser-to-backend smoke test
+
+Used isolated headless Edge, the actual Vite application and unmodified Express
+routes on loopback, with an actual temporary MongoDB instance. The harness checked
+that MongoDB was connected rather than accepting the backend test fallback.
+Used signed synthetic JWT fixtures and the ADR-approved MockChatbotAdapter;
+no production database, customer records, provider keys or live Gemini calls.
+
+Verified:
+
+- CUSTOMER JWT requests traverse the shared client, CORS, authentication,
+  authorization, validation, retrieval, provider adapter and metadata persistence.
+- Seeded knowledge produces the backend ANSWERED text; an unrelated question and
+  deactivated knowledge produce the backend UNSUPPORTED fallback.
+- A failing mock provider produces FAILED; manual retry replaces that reply and
+  preserves a single Customer question.
+- MongoDB records contain interaction metadata without message/history/reply text.
+- Outgoing request bodies contain only message and optional role/text history.
+- Six browser POST requests included the normal replies and real 401 response;
+  the CORS preflight returned 204.
+- Backend independently returns 403 for a staff JWT, 422 for blank input and 429
+  for the eleventh request from a separate synthetic Customer within one minute.
+- Real 401 uses normal application logout, removes active history and navigates
+  to login. Staff and unauthenticated home pages contain no launcher.
+- Navigation and refresh restore only the same Customer's active-tab transcript.
+- Home, products, profile, cart, checkout, orders, appointments, appointment
+  booking and prescription-history routes each contain exactly one shared
+  Navbar, Footer and launcher. Closing leaves no inert background or body lock.
+- The newly merged mobile account menu opens and closes correctly on navigation.
+- 390x844 and 320x640 layouts keep message input and close controls accessible.
+  Failure and narrow-layout screenshots were visually inspected.
+- Browser accessibility tree includes named dialog/send/minimize controls;
+  keyboard Tab remains in the modal and Escape restores the launcher/background.
+  No JavaScript runtime exceptions occurred.
+
+Temporary smoke harness and screenshots were kept outside the repositories.
+These page-shell checks do not assert successful checkout/payment transactions,
+product-detail/order-detail journeys with real data, or complete staff workflows.
+
+### Accessibility correction
+
+Changed focus outlines on light surfaces to navy (#1e3a8a) while retaining gold
+(#fbbf24) on the navy header close control. The previous gold-on-white ratio was
+1.67:1; the new navy-on-white ratio is 10.36:1 and gold-on-navy is 6.20:1.
+Verified the browser's computed focus-visible colors, including the header
+override. Existing pointer/touch dragging, keyboard positioning, focus management
+and compact-height tests remain covered by Step 4/5 evidence.
+
+Browser accessibility-tree and keyboard checks are not a manual screen-reader
+audit or a WCAG certification. Human screen-reader review, touch-keyboard testing
+on physical mobile devices and deployment smoke remain outstanding.
+
+### Review readiness and remaining work
+
+Prepared [the PR title and description](29-customer-chatbot-pr.md) for develop.
+This step does not push, open a PR, claim remote CI success, obtain peer approval,
+merge the feature or mark the issue Done.
+
+Known backend contract constraints remain visible to reviewers: the stateless
+backend does not enforce ADR-010's session-wide 20-message limit, and assistant
+output can exceed the 500-character history-entry limit. The frontend reserves
+reply space and offers explicit omission of optional earlier context for long
+replies; these do not implement missing backend security decisions.
+Live Gemini/provider and deployed-environment checks remain unperformed.
+
+## PR #50 review follow-up (2026-10-15)
+
+Addressed the three requested review points in
+[PR #50](https://github.com/darshana-opticals-osms/frontend/pull/50):
+
+1. Merged frontend develop `16a3f53b7c31e7d910b1a916dc1d3dd384d08af5`
+   (three incoming commits for staff order tracking/status management).
+   The merge had no conflicts; the incoming Navbar, routes and order-service
+   changes were retained. Backend, documents and infra develop baselines remain
+   unchanged from the previous review.
+2. Corrected the PR draft's integration-review link to
+   `./29-customer-chatbot-widget.md` and verified its target exists relative to
+   the containing document.
+3. Searched backend chatbot/session issues and created the separate
+   [backend #77](https://github.com/darshana-opticals-osms/backend/issues/77)
+   follow-up for authoritative session-limit enforcement. It records the approved
+   architecture constraints, required lifecycle/counting clarification, ownership,
+   concurrency, bypass protection, privacy, tests and Swagger requirements.
+   Linked the tracker from both frontend review documents. This frontend change
+   does not claim the backend limit has been implemented.
+
+Validation after develop integration: **666 tests across 53 files passed** with
+**94.89% line coverage** (86.00% branches, 91.26% functions).
+Lint, repository formatting, production build and diff checks passed.
+This rerun includes the new staff-order/status, route and Navbar regression tests,
+alongside the existing Customer/chatbot tests. No chatbot runtime changes or new
+dependencies were required.
+
+Remote CI must be verified on the published review-fix commit separately; local
+results alone do not establish a successful GitHub Actions run. The earlier live
+provider, physical-device and human screen-reader limitations still apply.

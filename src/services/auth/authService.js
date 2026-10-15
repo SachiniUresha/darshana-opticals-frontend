@@ -1,5 +1,6 @@
-﻿import apiClient from '../apiClient';
+import apiClient from '../apiClient';
 import authStorage from './authStorage';
+import { clearChatHistory } from '../chatHistoryStorage';
 
 async function register({ firstName, lastName, email, phone, password }) {
   const name = `${firstName.trim()} ${lastName.trim()}`.trim();
@@ -34,12 +35,14 @@ async function login({ email, password }) {
 
   const { token, user } = response.data;
 
+  clearChatHistory();
   authStorage.saveAuth(token, user);
 
   return user;
 }
 
 function logout() {
+  clearChatHistory();
   authStorage.clearAuth();
 }
 

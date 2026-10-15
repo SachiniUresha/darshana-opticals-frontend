@@ -10,14 +10,16 @@ import ProfilePage from '../pages/ProfilePage';
 import PrescriptionHistoryPage from '../pages/PrescriptionHistoryPage';
 import ProtectedRoute from './ProtectedRoute';
 import {
-  BRANCH_ASSISTANT,
-  BRANCH_MANAGER,
   CUSTOMER,
   OPTOMETRIST,
+  BRANCH_ASSISTANT,
+  BRANCH_MANAGER,
 } from '../config/roles';
 import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailsPage from '../pages/OrderDetailsPage';
+import StaffOrdersPage from '../pages/StaffOrdersPage';
+import StaffOrderDetailsPage from '../pages/StaffOrderDetailsPage';
 import CartPage from '../pages/CartPage';
 import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 import AppointmentBookingPage from '../pages/AppointmentBookingPage';
@@ -80,6 +82,9 @@ function AppRoutes() {
             <ProtectedRoute allowedRoles={[BRANCH_ASSISTANT, BRANCH_MANAGER]} />
           }
         >
+          <Route path="/staff/orders" element={<StaffOrdersPage />} />
+          <Route path="/staff/orders/:id" element={<StaffOrderDetailsPage />} />
+
           <Route
             path="/staff/appointments"
             element={<StaffAppointmentsPage />}

@@ -15,3 +15,20 @@ export async function getOrder(id) {
     throw new Error('Invalid order response');
   return result.data;
 }
+
+export async function updateOrderStatus(id, status) {
+  const result = await apiClient.patch(
+    `/orders/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  if (
+    !result?.data ||
+    typeof result.data !== 'object' ||
+    Array.isArray(result.data)
+  ) {
+    throw new Error('Invalid order status update response');
+  }
+
+  return result.data;
+}

@@ -1,0 +1,45 @@
+.staff-status-control h3 {
+  margin-bottom: 0.75rem;
+}
+
+.staff-status-control form {
+  margin-top: 1rem;
+}
+
+.staff-status-control label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.staff-status-control__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.staff-status-control select {
+  min-width: 200px;
+  max-width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.5rem;
+  background: #fff;
+  font: inherit;
+}
+
+.staff-status-control select:focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: 2px;
+}
+
+.staff-status-error {
+  color: #b42318;
+  margin-top: 1rem;
+}
+
+.staff-status-success {
+  color: #067647;
+  margin-top: 1rem;
+}

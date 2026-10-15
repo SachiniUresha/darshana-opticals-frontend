@@ -3,10 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
 import {
-  BRANCH_ASSISTANT,
-  BRANCH_MANAGER,
   CUSTOMER,
   OPTOMETRIST,
+  BRANCH_ASSISTANT,
+  BRANCH_MANAGER,
 } from '../../config/roles';
 import SearchBar from '../products/SearchBar';
 import './Navbar.css';
@@ -160,12 +160,6 @@ function Navbar() {
                 </>
               ) : null}
 
-              {canViewStaffAppointments ? (
-                <li>
-                  <Link to="/staff/appointments">Appointments</Link>
-                </li>
-              ) : null}
-
               {user?.role === OPTOMETRIST ? (
                 <li>
                   <Link to="/clinical/prescriptions/new">
@@ -173,6 +167,28 @@ function Navbar() {
                   </Link>
                 </li>
               ) : null}
+
+              {(user?.role === BRANCH_ASSISTANT ||
+                user?.role === BRANCH_MANAGER) && (
+                <li>
+                  <Link to="/staff/orders">Staff Orders</Link>
+                </li>
+              )}
+
+              {canViewStaffAppointments ? (
+                <li>
+                  <Link to="/staff/appointments">Appointments</Link>
+                </li>
+              ) : null}
+
+              {(user?.role === BRANCH_MANAGER ||
+                user?.role === BRANCH_ASSISTANT) && (
+                <li className="navbar__staff-role">
+                  {user.role === BRANCH_MANAGER
+                    ? 'Branch Manager'
+                    : 'Branch Assistant'}
+                </li>
+              )}
 
               <li>
                 <button

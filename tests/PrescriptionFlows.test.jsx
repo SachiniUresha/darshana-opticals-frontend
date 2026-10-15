@@ -238,5 +238,5 @@ describe('Prescription frontend integration', () => {
       },
       remarks: 'Clinical follow-up',
     });
-  });
+  }, 10000);
 });

@@ -125,6 +125,25 @@
   border-radius: 6px;
 }
 
+.navbar__staff-role {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  color: #173d92;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .navbar__account-links {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
 .navbar__cart-link {
   display: inline-flex;
   align-items: center;
