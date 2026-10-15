@@ -11,6 +11,37 @@ const responseData = {
 };
 
 describe('chatbot service with the shared API client', () => {
+  it.each([
+    ['12', 12],
+    ['0', 0],
+    [' 60 ', 60],
+    [null, undefined],
+    ['', undefined],
+    ['-1', undefined],
+    ['1.5', undefined],
+    ['tomorrow', undefined],
+    ['Infinity', undefined],
+    ['99999999999999999999', undefined],
+    ['2147484', undefined],
+  ])('safely preserves Retry-After %s seconds', async (header, expected) => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers(header === null ? {} : { 'Retry-After': header }),
+      json: async () => ({
+        error: { code: 'CHATBOT_SESSION_EXHAUSTED', message: 'Limit reached.' },
+      }),
+    });
+    try {
+      await sendMessage({ message: 'Question' });
+      throw new Error('Expected rejection');
+    } catch (error) {
+      expect(error.status).toBe(429);
+      expect(error.code).toBe('CHATBOT_SESSION_EXHAUSTED');
+      expect(error.retryAfterSeconds).toBe(expected);
+    }
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();

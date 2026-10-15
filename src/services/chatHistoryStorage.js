@@ -2,7 +2,7 @@ import authStorage from './auth/authStorage';
 import { CUSTOMER } from '../config/roles';
 import {
   CHATBOT_MAX_MESSAGE_LENGTH,
-  CHATBOT_MAX_SESSION_MESSAGES,
+  CHATBOT_MAX_TRANSCRIPT_MESSAGES,
   CHATBOT_INQUIRY_TYPES,
   CHATBOT_RESPONSE_STATUSES,
 } from '../config/chatbot';
@@ -48,7 +48,7 @@ export function isChatHistorySessionActive(session) {
 function normalizeMessages(messages) {
   if (
     !Array.isArray(messages) ||
-    messages.length > CHATBOT_MAX_SESSION_MESSAGES
+    messages.length > CHATBOT_MAX_TRANSCRIPT_MESSAGES
   ) {
     return null;
   }

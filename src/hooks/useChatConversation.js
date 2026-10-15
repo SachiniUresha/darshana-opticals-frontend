@@ -12,8 +12,7 @@ import {
 import {
   CHATBOT_MAX_CONTEXT_MESSAGES,
   CHATBOT_MAX_MESSAGE_LENGTH,
-  CHATBOT_MAX_SESSION_MESSAGES,
-  CHATBOT_SESSION_LIMIT_NOTICE,
+  CHATBOT_MAX_TRANSCRIPT_MESSAGES,
   CHATBOT_RESPONSE_STATUSES,
 } from '../config/chatbot';
 
@@ -61,6 +60,10 @@ function restoreSession(customerId) {
 }
 
 function safeRequestError(error) {
+  if (error?.status === 429 && error?.code === 'CHATBOT_SESSION_EXHAUSTED')
+    return 'Your shared 30-minute chatbot session has reached its message limit. Please try again later. Refreshing or clearing this conversation does not reset it.';
+  if (error?.code === 'CHATBOT_USAGE_UNAVAILABLE')
+    return 'The assistant is temporarily unavailable. Please try again later.';
   if (error?.status === 403)
     return 'Your account does not have access to the assistant.';
   if (error?.status === 429)
@@ -103,6 +106,23 @@ export default function useChatConversation() {
   );
   const [storageNotice, setStorageNotice] = useState('');
   const [standalone, setStandalone] = useState(false);
+  const [cooldown, setCooldown] = useState(null);
+  const [availabilityNotice, setAvailabilityNotice] = useState('');
+
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = window.setTimeout(
+      () => {
+        setCooldown(null);
+        setError('');
+        setAvailabilityNotice(
+          'You can try sending again. The assistant will check availability when you send.',
+        );
+      },
+      Math.max(0, cooldown.until - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
 
   useEffect(() => {
     mounted.current = true;
@@ -116,6 +136,8 @@ export default function useChatConversation() {
       setDraft('');
       setIsSending(false);
       setBlocked(true);
+      setCooldown(null);
+      setAvailabilityNotice('');
       setError(
         'Your sign-in session has changed. Reload this page to continue.',
       );
@@ -142,13 +164,18 @@ export default function useChatConversation() {
     setError('');
     setStorageNotice('');
     setStandalone(false);
+    setCooldown(null);
+    setAvailabilityNotice('');
   }, [user]);
 
   function persist(next) {
-    messagesRef.current = next;
-    setMessages(next);
+    // Retain complete recent messages, without making transcript length a
+    // security counter or permanently preventing sends after backend renewal.
+    const recent = next.slice(-CHATBOT_MAX_TRANSCRIPT_MESSAGES);
+    messagesRef.current = recent;
+    setMessages(recent);
     try {
-      if (!saveChatHistory(sessionRef.current, next)) {
+      if (!saveChatHistory(sessionRef.current, recent)) {
         setStorageNotice(STORAGE_NOTICE);
       }
     } catch {
@@ -168,19 +195,10 @@ export default function useChatConversation() {
     if (
       pending.current ||
       blocked ||
+      (cooldown && cooldown.until > Date.now()) ||
       !isChatHistorySessionActive(sessionRef.current)
     )
       return;
-    if (
-      isRetry &&
-      !messagesRef.current.some(
-        (message) => message.id === attempt.assistantId,
-      ) &&
-      messagesRef.current.length >= CHATBOT_MAX_SESSION_MESSAGES
-    ) {
-      setError(CHATBOT_SESSION_LIMIT_NOTICE);
-      return;
-    }
     if (contextIsTooLong(attempt.history) && !standalone) {
       setError('Choose to send this question without earlier conversation.');
       return;
@@ -197,6 +215,8 @@ export default function useChatConversation() {
     pending.current = activeAttempt;
     setIsSending(true);
     setError('');
+    setCooldown(null);
+    setAvailabilityNotice('');
     setFailedAttempt(null);
     if (!isRetry) setDraft('');
     if (!isRetry) {
@@ -239,7 +259,27 @@ export default function useChatConversation() {
       }
       if (requestError?.status === 403) setBlocked(true);
       setError(safeRequestError(requestError));
+      if (requestError?.status === 429) {
+        const seconds = requestError.retryAfterSeconds;
+        if (
+          Number.isSafeInteger(seconds) &&
+          seconds >= 0 &&
+          seconds <= 2147483
+        ) {
+          const until = Date.now() + seconds * 1000;
+          setCooldown({ until });
+          setAvailabilityNotice(
+            'Please wait until ' +
+              new Date(until).toLocaleTimeString() +
+              ' before trying again. Availability is shared across your tabs and devices.',
+          );
+        }
+      }
       if (
+        (requestError?.status === 429 &&
+          ['CHATBOT_SESSION_EXHAUSTED', 'RATE_LIMIT_EXCEEDED'].includes(
+            requestError?.code,
+          )) ||
         requestError?.status === 0 ||
         requestError?.code === 'NETWORK_ERROR' ||
         [502, 503, 504].includes(requestError?.status)
@@ -266,10 +306,6 @@ export default function useChatConversation() {
       setError('Questions must not exceed 500 characters.');
       return;
     }
-    if (messagesRef.current.length + 2 > CHATBOT_MAX_SESSION_MESSAGES) {
-      setError(CHATBOT_SESSION_LIMIT_NOTICE);
-      return;
-    }
     return runAttempt(
       {
         message: text.trim(),
@@ -290,7 +326,6 @@ export default function useChatConversation() {
   const retryNeedsStandalone = failedAttempt
     ? contextIsTooLong(failedAttempt.history)
     : false;
-  const limitReached = messages.length + 2 > CHATBOT_MAX_SESSION_MESSAGES;
   return {
     messages,
     draft,
@@ -303,12 +338,13 @@ export default function useChatConversation() {
     setStandalone,
     historyNeedsStandalone,
     retryNeedsStandalone,
-    limitReached,
-    canRetry:
-      Boolean(failedAttempt) &&
-      !blocked &&
-      (messages.length < CHATBOT_MAX_SESSION_MESSAGES ||
-        messages.some((message) => message.id === failedAttempt.assistantId)),
+    availabilityNotice,
+    cooldownActive: Boolean(cooldown),
+    transcriptNotice:
+      messages.length >= CHATBOT_MAX_TRANSCRIPT_MESSAGES
+        ? 'Only the 20 most recent messages are kept in this tab. Your message allowance is checked by the assistant when you send.'
+        : '',
+    canRetry: Boolean(failedAttempt) && !blocked,
     submitQuestion,
     retryQuestion,
   };

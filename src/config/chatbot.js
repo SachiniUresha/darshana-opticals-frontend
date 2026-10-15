@@ -2,7 +2,8 @@
 // These values support UI validation; backend validation remains authoritative.
 export const CHATBOT_MAX_MESSAGE_LENGTH = 500;
 export const CHATBOT_MAX_CONTEXT_MESSAGES = 6;
-export const CHATBOT_MAX_SESSION_MESSAGES = 20;
+// Display/storage bound only. The backend owns the shared session budget.
+export const CHATBOT_MAX_TRANSCRIPT_MESSAGES = 20;
 
 export const CHATBOT_RESPONSE_STATUSES = Object.freeze({
   ANSWERED: 'ANSWERED',
@@ -20,6 +21,3 @@ export const CHATBOT_INQUIRY_TYPES = Object.freeze([
   'GENERAL_INQUIRY',
   'UNSUPPORTED_OTHER',
 ]);
-
-export const CHATBOT_SESSION_LIMIT_NOTICE =
-  'This conversation has reached its message limit. Contact store support for more help.';
