@@ -192,7 +192,7 @@ describe('DDP-077 HomePage', () => {
     expect(getProducts).toHaveBeenCalledTimes(2);
   });
 
-  it('does not provide unimplemented appointment, cart or discount actions', async () => {
+  it('keeps eye tests informational without unsupported booking or promotional actions', async () => {
     renderHome();
 
     expect(
