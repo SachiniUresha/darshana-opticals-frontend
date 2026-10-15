@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import apiClient from './apiClient';
-import { getOrders, getOrder } from './orderService';
+import { getOrders, getOrder, updateOrderStatus } from './orderService';
 
 vi.mock('./apiClient', () => ({
   default: {
     get: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
@@ -133,6 +134,55 @@ describe('orderService', () => {
       apiClient.get.mockRejectedValue(error);
 
       await expect(getOrder(sampleOrder.id)).rejects.toBe(error);
+    });
+  });
+
+  describe('updateOrderStatus', () => {
+    it('updates an order using the shared API client', async () => {
+      const updatedOrder = {
+        ...sampleOrder,
+        status: 'READY_FOR_PICKUP',
+      };
+
+      apiClient.patch.mockResolvedValue({
+        success: true,
+        data: updatedOrder,
+      });
+
+      const result = await updateOrderStatus(
+        sampleOrder.id,
+        'READY_FOR_PICKUP',
+      );
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        `/orders/${sampleOrder.id}/status`,
+        { status: 'READY_FOR_PICKUP' },
+      );
+
+      expect(result).toEqual(updatedOrder);
+    });
+
+    it('rejects an invalid response', async () => {
+      apiClient.patch.mockResolvedValue({
+        success: true,
+        data: null,
+      });
+
+      await expect(
+        updateOrderStatus(sampleOrder.id, 'READY_FOR_PICKUP'),
+      ).rejects.toThrow('Invalid order status update response');
+    });
+
+    it('propagates authorization errors', async () => {
+      const error = Object.assign(new Error('Forbidden'), {
+        status: 403,
+      });
+
+      apiClient.patch.mockRejectedValue(error);
+
+      await expect(
+        updateOrderStatus(sampleOrder.id, 'READY_FOR_PICKUP'),
+      ).rejects.toBe(error);
     });
   });
 });

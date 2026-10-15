@@ -6,12 +6,10 @@ import Navbar from '../src/components/common/Navbar';
 import useAuth from '../src/hooks/useAuth';
 import useCart from '../src/hooks/useCart';
 import {
+  BRANCH_ASSISTANT,
   BRANCH_MANAGER,
   CUSTOMER,
-  INVENTORY_MANAGER,
-  MANAGEMENT,
   OPTOMETRIST,
-  SALES_ASSISTANT_CASHIER,
   SYSTEM_ADMIN,
 } from '../src/config/roles';
 
@@ -117,30 +115,26 @@ describe('Navbar authentication controls', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it.each([
-    SYSTEM_ADMIN,
-    INVENTORY_MANAGER,
-    BRANCH_MANAGER,
-    OPTOMETRIST,
-    MANAGEMENT,
-    SALES_ASSISTANT_CASHIER,
-  ])('hides Profile but keeps Logout for %s', (role) => {
-    useAuth.mockReturnValue({
-      isAuthenticated: true,
-      user: { role },
-      logout: vi.fn(),
-    });
+  it.each([SYSTEM_ADMIN, BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST])(
+    'hides Profile but keeps Logout for %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
 
-    renderNavbar();
+      renderNavbar();
 
-    expect(
-      screen.queryByRole('link', { name: /^profile$/i }),
-    ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('link', { name: /^profile$/i }),
+      ).not.toBeInTheDocument();
 
-    expect(
-      screen.getByRole('button', { name: /log out/i }),
-    ).toBeInTheDocument();
-  });
+      expect(
+        screen.getByRole('button', { name: /log out/i }),
+      ).toBeInTheDocument();
+    },
+  );
 
   it('opens the customer profile route from the authenticated navbar', async () => {
     useAuth.mockReturnValue({
@@ -366,4 +360,69 @@ describe('Navbar authentication controls', () => {
     expect(menuButton).toHaveAttribute('aria-expanded', 'false');
     expect(accountMenu).not.toHaveClass('navbar__account-links--open');
   });
+
+  it.each([BRANCH_ASSISTANT, BRANCH_MANAGER])(
+    'shows Staff Orders link to %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.getByRole('link', { name: 'Staff Orders' }),
+      ).toHaveAttribute('href', '/staff/orders');
+    },
+  );
+
+  it.each([CUSTOMER, OPTOMETRIST, SYSTEM_ADMIN])(
+    'hides Staff Orders link from %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.queryByRole('link', { name: 'Staff Orders' }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    [BRANCH_MANAGER, 'Branch Manager'],
+    [BRANCH_ASSISTANT, 'Branch Assistant'],
+  ])('displays correct staff role label for %s', (role, label) => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(screen.getByText(label)).toBeInTheDocument();
+  });
+
+  it.each([CUSTOMER, OPTOMETRIST, SYSTEM_ADMIN])(
+    'hides staff role identification from %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(screen.queryByText('Branch Manager')).not.toBeInTheDocument();
+      expect(screen.queryByText('Branch Assistant')).not.toBeInTheDocument();
+    },
+  );
 });

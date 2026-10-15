@@ -9,10 +9,17 @@ import ProductDetailPage from '../pages/ProductDetailPage';
 import ProfilePage from '../pages/ProfilePage';
 import PrescriptionHistoryPage from '../pages/PrescriptionHistoryPage';
 import ProtectedRoute from './ProtectedRoute';
-import { CUSTOMER, OPTOMETRIST } from '../config/roles';
+import {
+  CUSTOMER,
+  OPTOMETRIST,
+  BRANCH_ASSISTANT,
+  BRANCH_MANAGER,
+} from '../config/roles';
 import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailsPage from '../pages/OrderDetailsPage';
+import StaffOrdersPage from '../pages/StaffOrdersPage';
+import StaffOrderDetailsPage from '../pages/StaffOrderDetailsPage';
 import CartPage from '../pages/CartPage';
 import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 import AppointmentBookingPage from '../pages/AppointmentBookingPage';
@@ -63,7 +70,14 @@ function AppRoutes() {
             element={<OptometristPrescriptionPage />}
           />
         </Route>
-
+        <Route
+          element={
+            <ProtectedRoute allowedRoles={[BRANCH_ASSISTANT, BRANCH_MANAGER]} />
+          }
+        >
+          <Route path="/staff/orders" element={<StaffOrdersPage />} />
+          <Route path="/staff/orders/:id" element={<StaffOrderDetailsPage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

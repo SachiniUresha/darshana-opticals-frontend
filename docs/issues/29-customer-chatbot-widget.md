@@ -122,6 +122,7 @@ contrast, mobile input access and critical page controls.
 - ADR-010 specifies a maximum of 20 messages per session. The current stateless
   API does not enforce a session-wide count or define a session-reset operation.
   UI retention is not a replacement for authoritative backend enforcement.
+  Backend follow-up: [backend #77](https://github.com/darshana-opticals-osms/backend/issues/77).
 - Assistant output is not capped to 500 characters, but every history text entry is.
   Keep complete responses readable in the UI; do not blindly resend oversized
   responses or silently invent a truncation/summarization policy.
@@ -400,3 +401,35 @@ output can exceed the 500-character history-entry limit. The frontend reserves
 reply space and offers explicit omission of optional earlier context for long
 replies; these do not implement missing backend security decisions.
 Live Gemini/provider and deployed-environment checks remain unperformed.
+
+## PR #50 review follow-up (2026-10-15)
+
+Addressed the three requested review points in
+[PR #50](https://github.com/darshana-opticals-osms/frontend/pull/50):
+
+1. Merged frontend develop `16a3f53b7c31e7d910b1a916dc1d3dd384d08af5`
+   (three incoming commits for staff order tracking/status management).
+   The merge had no conflicts; the incoming Navbar, routes and order-service
+   changes were retained. Backend, documents and infra develop baselines remain
+   unchanged from the previous review.
+2. Corrected the PR draft's integration-review link to
+   `./29-customer-chatbot-widget.md` and verified its target exists relative to
+   the containing document.
+3. Searched backend chatbot/session issues and created the separate
+   [backend #77](https://github.com/darshana-opticals-osms/backend/issues/77)
+   follow-up for authoritative session-limit enforcement. It records the approved
+   architecture constraints, required lifecycle/counting clarification, ownership,
+   concurrency, bypass protection, privacy, tests and Swagger requirements.
+   Linked the tracker from both frontend review documents. This frontend change
+   does not claim the backend limit has been implemented.
+
+Validation after develop integration: **666 tests across 53 files passed** with
+**94.89% line coverage** (86.00% branches, 91.26% functions).
+Lint, repository formatting, production build and diff checks passed.
+This rerun includes the new staff-order/status, route and Navbar regression tests,
+alongside the existing Customer/chatbot tests. No chatbot runtime changes or new
+dependencies were required.
+
+Remote CI must be verified on the published review-fix commit separately; local
+results alone do not establish a successful GitHub Actions run. The earlier live
+provider, physical-device and human screen-reader limitations still apply.

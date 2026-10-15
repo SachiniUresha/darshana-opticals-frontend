@@ -21,7 +21,7 @@ a failed reply without duplicating the Customer question.
   last-six-message context and bounded active-tab transcript.
 - Handle safe network/HTTP failures, 429 without automatic retries, normal
   application logout on 401 and stopped sending on 403.
-- Merge the latest develop appointment and mobile Navbar changes before validation.
+- Integrate the latest develop appointment, staff-order and Navbar changes before validation.
 
 ## Security and privacy
 
@@ -36,7 +36,7 @@ prompts, clinical/payment/profile enrichment, autonomous actions, voice or uploa
 
 ## Validation
 
-- Frontend: 624 tests across 50 files pass; overall line coverage 94.80%.
+- Frontend: 666 tests across 53 files pass; overall line coverage 94.89%.
 - Backend: 30 existing chatbot integration/unit tests pass.
 - Lint, Prettier and production build pass.
 - Headless Edge against real Express/JWT and temporary MongoDB with the approved
@@ -53,6 +53,8 @@ The user approved issue-number branch naming:
 
 ADR-010 requires a session-wide 20-message limit, but the stateless backend has no
 authoritative session count/reset contract. The frontend bound is a UX constraint.
+Backend enforcement is tracked separately in
+[backend #77](https://github.com/darshana-opticals-osms/backend/issues/77).
 Backend output can exceed its history-entry limit; the Customer must explicitly
 choose to omit optional earlier context before sending a question after such a
 reply. Complete response text is retained and never silently summarized.
@@ -62,7 +64,7 @@ uses the user-supplied screenshots. Live Gemini/deployment smoke, human
 screen-reader/physical-device review, remote CI and approving peer review remain
 outstanding. No live payment or every staff workflow is claimed.
 
-See [integration review](docs/issues/29-customer-chatbot-widget.md) for evidence
+See [integration review](./29-customer-chatbot-widget.md) for evidence
 and limitations.
 
 Refs #29 (DDP-061 / FR-011).
