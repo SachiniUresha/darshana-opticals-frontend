@@ -592,7 +592,7 @@ describe('connected Customer chatbot flow', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it('reserves space for the final response at the 20-message boundary', async () => {
+  it('keeps a rolling transcript after reaching the 20-message display bound', async () => {
     const messages = Array.from({ length: 18 }, (_, index) =>
       index % 2 === 0
         ? { id: 'u-' + index, role: 'user', text: 'Prior question ' + index }
@@ -612,11 +612,10 @@ describe('connected Customer chatbot flow', () => {
     await screen.findByText(reply.responseText);
     expect(storedMessages()).toHaveLength(20);
     await user.type(screen.getByRole('textbox'), 'One more question');
-    expect(
-      screen.getByRole('button', { name: 'Send question' }),
-    ).toBeDisabled();
-    fireEvent.submit(document.querySelector('.chatbot-composer'));
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Send question' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Send question' }));
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(storedMessages()).toHaveLength(20);
   });
 
   it('restores a FAILED interaction and retries it only when the Customer asks', async () => {
@@ -670,7 +669,7 @@ describe('connected Customer chatbot flow', () => {
     expect(storedMessages()[19].responseStatus).toBe('ANSWERED');
   });
 
-  it('does not send a recovered unanswered question when its reply cannot fit in the transcript', async () => {
+  it('can retry a recovered unanswered question at the transcript display bound', async () => {
     seed(
       Array.from({ length: 20 }, (_, index) => ({
         id: 'u-' + index,
@@ -682,9 +681,13 @@ describe('connected Customer chatbot flow', () => {
     await openChat();
     expect(
       screen.queryByRole('button', { name: 'Retry last question' }),
-    ).not.toBeInTheDocument();
-    fireEvent.submit(document.querySelector('.chatbot-composer'));
-    expect(fetch).not.toHaveBeenCalled();
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Retry last question' }),
+    );
+    await screen.findByText(reply.responseText);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(storedMessages()).toHaveLength(20);
   });
 
   it('does not log out a newly signed-in Customer when an older request returns 401', async () => {

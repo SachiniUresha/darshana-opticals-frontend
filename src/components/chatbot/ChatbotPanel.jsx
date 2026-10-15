@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { EyeIcon } from '../forms/FieldIcons';
-import {
-  CHATBOT_MAX_MESSAGE_LENGTH,
-  CHATBOT_SESSION_LIMIT_NOTICE,
-} from '../../config/chatbot';
+import { CHATBOT_MAX_MESSAGE_LENGTH } from '../../config/chatbot';
 import { CloseIcon, SendIcon } from './ChatbotIcons';
 import ChatMessageList from './ChatMessageList';
 
@@ -31,13 +28,15 @@ export default function ChatbotPanel({
     setStandalone,
     historyNeedsStandalone = false,
     retryNeedsStandalone = false,
-    limitReached = false,
+    cooldownActive = false,
+    availabilityNotice = '',
+    transcriptNotice = '',
     canRetry = false,
     retryQuestion,
   } = conversation;
   const needsChoice = historyNeedsStandalone || retryNeedsStandalone;
   const sendBlocked =
-    blocked || limitReached || (historyNeedsStandalone && !standalone);
+    blocked || cooldownActive || (historyNeedsStandalone && !standalone);
 
   function chooseQuestion(question) {
     onDraftChange(question);
@@ -47,7 +46,7 @@ export default function ChatbotPanel({
 
   function submit(event) {
     event.preventDefault();
-    if (isSending || blocked || !onSend) return;
+    if (isSending || blocked || cooldownActive || !onSend) return;
     if (!draft.trim()) {
       setValidation('Enter a question before sending.');
       inputRef.current?.focus();
@@ -93,14 +92,19 @@ export default function ChatbotPanel({
         messages={messages}
         onChooseQuestion={chooseQuestion}
         isSending={isSending}
-        disableQuickQuestions={blocked || limitReached}
+        disableQuickQuestions={blocked || cooldownActive}
       />
       {isSending && (
         <p className="chatbot-processing" role="status">
           Darshana Assistant is thinking…
         </p>
       )}
-      {(error || storageNotice || needsChoice || limitReached || canRetry) && (
+      {(error ||
+        storageNotice ||
+        needsChoice ||
+        availabilityNotice ||
+        transcriptNotice ||
+        canRetry) && (
         <div className="chatbot-feedback">
           {error && (
             <p role="alert" className="chatbot-request-error">
@@ -108,10 +112,9 @@ export default function ChatbotPanel({
             </p>
           )}
           {storageNotice && <p role="status">{storageNotice}</p>}
-          {limitReached && (
-            <p className="chatbot-limit-notice">
-              {CHATBOT_SESSION_LIMIT_NOTICE}
-            </p>
+          {availabilityNotice && <p role="status">{availabilityNotice}</p>}
+          {transcriptNotice && (
+            <p className="chatbot-limit-notice">{transcriptNotice}</p>
           )}
           {needsChoice && !blocked && (
             <label className="chatbot-context-choice">
@@ -134,7 +137,11 @@ export default function ChatbotPanel({
             <button
               type="button"
               className="chatbot-retry"
-              disabled={isSending || (retryNeedsStandalone && !standalone)}
+              disabled={
+                isSending ||
+                cooldownActive ||
+                (retryNeedsStandalone && !standalone)
+              }
               onClick={() => {
                 retryQuestion?.();
                 inputRef.current?.focus({ preventScroll: true });

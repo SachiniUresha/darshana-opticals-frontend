@@ -63,6 +63,15 @@ async function request(path, options = {}) {
     const error = new Error(message);
     error.status = response.status;
     error.code = responseData?.error?.code;
+    // Chatbot documents Retry-After as integer seconds. Missing, malformed or
+    // unrepresentable values must never create an indefinite UI lock.
+    const retryAfter = response.headers?.get?.('Retry-After');
+    if (typeof retryAfter === 'string' && /^\d+$/.test(retryAfter.trim())) {
+      const seconds = Number(retryAfter);
+      if (Number.isSafeInteger(seconds) && seconds <= 2147483) {
+        error.retryAfterSeconds = seconds;
+      }
+    }
 
     throw error;
   }

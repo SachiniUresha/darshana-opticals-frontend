@@ -22,6 +22,42 @@ function panelProps(extra = {}) {
 }
 
 describe('chatbot panel presentation', () => {
+  it('announces server retry guidance, blocks click/Enter retries while waiting and re-enables sends', () => {
+    const onRetry = vi.fn();
+    const props = panelProps({
+      draft: 'Store hours?',
+      conversation: {
+        cooldownActive: true,
+        canRetry: true,
+        retryQuestion: onRetry,
+        error: 'Your shared chatbot session has reached its message limit.',
+        availabilityNotice: 'Please wait until 12:30 before trying again.',
+      },
+    });
+    const { rerender } = render(<ChatbotPanel {...props} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('message limit');
+    expect(screen.getByRole('status')).toHaveTextContent('12:30');
+    expect(
+      screen.getByRole('button', { name: 'Send question' }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Retry last question' }),
+    ).toBeDisabled();
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(props.onSend).not.toHaveBeenCalled();
+    rerender(
+      <ChatbotPanel
+        {...props}
+        conversation={{
+          cooldownActive: false,
+          availabilityNotice: 'You can try sending again.',
+        }}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Send question' })).toBeEnabled();
+    expect(screen.getByRole('status')).toHaveTextContent('try sending again');
+    expect(props.onSend).not.toHaveBeenCalled();
+  });
   it('reflects the documented input limit and blocks whitespace submissions', () => {
     const props = panelProps({ draft: '  ' });
     render(<ChatbotPanel {...props} />);
