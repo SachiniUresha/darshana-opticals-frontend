@@ -1,0 +1,209 @@
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 248px;
+  min-width: 0;
+  height: 100vh;
+  padding: 1.4rem 1rem 1.1rem;
+  background: #1b2c59;
+  color: #f7f9ff;
+  box-sizing: border-box;
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 66px;
+  margin-bottom: 2.1rem;
+  padding: 0.65rem;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #142858;
+  text-decoration: none;
+}
+.admin-sidebar__brand img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  flex: none;
+}
+.admin-sidebar__brand-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.admin-sidebar__brand-copy strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.85rem;
+  line-height: 1.15;
+}
+.admin-sidebar__brand-copy small {
+  margin-top: 0.25rem;
+  color: #bd8200;
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar__heading {
+  margin: 0 0 0.75rem 0.55rem;
+  color: #aebcda;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.admin-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 45px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  color: #edf3ff;
+  font-size: 0.89rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-sidebar__link svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.admin-sidebar__link:hover {
+  background: #304573;
+  color: #ffffff;
+}
+.admin-sidebar__link--active,
+.admin-sidebar__link--active:hover {
+  background: #ffca18;
+  color: #172957;
+  font-weight: 800;
+}
+
+.admin-sidebar__bottom {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #41537b;
+}
+.admin-sidebar__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.admin-sidebar__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 1px solid #f5c324;
+  border-radius: 8px;
+  color: #f5c324;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+.admin-sidebar__identity strong {
+  display: block;
+  font-size: 0.79rem;
+}
+.admin-sidebar__identity small {
+  display: block;
+  margin-top: 0.3rem;
+  color: #b5c3dc;
+  font-size: 0.69rem;
+}
+.admin-sidebar__logout {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #687a9e;
+  border-radius: 8px;
+  background: transparent;
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-sidebar__logout:hover {
+  background: #304573;
+}
+.admin-sidebar__brand:focus-visible,
+.admin-sidebar__link:focus-visible,
+.admin-sidebar__logout:focus-visible {
+  outline: 3px solid #ffca18;
+  outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  .admin-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 0.75rem 1rem;
+  }
+  .admin-sidebar__brand {
+    align-self: flex-start;
+    min-height: 52px;
+    margin-bottom: 0.65rem;
+  }
+  .admin-sidebar__heading {
+    margin: 0 0 0.4rem 0.3rem;
+  }
+  .admin-sidebar__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .admin-sidebar__link {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.55rem 0.6rem;
+    font-size: 0.78rem;
+  }
+  .admin-sidebar__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.55rem;
+    padding-top: 0.5rem;
+  }
+  .admin-sidebar__identity {
+    min-width: 0;
+  }
+  .admin-sidebar__logout {
+    width: auto;
+    flex: none;
+    margin-top: 0;
+    min-height: 44px;
+  }
+}
+@media (max-width: 420px) {
+  .admin-sidebar__link svg {
+    width: 16px;
+    height: 16px;
+  }
+  .admin-sidebar__link {
+    font-size: 0.73rem;
+  }
+  .admin-sidebar__identity strong {
+    font-size: 0.73rem;
+  }
+  .admin-sidebar__identity small {
+    font-size: 0.63rem;
+  }
+}

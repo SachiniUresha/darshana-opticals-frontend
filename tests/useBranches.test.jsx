@@ -169,4 +169,14 @@ describe('useBranches', () => {
 
     expect(getBranches).toHaveBeenCalledTimes(1);
   });
+  it('separates expired sessions from retryable Branch load failures', async () => {
+    getBranches.mockRejectedValueOnce(
+      Object.assign(new Error('Session expired'), { status: 401 }),
+    );
+    const { result } = renderHook(() => useBranches());
+    await waitFor(() => expect(result.current.unauthorized).toBe(true));
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(result.current.branches).toEqual([]);
+  });
 });
