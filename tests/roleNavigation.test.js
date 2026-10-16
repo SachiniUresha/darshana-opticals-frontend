@@ -33,12 +33,13 @@ describe('canonical roles', () => {
 });
 
 describe('post-login routing', () => {
-  it.each(canonicalRoles.filter((role) => ![OPTOMETRIST, SYSTEM_ADMIN].includes(role)))(
-    'safely falls back to Home for %s',
-    (role) => {
-      expect(getPostLoginRoute(role)).toBe('/');
-    },
-  );
+  it.each(
+    canonicalRoles.filter(
+      (role) => ![OPTOMETRIST, SYSTEM_ADMIN].includes(role),
+    ),
+  )('safely falls back to Home for %s', (role) => {
+    expect(getPostLoginRoute(role)).toBe('/');
+  });
 
   it('directs SYSTEM_ADMIN to the protected Admin Dashboard', () => {
     expect(getPostLoginRoute(SYSTEM_ADMIN)).toBe('/admin');
