@@ -41,6 +41,15 @@ async function login({ email, password }) {
   return user;
 }
 
+// Public recovery endpoint: do not attach JWTs or save account information.
+async function requestPasswordReset(email) {
+  return apiClient.post(
+    '/auth/forgot-password',
+    { email: email.trim().toLowerCase() },
+    { authenticated: false },
+  );
+}
+
 function logout() {
   clearChatHistory();
   authStorage.clearAuth();
@@ -63,6 +72,7 @@ function isAuthenticated() {
 const authService = {
   register,
   login,
+  requestPasswordReset,
   logout,
   getCurrentUser,
   updateCurrentUser,

@@ -26,6 +26,10 @@ function renderLoginPage() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/forgot-password"
+            element={<p>Forgot password page test marker</p>}
+          />
           <Route path="/" element={<p>Home page test marker</p>} />
           <Route path="/clinical" element={<p>Clinical test marker</p>} />
         </Routes>
@@ -85,15 +89,17 @@ describe('LoginPage', () => {
     );
   });
 
-  it('renders the Forgot password control as a non-navigating control', () => {
+  it('navigates from Login to the public Forgot Password route', async () => {
+    const user = userEvent.setup();
     renderLoginPage();
 
-    const forgotPassword = screen.getByRole('button', {
-      name: /forgot password\?/i,
-    });
+    const link = screen.getByRole('link', { name: /forgot password\?/i });
+    expect(link).toHaveAttribute('href', '/forgot-password');
+    await user.click(link);
 
-    expect(forgotPassword).toBeInTheDocument();
-    expect(forgotPassword).not.toHaveAttribute('href');
+    expect(
+      await screen.findByText('Forgot password page test marker'),
+    ).toBeInTheDocument();
   });
 
   it('shows validation errors and blocks login when required fields are empty', async () => {

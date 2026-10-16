@@ -6,6 +6,7 @@ import AdminStaffCreatePage from '../pages/AdminStaffCreatePage';
 import AdminDoctorCreatePage from '../pages/AdminDoctorCreatePage';
 import SignupPage from '../pages/SignupPage';
 import LoginPage from '../pages/LoginPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import ProductsPage from '../pages/ProductsPage';
 import ProductDetailPage from '../pages/ProductDetailPage';
@@ -35,6 +36,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
