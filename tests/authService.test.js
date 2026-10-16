@@ -111,6 +111,41 @@ describe('authService', () => {
     expect(result).toEqual(backendUser);
   });
 
+  it('requests a reset email through the public shared API client', async () => {
+    apiClient.post.mockResolvedValue({
+      success: true,
+      message: 'If an eligible account exists, a reset email has been sent.',
+    });
+
+    await authService.requestPasswordReset('  USER@Example.com  ');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/auth/forgot-password',
+      { email: 'user@example.com' },
+      { authenticated: false },
+    );
+    expect(authStorage.saveAuth).not.toHaveBeenCalled();
+  });
+
+  it('resets a password through the public API using only token and newPassword', async () => {
+    apiClient.post.mockResolvedValueOnce({
+      success: true,
+      message: 'Password has been reset.',
+    });
+
+    await authService.resetPassword({
+      token: 'test-reset-token',
+      newPassword: 'NewPassword123',
+    });
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/auth/reset-password',
+      { token: 'test-reset-token', newPassword: 'NewPassword123' },
+      { authenticated: false },
+    );
+    expect(authStorage.saveAuth).not.toHaveBeenCalled();
+  });
+
   it('clears authentication storage during logout', () => {
     authService.logout();
 
