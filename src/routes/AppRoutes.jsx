@@ -1,6 +1,7 @@
-﻿import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
+import AdminDashboardPage from '../pages/AdminDashboardPage';
 import SignupPage from '../pages/SignupPage';
 import LoginPage from '../pages/LoginPage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -14,6 +15,7 @@ import {
   OPTOMETRIST,
   BRANCH_ASSISTANT,
   BRANCH_MANAGER,
+  SYSTEM_ADMIN,
 } from '../config/roles';
 import OptometristPrescriptionPage from '../pages/OptometristPrescriptionPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
@@ -36,6 +38,10 @@ function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+
+        <Route element={<ProtectedRoute allowedRoles={[SYSTEM_ADMIN]} />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+        </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />

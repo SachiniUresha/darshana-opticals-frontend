@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
@@ -7,6 +7,7 @@ import {
   OPTOMETRIST,
   BRANCH_ASSISTANT,
   BRANCH_MANAGER,
+  SYSTEM_ADMIN,
 } from '../../config/roles';
 import SearchBar from '../products/SearchBar';
 import './Navbar.css';
@@ -162,6 +163,12 @@ function Navbar() {
                   <Link to="/clinical/prescriptions/new">
                     Record Prescription
                   </Link>
+                </li>
+              ) : null}
+
+              {user?.role === SYSTEM_ADMIN ? (
+                <li>
+                  <Link to="/admin">Admin Dashboard</Link>
                 </li>
               ) : null}
 

@@ -1,0 +1,21 @@
+.admin-page { width: min(100%, 1100px); margin: 0 auto; padding: 1rem 0 2.5rem; color: #1b2b58; }
+.admin-page__hero { padding: 2.25rem; border-radius: 16px; background: #192955; color: #fff; }
+.admin-page__eyebrow { margin: 0 0 .8rem; color: #fcca18; font-size: .72rem; font-weight: 800; letter-spacing: .17em; }
+.admin-page__heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.25rem; }
+.admin-page__hero h1 { margin: 0 0 .7rem; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.9rem, 3vw, 2.7rem); }
+.admin-page__hero p:not(.admin-page__eyebrow) { margin: 0; color: #dde6f9; line-height: 1.6; }
+.admin-page__access-badge { flex-shrink: 0; background: #ffefab; color: #4a3b0a; border: 1px solid #fbd452; border-radius: 999px; padding: .55rem .85rem; font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+.admin-page__section { margin-top: 2.1rem; }
+.admin-page__section-title h2 { margin: 0; font-size: 1.4rem; }
+.admin-page__section-title p { color: #63748b; margin: .55rem 0 1.25rem; }
+.admin-page__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.3rem; }
+.admin-page__card { min-width: 0; border: 1px solid #e3e9f4; background: #fff; border-radius: 16px; padding: 1.7rem; box-shadow: 0 8px 24px rgba(27,43,88,.08); }
+.admin-page__card-icon { display: grid; place-items: center; width: 44px; height: 44px; background: #edf2ff; color: #203d87; border-radius: 12px; font-weight: 800; }
+.admin-page__card h3 { margin: 1.1rem 0 .65rem; font-size: 1.15rem; }
+.admin-page__card p { min-height: 3.6rem; line-height: 1.6; color: #62738c; }
+.admin-page__action { display: inline-flex; align-items: center; gap: .6rem; min-height: 44px; padding: .7rem 1rem; background: #ffca13; border-radius: 9px; color: #162750; text-decoration: none; font-weight: 800; }
+.admin-page__action:hover { background: #f2bb00; }
+.admin-page__action:focus-visible { outline: 3px solid #173d92; outline-offset: 3px; }
+.admin-page__note { margin-top: 1.6rem; line-height: 1.65; color: #526580; font-size: .9rem; }
+@media (max-width: 650px) { .admin-page__hero { padding: 1.35rem; } .admin-page__heading-row { flex-direction: column; } .admin-page__cards { grid-template-columns: 1fr; } .admin-page__card p { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .admin-page__action { transition: none; } }

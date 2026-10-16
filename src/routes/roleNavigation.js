@@ -1,7 +1,8 @@
-import { isCanonicalRole, OPTOMETRIST } from '../config/roles';
+import { isCanonicalRole, OPTOMETRIST, SYSTEM_ADMIN } from '../config/roles';
 
 export const ROLE_DESTINATIONS = Object.freeze({
   [OPTOMETRIST]: '/clinical/prescriptions/new',
+  [SYSTEM_ADMIN]: '/admin',
 });
 
 function isSafeInternalDestination(destination) {

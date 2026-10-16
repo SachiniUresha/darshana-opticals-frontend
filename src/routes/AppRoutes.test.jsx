@@ -191,3 +191,26 @@ describe('Staff order route protection', () => {
     expect(screen.queryByText('Staff order details page')).toBeNull();
   });
 });
+
+describe('System Admin Dashboard route protection', () => {
+  it('allows SYSTEM_ADMIN to open the dashboard', () => {
+    mockAuth.current = { isAuthenticated: true, user: { role: SYSTEM_ADMIN } };
+    show('/admin');
+    expect(screen.getByRole('heading', { name: /Admin Dashboard/i })).toBeInTheDocument();
+  });
+
+  it.each([CUSTOMER, BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST])(
+    'blocks %s from the dashboard',
+    (role) => {
+      mockAuth.current = { isAuthenticated: true, user: { role } };
+      show('/admin');
+      expect(screen.getByTestId('current-path').textContent).toBe('/');
+    },
+  );
+
+  it('redirects unauthenticated visitors to login', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/admin');
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
+  });
+});
