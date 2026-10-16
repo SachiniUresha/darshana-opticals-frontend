@@ -22,14 +22,19 @@ vi.mock('../src/services/apiClient', () => ({
 const provider = {
   id: '507f1f77bcf86cd799439011',
   name: 'Dr. Silva',
-  role: 'OPTOMETRIST',
-  branchId: '507f1f77bcf86cd799439012',
+  specialization: 'Ophthalmologist',
 };
+
+const branchId = '507f1f77bcf86cd799439012';
 
 const session = {
   id: '507f1f77bcf86cd799439021',
-  staffId: provider.id,
-  branchId: provider.branchId,
+  doctorId: provider.id,
+  staffId: null,
+  doctor: provider,
+  doctorName: provider.name,
+  specialization: provider.specialization,
+  branchId,
   startAt: '2026-11-01T03:30:00.000Z',
   endAt: '2026-11-01T04:30:00.000Z',
   capacity: 10,
@@ -42,7 +47,7 @@ const appointment = {
   staffId: provider.id,
   providerName: provider.name,
   sessionId: session.id,
-  branchId: provider.branchId,
+  branchId: branchId,
   dateTime: session.startAt,
   status: 'CONFIRMED',
   position: 2,
@@ -93,8 +98,7 @@ describe('staffAppointmentService', () => {
 
   it('creates a doctor session using the documented payload', async () => {
     const payload = {
-      staffId: provider.id,
-      branchId: provider.branchId,
+      doctorId: provider.id,
       startAt: session.startAt,
       endAt: session.endAt,
       capacity: session.capacity,

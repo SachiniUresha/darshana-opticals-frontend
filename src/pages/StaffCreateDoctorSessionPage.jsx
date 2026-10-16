@@ -18,13 +18,10 @@ function toSriLankaIso(date, time) {
 function createSessionErrorLabel(error) {
   switch (error?.code) {
     case 'OVERLAPPING_SESSION':
-      return 'This Optometrist already has a session that overlaps with the selected time. Please choose another time.';
+      return 'This Doctor already has a session that overlaps with the selected time. Please choose another time.';
 
     case 'PROVIDER_CHANGED':
-      return 'The selected Optometrist is no longer eligible for scheduling. Refresh providers and try again.';
-
-    case 'INVALID_PROVIDER_BRANCH':
-      return 'The selected Optometrist is not assigned to Gampaha Main Branch.';
+      return 'The selected Doctor is no longer available. Refresh the Doctor list and try again.';
 
     case 'INVALID_BRANCH':
       return 'Doctor sessions can only be created for Gampaha Main Branch.';
@@ -34,22 +31,22 @@ function createSessionErrorLabel(error) {
   }
 
   if (error?.status === 403) {
-    return 'You do not have permission to create doctor sessions.';
+    return 'You do not have permission to create Doctor sessions.';
   }
 
   if (error?.status === 404) {
-    return 'The selected Optometrist is no longer available.';
+    return 'The selected Doctor is no longer available.';
   }
 
   if (error?.status === 400 || error?.status === 409 || error?.status === 422) {
-    return 'The doctor session could not be created. Please review the session details and try again.';
+    return 'The Doctor session could not be created. Please review the session details and try again.';
   }
 
   if (error?.status === 0) {
     return 'Unable to reach the server. Please check your connection and try again.';
   }
 
-  return 'Unable to create the doctor session. Please try again.';
+  return 'Unable to create the Doctor session. Please try again.';
 }
 
 export default function StaffCreateDoctorSessionPage() {
@@ -110,16 +107,14 @@ export default function StaffCreateDoctorSessionPage() {
 
         if (error?.status === 403) {
           setProviderError(
-            'You do not have permission to view eligible Optometrists.',
+            'You do not have permission to view available Doctors.',
           );
         } else if (error?.status === 0) {
           setProviderError(
             'Unable to reach the server. Please check your connection and try again.',
           );
         } else {
-          setProviderError(
-            'Unable to load eligible Optometrists. Please try again.',
-          );
+          setProviderError('Unable to load Doctors. Please try again.');
         }
       } finally {
         if (active) {
@@ -170,8 +165,7 @@ export default function StaffCreateDoctorSessionPage() {
 
     try {
       const createdSession = await createDoctorSession({
-        staffId: selectedProvider.id,
-        branchId: selectedProvider.branchId,
+        doctorId: selectedProvider.id,
         startAt,
         endAt,
         capacity: numericCapacity,
@@ -206,7 +200,7 @@ export default function StaffCreateDoctorSessionPage() {
 
           <h1>Create Doctor Session</h1>
 
-          <p>Schedule an eligible Optometrist at Gampaha Main Branch.</p>
+          <p>Schedule an available Doctor at Gampaha Main Branch.</p>
         </div>
 
         <Link className="staff-session-form-back" to="/staff/appointments">
@@ -223,8 +217,8 @@ export default function StaffCreateDoctorSessionPage() {
           <div className="staff-session-form-card__heading">
             <h2>Create Doctor Session</h2>
             <p>
-              Fields marked * are required. Branch is fixed to Gampaha Main
-              Branch.
+              Fields marked * are required. Sessions are created for Gampaha
+              Main Branch.
             </p>
           </div>
 
@@ -233,13 +227,13 @@ export default function StaffCreateDoctorSessionPage() {
               className="staff-session-form-alert staff-session-form-alert--error"
               role="alert"
             >
-              <strong>Unable to load providers</strong>
+              <strong>Unable to load Doctors</strong>
               <span>{providerError}</span>
             </div>
           ) : null}
 
           <label>
-            <span>Optometrist *</span>
+            <span>Doctor *</span>
 
             <select
               value={selectedProviderId}
@@ -254,13 +248,16 @@ export default function StaffCreateDoctorSessionPage() {
               required
             >
               {loadingProviders ? (
-                <option value="">Loading Optometrists...</option>
+                <option value="">Loading Doctors...</option>
               ) : providers.length === 0 ? (
-                <option value="">No eligible Optometrists</option>
+                <option value="">No Doctors available</option>
               ) : (
                 providers.map((provider) => (
                   <option key={provider.id} value={provider.id}>
                     {provider.name}
+                    {provider.specialization
+                      ? ` — ${provider.specialization}`
+                      : ''}
                   </option>
                 ))
               )}
@@ -341,7 +338,7 @@ export default function StaffCreateDoctorSessionPage() {
 
               <input
                 type="text"
-                value="Gampaha Main Branch · locked"
+                value="Gampaha Main Branch · fixed"
                 readOnly
                 aria-readonly="true"
               />
@@ -373,29 +370,19 @@ export default function StaffCreateDoctorSessionPage() {
             <h2>Scheduling Guidelines</h2>
 
             <div>
-              <strong>Eligible provider</strong>
-              <p>Select only an Optometrist supplied by the backend.</p>
+              <strong>Doctor</strong>
+              <p>Choose an available Doctor from the approved directory.</p>
             </div>
 
             <div>
-              <strong>Time validation</strong>
+              <strong>Time</strong>
               <p>End time must be later than the start time.</p>
             </div>
 
             <div>
-              <strong>Scheduling authority</strong>
-              <p>
-                The server validates overlapping sessions, capacity and branch.
-              </p>
+              <strong>Capacity</strong>
+              <p>Enter the maximum number of appointments for this session.</p>
             </div>
-          </section>
-
-          <section className="staff-session-form-note">
-            <strong>Backend validation</strong>
-            <p>
-              The system confirms the provider, branch, availability and
-              overlapping-session rules before saving.
-            </p>
           </section>
         </aside>
       </div>
@@ -409,11 +396,6 @@ export default function StaffCreateDoctorSessionPage() {
           <span>{formError}</span>
         </div>
       ) : null}
-
-      <p className="staff-session-form-footer-note">
-        Scheduling conflicts and provider eligibility are checked by the backend
-        before confirmation.
-      </p>
     </section>
   );
 }

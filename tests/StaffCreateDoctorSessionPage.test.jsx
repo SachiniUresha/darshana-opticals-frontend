@@ -19,17 +19,22 @@ vi.mock('../src/services/staffAppointmentService', () => ({
 
 const logout = vi.fn();
 
-const provider = {
+const doctor = {
   id: '507f1f77bcf86cd799439011',
   name: 'Dr. N. Silva',
-  role: 'OPTOMETRIST',
-  branchId: '507f1f77bcf86cd799439012',
+  specialization: 'Ophthalmologist',
 };
+
+const branchId = '507f1f77bcf86cd799439012';
 
 const createdSession = {
   id: '507f1f77bcf86cd799439021',
-  staffId: provider.id,
-  branchId: provider.branchId,
+  doctorId: doctor.id,
+  staffId: null,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
+  branchId,
   startAt: '2026-10-20T07:30:00.000Z',
   endAt: '2026-10-20T08:30:00.000Z',
   capacity: 10,
@@ -59,7 +64,7 @@ function renderPage() {
 
 async function fillValidForm() {
   await screen.findByRole('option', {
-    name: 'Dr. N. Silva',
+    name: 'Dr. N. Silva — Ophthalmologist',
   });
 
   fireEvent.change(screen.getByLabelText('Date *'), {
@@ -89,27 +94,27 @@ describe('StaffCreateDoctorSessionPage', () => {
       logout,
     });
 
-    getAppointmentProviders.mockResolvedValue([provider]);
+    getAppointmentProviders.mockResolvedValue([doctor]);
     createDoctorSession.mockResolvedValue(createdSession);
   });
 
-  it('loads eligible Optometrists from the backend', async () => {
+  it('loads Doctors and specialization from the appointment API', async () => {
     renderPage();
 
     expect(
       await screen.findByRole('option', {
-        name: 'Dr. N. Silva',
+        name: 'Dr. N. Silva — Ophthalmologist',
       }),
     ).toBeInTheDocument();
 
     expect(getAppointmentProviders).toHaveBeenCalledTimes(1);
 
     expect(
-      screen.getByDisplayValue('Gampaha Main Branch · locked'),
+      screen.getByDisplayValue('Gampaha Main Branch · fixed'),
     ).toHaveAttribute('readonly');
   });
 
-  it('creates a session using only approved form values and backend provider branch', async () => {
+  it('creates a Doctor session using doctorId and session details only', async () => {
     renderPage();
 
     await fillValidForm();
@@ -122,13 +127,17 @@ describe('StaffCreateDoctorSessionPage', () => {
 
     await waitFor(() => {
       expect(createDoctorSession).toHaveBeenCalledWith({
-        staffId: provider.id,
-        branchId: provider.branchId,
+        doctorId: doctor.id,
         startAt: '2026-10-20T13:00:00+05:30',
         endAt: '2026-10-20T14:00:00+05:30',
         capacity: 10,
       });
     });
+
+    const submittedPayload = createDoctorSession.mock.calls[0][0];
+
+    expect(submittedPayload).not.toHaveProperty('staffId');
+    expect(submittedPayload).not.toHaveProperty('branchId');
 
     expect(
       await screen.findByText('Session details marker'),
@@ -139,7 +148,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     renderPage();
 
     await screen.findByRole('option', {
-      name: 'Dr. N. Silva',
+      name: 'Dr. N. Silva — Ophthalmologist',
     });
 
     fireEvent.change(screen.getByLabelText('Date *'), {
@@ -197,7 +206,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     expect(createDoctorSession).not.toHaveBeenCalled();
   });
 
-  it('shows the Figma overlap conflict without claiming success', async () => {
+  it('shows Doctor overlap conflicts without claiming success', async () => {
     createDoctorSession.mockRejectedValue(
       Object.assign(new Error('Overlap'), {
         status: 409,
@@ -220,7 +229,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'already has a session that overlaps',
+      'Doctor already has a session that overlaps',
     );
 
     expect(
@@ -228,11 +237,10 @@ describe('StaffCreateDoctorSessionPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows provider eligibility conflicts safely', async () => {
+  it('shows unavailable Doctor errors safely', async () => {
     createDoctorSession.mockRejectedValue(
-      Object.assign(new Error('Provider changed'), {
-        status: 409,
-        code: 'PROVIDER_CHANGED',
+      Object.assign(new Error('Doctor missing'), {
+        status: 404,
       }),
     );
 
@@ -247,7 +255,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'selected Optometrist is no longer eligible',
+      'selected Doctor is no longer available',
     );
   });
 
@@ -292,7 +300,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('logs out and redirects when provider loading returns 401', async () => {
+  it('logs out and redirects when Doctor loading returns 401', async () => {
     getAppointmentProviders.mockRejectedValue(
       Object.assign(new Error('Unauthorized'), {
         status: 401,
@@ -306,7 +314,7 @@ describe('StaffCreateDoctorSessionPage', () => {
     expect(logout).toHaveBeenCalledTimes(1);
   });
 
-  it('shows a safe network error when provider loading fails', async () => {
+  it('shows a safe network error when Doctor loading fails', async () => {
     getAppointmentProviders.mockRejectedValue(
       Object.assign(new Error('Network details'), {
         status: 0,
@@ -320,5 +328,19 @@ describe('StaffCreateDoctorSessionPage', () => {
     );
 
     expect(screen.queryByText('Network details')).not.toBeInTheDocument();
+  });
+
+  it('does not show technical backend implementation messages', async () => {
+    renderPage();
+
+    await screen.findByRole('option', {
+      name: 'Dr. N. Silva — Ophthalmologist',
+    });
+
+    expect(screen.queryByText(/backend validation/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/server validates/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/checked by the backend/i),
+    ).not.toBeInTheDocument();
   });
 });
