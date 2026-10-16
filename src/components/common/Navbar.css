@@ -275,3 +275,11 @@
     color: #334155 !important;
   }
 }
+
+/* Admin uses the existing header without public shopping navigation. */
+.navbar--admin {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.navbar--admin .navbar__account-links {
+  justify-self: end;
+}

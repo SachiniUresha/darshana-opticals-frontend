@@ -37,6 +37,14 @@ vi.mock('../pages/LoginPage', () => ({
   default: () => <div>Login page</div>,
 }));
 
+vi.mock('../pages/AdminStaffCreatePage', () => ({
+  default: () => <h1>Add New Staff Member</h1>,
+}));
+
+vi.mock('../pages/AdminDoctorCreatePage', () => ({
+  default: () => <h1>Add New Doctor</h1>,
+}));
+
 vi.mock('../pages/StaffOrdersPage', () => ({
   default: () => <div>Staff orders page</div>,
 }));
@@ -189,5 +197,82 @@ describe('Staff order route protection', () => {
 
     expect(screen.getByText('Home page')).toBeTruthy();
     expect(screen.queryByText('Staff order details page')).toBeNull();
+  });
+});
+
+describe('System Admin Dashboard route protection', () => {
+  it('allows SYSTEM_ADMIN to open the dashboard', () => {
+    mockAuth.current = { isAuthenticated: true, user: { role: SYSTEM_ADMIN } };
+    show('/admin');
+    expect(
+      screen.getByRole('heading', { name: /Admin Dashboard/i }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([CUSTOMER, BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST])(
+    'blocks %s from the dashboard',
+    (role) => {
+      mockAuth.current = { isAuthenticated: true, user: { role } };
+      show('/admin');
+      expect(screen.getByTestId('current-path').textContent).toBe('/');
+    },
+  );
+
+  it('redirects unauthenticated visitors to login', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/admin');
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
+  });
+});
+describe('Admin Staff creation route protection', () => {
+  it('allows SYSTEM_ADMIN to open the staff creation page', () => {
+    mockAuth.current = { isAuthenticated: true, user: { role: SYSTEM_ADMIN } };
+    show('/admin/staff/new');
+    expect(
+      screen.getByRole('heading', { name: 'Add New Staff Member' }),
+    ).toBeInTheDocument();
+  });
+
+  it.each([CUSTOMER, BRANCH_ASSISTANT, BRANCH_MANAGER, OPTOMETRIST])(
+    'denies %s from creating Staff',
+    (role) => {
+      mockAuth.current = { isAuthenticated: true, user: { role } };
+      show('/admin/staff/new');
+      expect(screen.getByTestId('current-path').textContent).toBe('/');
+    },
+  );
+
+  it('sends unauthenticated visitors to Login', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/admin/staff/new');
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
+  });
+});
+
+describe('Admin Doctor creation route protection', () => {
+  it('allows SYSTEM_ADMIN to open Doctor creation', () => {
+    mockAuth.current = { isAuthenticated: true, user: { role: SYSTEM_ADMIN } };
+    show('/admin/doctors/new');
+    expect(
+      screen.getByRole('heading', { name: 'Add New Doctor' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('current-path').textContent).toBe(
+      '/admin/doctors/new',
+    );
+  });
+
+  it.each([CUSTOMER, BRANCH_ASSISTANT, BRANCH_MANAGER, OPTOMETRIST])(
+    'blocks %s from Doctor creation',
+    (role) => {
+      mockAuth.current = { isAuthenticated: true, user: { role } };
+      show('/admin/doctors/new');
+      expect(screen.getByTestId('current-path').textContent).toBe('/');
+    },
+  );
+
+  it('sends unauthenticated visitors to login', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/admin/doctors/new');
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
   });
 });
