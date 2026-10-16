@@ -34,7 +34,6 @@ const branchId = '507f1f77bcf86cd799439012';
 const session = {
   id: '507f1f77bcf86cd799439021',
   doctorId: doctor.id,
-  staffId: null,
   doctor,
   doctorName: doctor.name,
   specialization: doctor.specialization,
@@ -49,11 +48,9 @@ const session = {
 const appointment = {
   id: '507f1f77bcf86cd799439031',
   doctorId: doctor.id,
-  staffId: null,
   doctor,
   doctorName: doctor.name,
   specialization: doctor.specialization,
-  providerName: doctor.name,
   sessionId: session.id,
   branchId,
   dateTime: session.startAt,
@@ -89,6 +86,26 @@ async function waitForForm() {
   });
 }
 
+async function openConfirmation() {
+  await waitForForm();
+
+  fireEvent.change(screen.getByLabelText('Capacity *'), {
+    target: {
+      value: '12',
+    },
+  });
+
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: 'Save Session Changes',
+    }),
+  );
+
+  return screen.getByRole('dialog', {
+    name: 'Confirm Session Reschedule',
+  });
+}
+
 describe('StaffEditDoctorSessionPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -99,6 +116,7 @@ describe('StaffEditDoctorSessionPage', () => {
 
     getDoctorSessions.mockResolvedValue([session]);
     getAppointmentProviders.mockResolvedValue([doctor]);
+
     getStaffAppointments.mockResolvedValue([
       appointment,
       {
@@ -141,25 +159,100 @@ describe('StaffEditDoctorSessionPage', () => {
   it('shows the confirmation modal before saving changes', async () => {
     renderPage();
 
-    await waitForForm();
+    const dialog = await openConfirmation();
 
-    fireEvent.change(screen.getByLabelText('Capacity *'), {
-      target: {
-        value: '12',
-      },
+    expect(dialog).toBeInTheDocument();
+
+    expect(updateDoctorSession).not.toHaveBeenCalled();
+  });
+
+  it('moves focus into the confirmation dialog when it opens', async () => {
+    renderPage();
+
+    await openConfirmation();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Keep Current Session',
+        }),
+      ).toHaveFocus();
+    });
+  });
+
+  it('traps keyboard focus inside the confirmation dialog', async () => {
+    renderPage();
+
+    await openConfirmation();
+
+    const keepButton = screen.getByRole('button', {
+      name: 'Keep Current Session',
     });
 
-    fireEvent.click(
+    const confirmButton = screen.getByRole('button', {
+      name: 'Confirm Reschedule',
+    });
+
+    confirmButton.focus();
+
+    fireEvent.keyDown(document, {
+      key: 'Tab',
+    });
+
+    expect(keepButton).toHaveFocus();
+
+    keepButton.focus();
+
+    fireEvent.keyDown(document, {
+      key: 'Tab',
+      shiftKey: true,
+    });
+
+    expect(confirmButton).toHaveFocus();
+  });
+
+  it('prevents background controls from keeping focus while dialog is open', async () => {
+    renderPage();
+
+    await openConfirmation();
+
+    const doctorSelect = screen.getByRole('combobox', {
+      name: 'Doctor *',
+    });
+
+    doctorSelect.focus();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Keep Current Session',
+        }),
+      ).toHaveFocus();
+    });
+  });
+
+  it('closes the confirmation with Escape and restores trigger focus', async () => {
+    renderPage();
+
+    await openConfirmation();
+
+    fireEvent.keyDown(document, {
+      key: 'Escape',
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', {
+          name: 'Confirm Session Reschedule',
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(
       screen.getByRole('button', {
         name: 'Save Session Changes',
       }),
-    );
-
-    expect(
-      screen.getByRole('dialog', {
-        name: 'Confirm Session Reschedule',
-      }),
-    ).toBeInTheDocument();
+    ).toHaveFocus();
 
     expect(updateDoctorSession).not.toHaveBeenCalled();
   });
@@ -167,19 +260,7 @@ describe('StaffEditDoctorSessionPage', () => {
   it('saves using doctorId without sending legacy staff or branch identifiers', async () => {
     renderPage();
 
-    await waitForForm();
-
-    fireEvent.change(screen.getByLabelText('Capacity *'), {
-      target: {
-        value: '12',
-      },
-    });
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Save Session Changes',
-      }),
-    );
+    await openConfirmation();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -223,6 +304,7 @@ describe('StaffEditDoctorSessionPage', () => {
     await waitForForm();
 
     expect(screen.getByDisplayValue('Select a Doctor')).toBeInTheDocument();
+
     expect(screen.getByText('Legacy Optometrist session')).toBeInTheDocument();
 
     fireEvent.click(
@@ -355,19 +437,7 @@ describe('StaffEditDoctorSessionPage', () => {
 
     renderPage();
 
-    await waitForForm();
-
-    fireEvent.change(screen.getByLabelText('Capacity *'), {
-      target: {
-        value: '12',
-      },
-    });
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Save Session Changes',
-      }),
-    );
+    await openConfirmation();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -392,19 +462,7 @@ describe('StaffEditDoctorSessionPage', () => {
 
     renderPage();
 
-    await waitForForm();
-
-    fireEvent.change(screen.getByLabelText('Capacity *'), {
-      target: {
-        value: '12',
-      },
-    });
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Save Session Changes',
-      }),
-    );
+    await openConfirmation();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -417,22 +475,10 @@ describe('StaffEditDoctorSessionPage', () => {
     );
   });
 
-  it('can cancel the confirmation without submitting', async () => {
+  it('can cancel the confirmation without submitting and restores focus', async () => {
     renderPage();
 
-    await waitForForm();
-
-    fireEvent.change(screen.getByLabelText('Capacity *'), {
-      target: {
-        value: '12',
-      },
-    });
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Save Session Changes',
-      }),
-    );
+    await openConfirmation();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -440,9 +486,89 @@ describe('StaffEditDoctorSessionPage', () => {
       }),
     );
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
 
     expect(updateDoctorSession).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Save Session Changes',
+      }),
+    ).toHaveFocus();
+  });
+
+  it('does not close the confirmation with Escape while saving is pending', async () => {
+    updateDoctorSession.mockImplementation(() => new Promise(() => {}));
+
+    renderPage();
+
+    await openConfirmation();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Reschedule',
+      }),
+    );
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'Saving Changes...',
+      }),
+    ).toBeDisabled();
+
+    fireEvent.keyDown(document, {
+      key: 'Escape',
+    });
+
+    expect(
+      screen.getByRole('dialog', {
+        name: 'Confirm Session Reschedule',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('prevents duplicate update submission while saving is pending', async () => {
+    let resolveUpdate;
+
+    updateDoctorSession.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve;
+        }),
+    );
+
+    renderPage();
+
+    await openConfirmation();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Reschedule',
+      }),
+    );
+
+    const pendingButton = await screen.findByRole('button', {
+      name: 'Saving Changes...',
+    });
+
+    expect(pendingButton).toBeDisabled();
+
+    fireEvent.click(pendingButton);
+
+    expect(updateDoctorSession).toHaveBeenCalledTimes(1);
+
+    resolveUpdate({
+      ...session,
+      capacity: 12,
+    });
+
+    expect(
+      await screen.findByText('Session details marker'),
+    ).toBeInTheDocument();
+
+    expect(updateDoctorSession).toHaveBeenCalledTimes(1);
   });
 
   it('uses user-friendly staff instructions without backend implementation wording', async () => {

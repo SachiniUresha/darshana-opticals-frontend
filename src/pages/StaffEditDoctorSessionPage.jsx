@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import {
@@ -151,6 +151,11 @@ export default function StaffEditDoctorSessionPage() {
   const [fieldError, setFieldError] = useState('');
   const [submitError, setSubmitError] = useState('');
 
+  const reviewButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+  const restoreFocusRef = useRef(true);
+  const submittingRef = useRef(false);
+
   useEffect(() => {
     let active = true;
     const previousTitle = document.title;
@@ -213,9 +218,11 @@ export default function StaffEditDoctorSessionPage() {
 
         if (error?.status === 401) {
           logout();
+
           navigate('/login', {
             replace: true,
           });
+
           return;
         }
 
@@ -242,6 +249,114 @@ export default function StaffEditDoctorSessionPage() {
       document.title = previousTitle;
     };
   }, [logout, navigate, sessionId]);
+
+  useEffect(() => {
+    if (!showConfirmation) {
+      return undefined;
+    }
+
+    const dialog = dialogRef.current;
+    const reviewButton = reviewButtonRef.current;
+
+    if (!dialog) {
+      return undefined;
+    }
+
+    function getFocusableElements() {
+      return Array.from(
+        dialog.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) =>
+          element instanceof HTMLElement &&
+          element.getAttribute('aria-hidden') !== 'true',
+      );
+    }
+
+    function moveFocusIntoDialog() {
+      const focusableElements = getFocusableElements();
+
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      } else {
+        dialog.focus();
+      }
+    }
+
+    moveFocusIntoDialog();
+
+    function handleDialogKeyDown(event) {
+      if (event.key === 'Escape') {
+        if (submittingRef.current) {
+          return;
+        }
+
+        event.preventDefault();
+        restoreFocusRef.current = true;
+        setShowConfirmation(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const focusableElements = getFocusableElements();
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (
+        event.shiftKey &&
+        (document.activeElement === firstElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (
+        !event.shiftKey &&
+        (document.activeElement === lastElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    function handleDocumentFocus(event) {
+      if (dialog.contains(event.target)) {
+        return;
+      }
+
+      moveFocusIntoDialog();
+    }
+
+    document.addEventListener('keydown', handleDialogKeyDown);
+    document.addEventListener('focusin', handleDocumentFocus);
+
+    return () => {
+      document.removeEventListener('keydown', handleDialogKeyDown);
+      document.removeEventListener('focusin', handleDocumentFocus);
+
+      if (
+        restoreFocusRef.current &&
+        reviewButton &&
+        document.contains(reviewButton)
+      ) {
+        reviewButton.focus();
+      }
+    };
+  }, [showConfirmation]);
 
   const selectedProvider = useMemo(
     () =>
@@ -303,14 +418,25 @@ export default function StaffEditDoctorSessionPage() {
       return;
     }
 
+    restoreFocusRef.current = true;
     setShowConfirmation(true);
   }
 
-  async function confirmUpdate() {
-    if (!validateForm() || submitting) {
+  function closeConfirmation() {
+    if (submittingRef.current) {
       return;
     }
 
+    restoreFocusRef.current = true;
+    setShowConfirmation(false);
+  }
+
+  async function confirmUpdate() {
+    if (!validateForm() || submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
     setSubmitting(true);
 
     try {
@@ -321,6 +447,8 @@ export default function StaffEditDoctorSessionPage() {
         capacity: Number(capacity),
       });
 
+      restoreFocusRef.current = false;
+
       navigate(
         `/staff/appointments/sessions/${encodeURIComponent(updatedSession.id)}`,
         {
@@ -329,16 +457,22 @@ export default function StaffEditDoctorSessionPage() {
       );
     } catch (error) {
       if (error?.status === 401) {
+        restoreFocusRef.current = false;
+
         logout();
+
         navigate('/login', {
           replace: true,
         });
+
         return;
       }
 
+      restoreFocusRef.current = true;
       setShowConfirmation(false);
       setSubmitError(updateSessionErrorLabel(error));
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
@@ -521,7 +655,7 @@ export default function StaffEditDoctorSessionPage() {
               Cancel
             </Link>
 
-            <button type="submit" disabled={submitting}>
+            <button ref={reviewButtonRef} type="submit" disabled={submitting}>
               Save Session Changes
             </button>
           </div>
@@ -577,10 +711,12 @@ export default function StaffEditDoctorSessionPage() {
       {showConfirmation ? (
         <div className="staff-edit-session-modal-backdrop" role="presentation">
           <section
+            ref={dialogRef}
             className="staff-edit-session-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-session-reschedule-title"
+            tabIndex={-1}
           >
             <div className="staff-edit-session-modal__title">
               <span aria-hidden="true">!</span>
@@ -654,7 +790,7 @@ export default function StaffEditDoctorSessionPage() {
             <div className="staff-edit-session-modal__actions">
               <button
                 type="button"
-                onClick={() => setShowConfirmation(false)}
+                onClick={closeConfirmation}
                 disabled={submitting}
               >
                 Keep Current Session
