@@ -22,9 +22,22 @@ vi.mock('../src/services/staffAppointmentService', () => ({
 
 const logout = vi.fn();
 
+const doctor = {
+  id: '507f1f77bcf86cd799439011',
+  name: 'Dr. N. Silva',
+  specialization: 'Ophthalmologist',
+};
+
 const session = {
   id: '507f1f77bcf86cd799439021',
-  staffId: '507f1f77bcf86cd799439011',
+  doctorId: doctor.id,
+  doctor: {
+    id: doctor.id,
+    name: doctor.name,
+    specialization: doctor.specialization,
+  },
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
   branchId: '507f1f77bcf86cd799439012',
   startAt: '2026-10-20T07:30:00.000Z',
   endAt: '2026-10-20T08:30:00.000Z',
@@ -38,17 +51,16 @@ const otherSession = {
   id: '507f1f77bcf86cd799439099',
 };
 
-const provider = {
-  id: session.staffId,
-  name: 'Dr. N. Silva',
-  role: 'OPTOMETRIST',
-  branchId: session.branchId,
-};
-
 const appointment = {
   id: '507f1f77bcf86cd799439031',
-  staffId: provider.id,
-  providerName: provider.name,
+  doctorId: doctor.id,
+  doctor: {
+    id: doctor.id,
+    name: doctor.name,
+    specialization: doctor.specialization,
+  },
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
   sessionId: session.id,
   branchId: session.branchId,
   dateTime: session.startAt,
@@ -102,10 +114,10 @@ describe('StaffDoctorSessionDetailsPage', () => {
 
     getStaffAppointments.mockResolvedValue([appointment, unrelatedAppointment]);
 
-    getAppointmentProviders.mockResolvedValue([provider]);
+    getAppointmentProviders.mockResolvedValue([doctor]);
   });
 
-  it('loads authoritative session details and metrics', async () => {
+  it('loads authoritative doctor session details and metrics', async () => {
     renderPage();
 
     expect(
@@ -121,6 +133,14 @@ describe('StaffDoctorSessionDetailsPage', () => {
     expect(within(summary).getByText('9')).toBeInTheDocument();
 
     expect(screen.getAllByText('Dr. N. Silva').length).toBeGreaterThan(0);
+
+    expect(screen.getByText(/Ophthalmologist/)).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('columnheader', {
+        name: 'Doctor',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('shows only bookings belonging to the requested session', async () => {

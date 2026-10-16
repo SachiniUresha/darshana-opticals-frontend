@@ -15,12 +15,26 @@ import {
 import { getAppointmentStatusLabel } from '../utils/staffAppointmentView';
 import './StaffDoctorSessionDetailsPage.css';
 
-function providerReference(staffId) {
-  if (!staffId) {
-    return 'Provider unavailable';
+function doctorReference(doctorId) {
+  if (!doctorId) {
+    return 'Doctor unavailable';
   }
 
-  return `Provider …${staffId.slice(-6)}`;
+  return `Doctor …${doctorId.slice(-6)}`;
+}
+
+function recordDoctorId(record) {
+  return record?.doctorId ?? record?.doctor?.id ?? record?.staffId ?? null;
+}
+
+function recordDoctorName(record) {
+  return (
+    record?.doctorName ?? record?.doctor?.name ?? record?.providerName ?? null
+  );
+}
+
+function recordDoctorSpecialization(record) {
+  return record?.specialization ?? record?.doctor?.specialization ?? null;
 }
 
 function sessionStatus(session) {
@@ -140,29 +154,57 @@ export default function StaffDoctorSessionDetailsPage() {
     };
   }, [loadData]);
 
-  const providerNames = useMemo(() => {
-    const names = new Map();
+  const doctorDetails = useMemo(() => {
+    const details = new Map();
+
+    function addDoctor(id, name, specialization = null) {
+      if (!id) {
+        return;
+      }
+
+      const current = details.get(id);
+
+      details.set(id, {
+        name: name ?? current?.name ?? null,
+        specialization: specialization ?? current?.specialization ?? null,
+      });
+    }
 
     for (const provider of providers) {
-      names.set(provider.id, provider.name);
+      addDoctor(provider.id, provider.name, provider.specialization);
+    }
+
+    if (session) {
+      addDoctor(
+        recordDoctorId(session),
+        recordDoctorName(session),
+        recordDoctorSpecialization(session),
+      );
     }
 
     for (const appointment of appointments) {
-      if (
-        appointment.staffId &&
-        appointment.providerName &&
-        !names.has(appointment.staffId)
-      ) {
-        names.set(appointment.staffId, appointment.providerName);
-      }
+      addDoctor(
+        recordDoctorId(appointment),
+        recordDoctorName(appointment),
+        recordDoctorSpecialization(appointment),
+      );
     }
 
-    return names;
-  }, [appointments, providers]);
+    return details;
+  }, [appointments, providers, session]);
 
-  const providerName = session
-    ? (providerNames.get(session.staffId) ?? providerReference(session.staffId))
-    : 'Provider unavailable';
+  const sessionDoctorId = recordDoctorId(session);
+
+  const doctorName = session
+    ? (doctorDetails.get(sessionDoctorId)?.name ??
+      recordDoctorName(session) ??
+      doctorReference(sessionDoctorId))
+    : 'Doctor unavailable';
+
+  const doctorSpecialization = session
+    ? (doctorDetails.get(sessionDoctorId)?.specialization ??
+      recordDoctorSpecialization(session))
+    : null;
 
   if (loading) {
     return (
@@ -199,10 +241,7 @@ export default function StaffDoctorSessionDetailsPage() {
         <div className="staff-session-details-state" role="status">
           <h1>Doctor session not found</h1>
 
-          <p>
-            This session is unavailable or is outside your approved appointment
-            workspace.
-          </p>
+          <p>This doctor session is unavailable.</p>
 
           <Link to="/staff/appointments">Back to Sessions</Link>
         </div>
@@ -222,9 +261,7 @@ export default function StaffDoctorSessionDetailsPage() {
 
           <h1>Doctor Session Details</h1>
 
-          <p>
-            Review session availability and backend-assigned customer positions.
-          </p>
+          <p>Review session details, availability, and customer bookings.</p>
         </div>
 
         <Link className="staff-session-details-back" to="/staff/appointments">
@@ -241,7 +278,11 @@ export default function StaffDoctorSessionDetailsPage() {
             Asia/Colombo
           </p>
 
-          <p>{providerName} · Gampaha Main Branch</p>
+          <p>
+            {doctorName}
+            {doctorSpecialization ? ` · ${doctorSpecialization}` : ''} · Gampaha
+            Main Branch
+          </p>
         </div>
 
         <span
@@ -263,25 +304,25 @@ export default function StaffDoctorSessionDetailsPage() {
         <article>
           <span>Capacity</span>
           <strong>{session.capacity}</strong>
-          <small>Configured capacity</small>
+          <small>Session capacity</small>
         </article>
 
         <article>
           <span>Confirmed</span>
           <strong>{session.confirmedCount}</strong>
-          <small>Current active bookings</small>
+          <small>Current bookings</small>
         </article>
 
         <article>
           <span>Available</span>
           <strong>{session.remainingCapacity}</strong>
-          <small>Backend-computed places</small>
+          <small>Places remaining</small>
         </article>
 
         <article>
           <span>Branch</span>
           <strong>Gampaha</strong>
-          <small>Main Branch only</small>
+          <small>Main Branch</small>
         </article>
       </section>
 
@@ -291,7 +332,7 @@ export default function StaffDoctorSessionDetailsPage() {
 
           <p>
             {isBranchAssistant
-              ? 'Only Branch Assistants can make backend-approved changes.'
+              ? 'You can update this doctor session.'
               : 'Your Branch Manager access is read-only.'}
           </p>
         </div>
@@ -326,7 +367,7 @@ export default function StaffDoctorSessionDetailsPage() {
           <div>
             <h2 id="session-bookings-title">Customer Bookings</h2>
 
-            <p>Only the server can assign or reorder active positions.</p>
+            <p>Review the customers booked for this doctor session.</p>
           </div>
 
           <strong>
@@ -347,75 +388,76 @@ export default function StaffDoctorSessionDetailsPage() {
                   <th>Position</th>
                   <th>Customer</th>
                   <th>Date</th>
-                  <th>Optometrist</th>
+                  <th>Doctor</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
 
               <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment.id}>
-                    <td>
-                      {appointment.position == null
-                        ? '—'
-                        : `#${appointment.position}`}
-                    </td>
+                {appointments.map((appointment) => {
+                  const appointmentDoctorId = recordDoctorId(appointment);
 
-                    <td>
-                      {isBranchAssistant
-                        ? (appointment.customer?.name ?? 'Customer unavailable')
-                        : 'Restricted'}
-                    </td>
+                  const appointmentDoctorName =
+                    recordDoctorName(appointment) ??
+                    doctorDetails.get(appointmentDoctorId)?.name ??
+                    doctorName;
 
-                    <td>
-                      {appointmentDateLabel(appointment.dateTime)}
+                  return (
+                    <tr key={appointment.id}>
+                      <td>
+                        {appointment.position == null
+                          ? '—'
+                          : `#${appointment.position}`}
+                      </td>
 
-                      <small>
-                        {appointmentTimeLabel(appointment.dateTime)}
-                      </small>
-                    </td>
+                      <td>
+                        {isBranchAssistant
+                          ? (appointment.customer?.name ??
+                            'Customer unavailable')
+                          : 'Restricted'}
+                      </td>
 
-                    <td>{appointment.providerName ?? providerName}</td>
+                      <td>
+                        {appointmentDateLabel(appointment.dateTime)}
 
-                    <td>
-                      <span
-                        className={[
-                          'staff-session-details-status',
-                          appointment.status === 'CONFIRMED'
-                            ? 'staff-session-details-status--available'
-                            : 'staff-session-details-status--cancelled',
-                        ].join(' ')}
-                      >
-                        {getAppointmentStatusLabel(appointment.status)}
-                      </span>
-                    </td>
+                        <small>
+                          {appointmentTimeLabel(appointment.dateTime)}
+                        </small>
+                      </td>
 
-                    <td>
-                      <Link
-                        className="staff-session-bookings-view"
-                        to={`/staff/appointments/bookings/${encodeURIComponent(
-                          appointment.id,
-                        )}`}
-                      >
-                        View ›
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                      <td>{appointmentDoctorName}</td>
+
+                      <td>
+                        <span
+                          className={[
+                            'staff-session-details-status',
+                            appointment.status === 'CONFIRMED'
+                              ? 'staff-session-details-status--available'
+                              : 'staff-session-details-status--cancelled',
+                          ].join(' ')}
+                        >
+                          {getAppointmentStatusLabel(appointment.status)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <Link
+                          className="staff-session-bookings-view"
+                          to={`/staff/appointments/bookings/${encodeURIComponent(
+                            appointment.id,
+                          )}`}
+                        >
+                          View ›
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-      </section>
-
-      <section className="staff-session-details-integrity">
-        <strong>Position integrity</strong>
-
-        <p>
-          Display positions returned by the backend after cancellation or
-          rescheduling. Never compute them in React.
-        </p>
       </section>
 
       {isBranchAssistant && session.confirmedCount > 0 ? (
@@ -423,8 +465,8 @@ export default function StaffDoctorSessionDetailsPage() {
           <strong>Manual contact</strong>
 
           <p>
-            After significant session changes, staff must contact affected
-            customers and the Optometrist manually.
+            After significant session changes, contact affected customers and
+            the Doctor if needed.
           </p>
         </section>
       ) : null}
