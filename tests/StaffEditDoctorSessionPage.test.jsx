@@ -127,18 +127,15 @@ describe('StaffEditDoctorSessionPage', () => {
 
     expect(screen.getByText('2 CONFIRMED')).toBeInTheDocument();
 
-    expect(
-      screen.getByRole('combobox', {
-        name: 'Doctor *',
-      }),
-    ).toHaveValue(doctor.id);
+    const doctorSelect = screen.getByRole('combobox', {
+      name: 'Doctor *',
+    });
 
-    expect(
-      screen.getByRole('option', {
-        name: 'Dr. N. Silva — Ophthalmologist',
-        selected: true,
-      }),
-    ).toBeInTheDocument();
+    expect(doctorSelect).toHaveValue(doctor.id);
+
+    expect(doctorSelect.selectedOptions[0]).toHaveTextContent(
+      'Dr. N. Silva — Ophthalmologist',
+    );
   });
 
   it('shows the confirmation modal before saving changes', async () => {

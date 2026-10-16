@@ -76,12 +76,26 @@ function sessionAvailability(session) {
   return session.remainingCapacity > 0 ? 'AVAILABLE' : 'FULL';
 }
 
-function shortStaffReference(staffId) {
-  if (!staffId) {
-    return 'Provider unavailable';
+function shortProviderReference(providerId) {
+  if (!providerId) {
+    return 'Doctor unavailable';
   }
 
-  return `Provider …${staffId.slice(-6)}`;
+  return `Doctor …${providerId.slice(-6)}`;
+}
+
+function recordProviderId(record) {
+  return record?.doctorId ?? record?.staffId ?? null;
+}
+
+function recordProviderName(record) {
+  return (
+    record?.doctorName ?? record?.doctor?.name ?? record?.providerName ?? null
+  );
+}
+
+function recordProviderSpecialization(record) {
+  return record?.specialization ?? record?.doctor?.specialization ?? null;
 }
 
 function AppointmentMetrics({
@@ -302,29 +316,50 @@ export default function StaffAppointmentsPage() {
     };
   }, [loadData]);
 
-  const providerNames = useMemo(() => {
-    const names = new Map();
+  const providerDetails = useMemo(() => {
+    const details = new Map();
+
+    function addProvider(id, name, specialization = null) {
+      if (!id) {
+        return;
+      }
+
+      const current = details.get(id);
+
+      details.set(id, {
+        name: name ?? current?.name ?? null,
+        specialization: specialization ?? current?.specialization ?? null,
+      });
+    }
 
     for (const provider of providers) {
-      names.set(provider.id, provider.name);
+      addProvider(provider.id, provider.name, provider.specialization);
+    }
+
+    for (const session of sessions) {
+      addProvider(
+        recordProviderId(session),
+        recordProviderName(session),
+        recordProviderSpecialization(session),
+      );
     }
 
     for (const appointment of appointments) {
-      if (
-        appointment.staffId &&
-        appointment.providerName &&
-        !names.has(appointment.staffId)
-      ) {
-        names.set(appointment.staffId, appointment.providerName);
-      }
+      addProvider(
+        recordProviderId(appointment),
+        recordProviderName(appointment),
+        recordProviderSpecialization(appointment),
+      );
     }
 
-    return names;
-  }, [appointments, providers]);
+    return details;
+  }, [appointments, providers, sessions]);
 
   const providerLabel = useCallback(
-    (staffId) => providerNames.get(staffId) ?? shortStaffReference(staffId),
-    [providerNames],
+    (providerId) =>
+      providerDetails.get(providerId)?.name ??
+      shortProviderReference(providerId),
+    [providerDetails],
   );
 
   const now = new Date();
@@ -347,31 +382,35 @@ export default function StaffAppointmentsPage() {
   );
 
   const sessionProviderOptions = useMemo(() => {
-    const ids = [...new Set(sessions.map((session) => session.staffId))];
+    const ids = [
+      ...new Set(sessions.map((session) => recordProviderId(session))),
+    ].filter(Boolean);
 
-    return ids.map((staffId) => ({
-      id: staffId,
-      label: providerNames.get(staffId) ?? shortStaffReference(staffId),
+    return ids.map((providerId) => ({
+      id: providerId,
+      label: providerLabel(providerId),
     }));
-  }, [providerNames, sessions]);
+  }, [providerLabel, sessions]);
 
   const bookingProviderOptions = useMemo(() => {
     const ids = [
-      ...new Set(appointments.map((appointment) => appointment.staffId)),
-    ];
+      ...new Set(
+        appointments.map((appointment) => recordProviderId(appointment)),
+      ),
+    ].filter(Boolean);
 
-    return ids.map((staffId) => ({
-      id: staffId,
-      label: providerNames.get(staffId) ?? shortStaffReference(staffId),
+    return ids.map((providerId) => ({
+      id: providerId,
+      label: providerLabel(providerId),
     }));
-  }, [appointments, providerNames]);
+  }, [appointments, providerLabel]);
 
   const filteredSessions = useMemo(() => {
     const search = sessionSearch.trim().toLowerCase();
 
     return [...sessions]
       .filter((session) => {
-        const provider = providerLabel(session.staffId).toLowerCase();
+        const provider = providerLabel(recordProviderId(session)).toLowerCase();
 
         if (search && !provider.includes(search)) {
           return false;
@@ -383,7 +422,7 @@ export default function StaffAppointmentsPage() {
 
         if (
           sessionProviderFilter !== 'ALL' &&
-          session.staffId !== sessionProviderFilter
+          recordProviderId(session) !== sessionProviderFilter
         ) {
           return false;
         }
@@ -432,7 +471,7 @@ export default function StaffAppointmentsPage() {
 
         if (
           bookingProviderFilter !== 'ALL' &&
-          appointment.staffId !== bookingProviderFilter
+          recordProviderId(appointment) !== bookingProviderFilter
         ) {
           return false;
         }
@@ -548,7 +587,7 @@ export default function StaffAppointmentsPage() {
 
               <div className="staff-overview-filters">
                 <label>
-                  <span>Search optometrist</span>
+                  <span>Search doctor</span>
                   <input
                     type="search"
                     value={sessionSearch}
@@ -573,14 +612,14 @@ export default function StaffAppointmentsPage() {
                 </label>
 
                 <label>
-                  <span>Optometrist</span>
+                  <span>Doctor</span>
                   <select
                     value={sessionProviderFilter}
                     onChange={(event) =>
                       setSessionProviderFilter(event.target.value)
                     }
                   >
-                    <option value="ALL">All providers</option>
+                    <option value="ALL">All doctors</option>
                     {sessionProviderOptions.map((provider) => (
                       <option key={provider.id} value={provider.id}>
                         {provider.label}
@@ -632,7 +671,7 @@ export default function StaffAppointmentsPage() {
                       <tr>
                         <th>Date</th>
                         <th>Time</th>
-                        <th>Optometrist</th>
+                        <th>Doctor</th>
                         <th>Capacity</th>
                         <th>Confirmed</th>
                         <th>Available</th>
@@ -657,7 +696,9 @@ export default function StaffAppointmentsPage() {
                             </td>
 
                             <td>
-                              <strong>{providerLabel(session.staffId)}</strong>
+                              <strong>
+                                {providerLabel(recordProviderId(session))}
+                              </strong>
                             </td>
 
                             <td>{session.capacity}</td>
@@ -733,7 +774,7 @@ export default function StaffAppointmentsPage() {
                           </div>
 
                           <strong className="staff-session-mobile-card__provider">
-                            {providerLabel(session.staffId)}
+                            {providerLabel(recordProviderId(session))}
                           </strong>
 
                           <span>
@@ -799,7 +840,7 @@ export default function StaffAppointmentsPage() {
                 </label>
 
                 <label>
-                  <span>Optometrist</span>
+                  <span>Doctor</span>
                   <select
                     value={bookingProviderFilter}
                     onChange={(event) =>
@@ -851,7 +892,7 @@ export default function StaffAppointmentsPage() {
                         <th>Position</th>
                         <th>Customer</th>
                         <th>Date</th>
-                        <th>Optometrist</th>
+                        <th>Doctor</th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
@@ -886,8 +927,8 @@ export default function StaffAppointmentsPage() {
                           </td>
 
                           <td>
-                            {appointment.providerName ??
-                              providerLabel(appointment.staffId)}
+                            {recordProviderName(appointment) ??
+                              providerLabel(recordProviderId(appointment))}
                           </td>
 
                           <td>
