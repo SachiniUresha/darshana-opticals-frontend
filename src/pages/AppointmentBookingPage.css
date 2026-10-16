@@ -1,11 +1,15 @@
 .eye-test-page {
   min-height: 70vh;
+  margin-top: -1.5rem;
   background: #f7f8fa;
   color: #172033;
 }
 
 .eye-test-hero {
   position: relative;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
   overflow: hidden;
   padding: 3.25rem 1rem 3.5rem;
   background: #192d68;
@@ -498,16 +502,6 @@
   overflow-wrap: anywhere;
 }
 
-.appointment-server-note {
-  margin-top: 1rem;
-  padding: 0.85rem;
-  border: 1px solid #f1d680;
-  border-radius: 8px;
-  background: #fff9df;
-  color: #7d5b05;
-  font-size: 0.76rem;
-}
-
 .appointment-inline-error {
   margin: 0 0 1rem;
   padding: 0.85rem 1rem;
@@ -692,6 +686,10 @@
 
   .eye-test-card__actions {
     align-items: stretch;
+  }
+
+  .eye-test-page {
+    margin-top: -1rem;
   }
 }
 

@@ -610,8 +610,7 @@ function AppointmentBookingPage() {
             <h2 id="date-step-title">Pick a date &amp; time</h2>
 
             <p className="appointment-step-description">
-              Only backend-confirmed sessions that are currently bookable are
-              shown.
+              Choose an available date and time for your eye test.
             </p>
 
             {bookingError ? (
@@ -805,11 +804,6 @@ function AppointmentBookingPage() {
                 <dd>Darshana Opticals — Gampaha Main Branch</dd>
               </div>
             </dl>
-
-            <div className="appointment-server-note">
-              Appointment availability will be revalidated by the server when
-              you confirm the booking.
-            </div>
 
             {bookingError ? (
               <div className="appointment-inline-error" role="alert">

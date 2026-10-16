@@ -192,6 +192,42 @@ describe('AppointmentBookingPage', () => {
     createAppointment.mockResolvedValue(confirmation);
   });
 
+  it('keeps customer-facing booking instructions free from technical backend wording', async () => {
+    const user = userEvent.setup();
+
+    renderPage();
+
+    await selectDoctorAndContinue(user);
+
+    expect(
+      screen.getByText('Choose an available date and time for your eye test.'),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByText(/backend-confirmed/i)).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', {
+        name: '1 November 2026',
+      }),
+    );
+
+    const sessionRadio = screen.getByRole('radio', {
+      name: /2:30/i,
+    });
+
+    await user.click(sessionRadio.closest('label'));
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /continue/i,
+      }),
+    );
+
+    expect(
+      screen.queryByText(/revalidated by the server/i),
+    ).not.toBeInTheDocument();
+  });
+
   it('loads authenticated customer details and backend appointment data', async () => {
     renderPage();
 
