@@ -23,10 +23,22 @@ vi.mock('../src/services/staffAppointmentService', () => ({
 
 const logout = vi.fn();
 
+const doctor = {
+  id: '507f1f77bcf86cd799439011',
+  name: 'Dr. N. Silva',
+  specialization: 'Ophthalmologist',
+};
+
+const branchId = '507f1f77bcf86cd799439012';
+
 const session = {
   id: '507f1f77bcf86cd799439021',
-  staffId: '507f1f77bcf86cd799439011',
-  branchId: '507f1f77bcf86cd799439012',
+  doctorId: doctor.id,
+  staffId: null,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
+  branchId,
   startAt: '2026-10-20T07:30:00.000Z',
   endAt: '2026-10-20T08:30:00.000Z',
   capacity: 10,
@@ -34,19 +46,16 @@ const session = {
   remainingCapacity: 8,
 };
 
-const provider = {
-  id: session.staffId,
-  name: 'Dr. N. Silva',
-  role: 'OPTOMETRIST',
-  branchId: session.branchId,
-};
-
 const appointment = {
   id: '507f1f77bcf86cd799439031',
-  staffId: provider.id,
-  providerName: provider.name,
+  doctorId: doctor.id,
+  staffId: null,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
+  providerName: doctor.name,
   sessionId: session.id,
-  branchId: session.branchId,
+  branchId,
   dateTime: session.startAt,
   status: 'CONFIRMED',
   position: 1,
@@ -89,7 +98,7 @@ describe('StaffEditDoctorSessionPage', () => {
     });
 
     getDoctorSessions.mockResolvedValue([session]);
-    getAppointmentProviders.mockResolvedValue([provider]);
+    getAppointmentProviders.mockResolvedValue([doctor]);
     getStaffAppointments.mockResolvedValue([
       appointment,
       {
@@ -105,16 +114,31 @@ describe('StaffEditDoctorSessionPage', () => {
     });
   });
 
-  it('pre-fills the existing backend session', async () => {
+  it('pre-fills the existing Doctor and specialization', async () => {
     renderPage();
 
     await waitForForm();
 
-    expect(screen.getByDisplayValue('Dr. N. Silva')).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue('Dr. N. Silva — Ophthalmologist'),
+    ).toBeInTheDocument();
 
     expect(screen.getByDisplayValue('10')).toBeInTheDocument();
 
     expect(screen.getByText('2 CONFIRMED')).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('combobox', {
+        name: 'Doctor *',
+      }),
+    ).toHaveValue(doctor.id);
+
+    expect(
+      screen.getByRole('option', {
+        name: 'Dr. N. Silva — Ophthalmologist',
+        selected: true,
+      }),
+    ).toBeInTheDocument();
   });
 
   it('shows the confirmation modal before saving changes', async () => {
@@ -143,7 +167,7 @@ describe('StaffEditDoctorSessionPage', () => {
     expect(updateDoctorSession).not.toHaveBeenCalled();
   });
 
-  it('saves only after explicit confirmation', async () => {
+  it('saves using doctorId without sending legacy staff or branch identifiers', async () => {
     renderPage();
 
     await waitForForm();
@@ -167,19 +191,107 @@ describe('StaffEditDoctorSessionPage', () => {
     );
 
     await waitFor(() => {
+      expect(updateDoctorSession).toHaveBeenCalledWith(session.id, {
+        doctorId: doctor.id,
+        startAt: '2026-10-20T13:00:00+05:30',
+        endAt: '2026-10-20T14:00:00+05:30',
+        capacity: 12,
+      });
+    });
+
+    const submittedPayload = updateDoctorSession.mock.calls[0][1];
+
+    expect(submittedPayload).not.toHaveProperty('staffId');
+    expect(submittedPayload).not.toHaveProperty('branchId');
+
+    expect(
+      await screen.findByText('Session details marker'),
+    ).toBeInTheDocument();
+  });
+
+  it('requires explicit Doctor selection when editing a legacy Optometrist session', async () => {
+    getDoctorSessions.mockResolvedValueOnce([
+      {
+        ...session,
+        doctorId: null,
+        doctor: null,
+        doctorName: null,
+        specialization: null,
+        staffId: '507f1f77bcf86cd799439099',
+      },
+    ]);
+
+    renderPage();
+
+    await waitForForm();
+
+    expect(screen.getByDisplayValue('Select a Doctor')).toBeInTheDocument();
+    expect(screen.getByText('Legacy Optometrist session')).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Save Session Changes',
+      }),
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Please select a Doctor.',
+    );
+
+    expect(updateDoctorSession).not.toHaveBeenCalled();
+  });
+
+  it('converts a legacy session to a Doctor only after explicit selection', async () => {
+    getDoctorSessions.mockResolvedValueOnce([
+      {
+        ...session,
+        doctorId: null,
+        doctor: null,
+        doctorName: null,
+        specialization: null,
+        staffId: '507f1f77bcf86cd799439099',
+      },
+    ]);
+
+    renderPage();
+
+    await waitForForm();
+
+    fireEvent.change(screen.getByLabelText('Doctor *'), {
+      target: {
+        value: doctor.id,
+      },
+    });
+
+    fireEvent.change(screen.getByLabelText('Capacity *'), {
+      target: {
+        value: '12',
+      },
+    });
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Save Session Changes',
+      }),
+    );
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Reschedule',
+      }),
+    );
+
+    await waitFor(() => {
       expect(updateDoctorSession).toHaveBeenCalledWith(
         session.id,
         expect.objectContaining({
-          staffId: provider.id,
-          branchId: provider.branchId,
+          doctorId: doctor.id,
           capacity: 12,
         }),
       );
     });
 
-    expect(
-      await screen.findByText('Session details marker'),
-    ).toBeInTheDocument();
+    expect(updateDoctorSession.mock.calls[0][1]).not.toHaveProperty('staffId');
   });
 
   it('does not allow capacity below confirmed bookings', async () => {
@@ -236,7 +348,7 @@ describe('StaffEditDoctorSessionPage', () => {
     expect(updateDoctorSession).not.toHaveBeenCalled();
   });
 
-  it('shows backend overlap conflicts safely', async () => {
+  it('shows Doctor overlap conflicts safely', async () => {
     updateDoctorSession.mockRejectedValue(
       Object.assign(new Error('Overlap details'), {
         status: 409,
@@ -267,7 +379,7 @@ describe('StaffEditDoctorSessionPage', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'another session that overlaps',
+      'Doctor already has another session that overlaps',
     );
 
     expect(screen.queryByText('Overlap details')).not.toBeInTheDocument();
@@ -334,6 +446,16 @@ describe('StaffEditDoctorSessionPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     expect(updateDoctorSession).not.toHaveBeenCalled();
+  });
+
+  it('uses user-friendly staff instructions without backend implementation wording', async () => {
+    renderPage();
+
+    await waitForForm();
+
+    expect(screen.queryByText(/approved api/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/backend/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/server validates/i)).not.toBeInTheDocument();
   });
 
   it('logs out and redirects when loading returns 401', async () => {

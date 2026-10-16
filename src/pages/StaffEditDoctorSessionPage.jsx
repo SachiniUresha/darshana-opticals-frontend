@@ -52,41 +52,80 @@ function toSriLankaIso(date, time) {
   return `${date}T${time}:00+05:30`;
 }
 
+function doctorDisplayName(doctor) {
+  if (!doctor?.name) {
+    return '';
+  }
+
+  return doctor.specialization
+    ? `${doctor.name} — ${doctor.specialization}`
+    : doctor.name;
+}
+
+function currentSessionDoctorLabel(session, providers) {
+  if (!session) {
+    return 'Doctor unavailable';
+  }
+
+  const directoryDoctor =
+    providers.find((provider) => provider.id === session.doctorId) ?? null;
+
+  if (directoryDoctor) {
+    return doctorDisplayName(directoryDoctor);
+  }
+
+  if (session.doctor?.name) {
+    return doctorDisplayName(session.doctor);
+  }
+
+  if (session.doctorName) {
+    return session.specialization
+      ? `${session.doctorName} — ${session.specialization}`
+      : session.doctorName;
+  }
+
+  if (session.staffId) {
+    return 'Legacy Optometrist session';
+  }
+
+  return 'Doctor unavailable';
+}
+
 function updateSessionErrorLabel(error) {
   switch (error?.code) {
     case 'OVERLAPPING_SESSION':
-      return 'This Optometrist already has another session that overlaps with the proposed time.';
+      return 'This Doctor already has another session that overlaps with the proposed time.';
 
     case 'CAPACITY_TOO_LOW':
       return 'Capacity cannot be reduced below the number of confirmed active bookings.';
 
-    case 'INVALID_PROVIDER_BRANCH':
-      return 'The selected Optometrist is not assigned to Gampaha Main Branch.';
-
     case 'INVALID_BRANCH':
       return 'Doctor sessions can only be managed for Gampaha Main Branch.';
+
+    case 'OPTOMETRIST_REASSIGNMENT_UNSUPPORTED':
+      return 'This session must be assigned to a Doctor before it can be updated.';
 
     default:
       break;
   }
 
   if (error?.status === 403) {
-    return 'You do not have permission to update doctor sessions.';
+    return 'You do not have permission to update Doctor sessions.';
   }
 
   if (error?.status === 404) {
-    return 'The doctor session or selected Optometrist is no longer available.';
+    return 'The Doctor session or selected Doctor is no longer available.';
   }
 
   if (error?.status === 400 || error?.status === 409 || error?.status === 422) {
-    return 'The session changes could not be validated. Please review the details and try again.';
+    return 'The session changes could not be saved. Please review the details and try again.';
   }
 
   if (error?.status === 0) {
     return 'Unable to reach the server. Please check your connection and try again.';
   }
 
-  return 'Unable to update the doctor session. Please try again.';
+  return 'Unable to update the Doctor session. Please try again.';
 }
 
 export default function StaffEditDoctorSessionPage() {
@@ -138,7 +177,7 @@ export default function StaffEditDoctorSessionPage() {
 
         if (!selectedSession) {
           setLoadError(
-            'The doctor session is unavailable or outside your approved workspace.',
+            'The Doctor session is unavailable or outside your approved workspace.',
           );
           return;
         }
@@ -152,11 +191,17 @@ export default function StaffEditDoctorSessionPage() {
             appointment.status === 'CONFIRMED',
         );
 
+        const currentDoctorExists = providerData.some(
+          (provider) => provider.id === selectedSession.doctorId,
+        );
+
         setSession(selectedSession);
         setProviders(providerData);
         setConfirmedBookings(bookings.length);
 
-        setSelectedProviderId(selectedSession.staffId);
+        setSelectedProviderId(
+          currentDoctorExists ? selectedSession.doctorId : '',
+        );
         setDate(start.date);
         setStartTime(start.time);
         setEndTime(end.time);
@@ -175,13 +220,13 @@ export default function StaffEditDoctorSessionPage() {
         }
 
         if (error?.status === 403) {
-          setLoadError('You do not have permission to edit doctor sessions.');
+          setLoadError('You do not have permission to edit Doctor sessions.');
         } else if (error?.status === 0) {
           setLoadError(
             'Unable to reach the server. Please check your connection and try again.',
           );
         } else {
-          setLoadError('Unable to load the doctor session. Please try again.');
+          setLoadError('Unable to load the Doctor session. Please try again.');
         }
       } finally {
         if (active) {
@@ -204,9 +249,8 @@ export default function StaffEditDoctorSessionPage() {
     [providers, selectedProviderId],
   );
 
-  const currentProvider = useMemo(
-    () =>
-      providers.find((provider) => provider.id === session?.staffId) ?? null,
+  const currentProviderLabel = useMemo(
+    () => currentSessionDoctorLabel(session, providers),
     [providers, session],
   );
 
@@ -217,7 +261,12 @@ export default function StaffEditDoctorSessionPage() {
     setFieldError('');
     setSubmitError('');
 
-    if (!selectedProvider || !date || !startTime || !endTime || !capacity) {
+    if (!selectedProvider) {
+      setFieldError('Please select a Doctor.');
+      return false;
+    }
+
+    if (!date || !startTime || !endTime || !capacity) {
       setFieldError('Please complete all required fields.');
       return false;
     }
@@ -266,8 +315,7 @@ export default function StaffEditDoctorSessionPage() {
 
     try {
       const updatedSession = await updateDoctorSession(session.id, {
-        staffId: selectedProvider.id,
-        branchId: selectedProvider.branchId,
+        doctorId: selectedProvider.id,
         startAt: toSriLankaIso(date, startTime),
         endAt: toSriLankaIso(date, endTime),
         capacity: Number(capacity),
@@ -299,7 +347,7 @@ export default function StaffEditDoctorSessionPage() {
     return (
       <section className="staff-edit-session-page">
         <p className="staff-edit-session-state" role="status">
-          Loading doctor session...
+          Loading Doctor session...
         </p>
       </section>
     );
@@ -312,7 +360,7 @@ export default function StaffEditDoctorSessionPage() {
           className="staff-edit-session-state staff-edit-session-state--error"
           role="alert"
         >
-          <h1>Unable to edit doctor session</h1>
+          <h1>Unable to edit Doctor session</h1>
 
           <p>{loadError}</p>
 
@@ -333,8 +381,8 @@ export default function StaffEditDoctorSessionPage() {
           <h1>Edit / Reschedule Doctor Session</h1>
 
           <p>
-            Change the scheduled time, Optometrist or capacity without losing
-            existing booking records.
+            Change the scheduled Doctor, time or capacity while keeping existing
+            booking records.
           </p>
         </div>
 
@@ -355,11 +403,11 @@ export default function StaffEditDoctorSessionPage() {
           <div>
             <h2>Edit / Reschedule Session</h2>
 
-            <p>Update approved session information for Gampaha Main Branch.</p>
+            <p>Update the session information for Gampaha Main Branch.</p>
           </div>
 
           <label>
-            <span>Optometrist *</span>
+            <span>Doctor *</span>
 
             <select
               value={selectedProviderId}
@@ -368,11 +416,14 @@ export default function StaffEditDoctorSessionPage() {
                 setFieldError('');
                 setSubmitError('');
               }}
-              disabled={submitting}
+              disabled={submitting || providers.length === 0}
+              required
             >
+              <option value="">Select a Doctor</option>
+
               {providers.map((provider) => (
                 <option key={provider.id} value={provider.id}>
-                  {provider.name}
+                  {doctorDisplayName(provider)}
                 </option>
               ))}
             </select>
@@ -448,7 +499,7 @@ export default function StaffEditDoctorSessionPage() {
 
               <input
                 type="text"
-                value="Gampaha Main Branch · locked"
+                value="Gampaha Main Branch · fixed"
                 readOnly
                 aria-readonly="true"
               />
@@ -488,16 +539,17 @@ export default function StaffEditDoctorSessionPage() {
               {confirmedBookings} confirmed customer booking
               {confirmedBookings === 1 ? '' : 's'}{' '}
               {confirmedBookings === 1 ? 'is' : 'are'} associated with this
-              session. Inform affected customers and the Optometrist manually.
+              session. Inform affected customers and the Doctor manually after
+              making changes.
             </p>
           </section>
 
           <section className="staff-edit-session-warning">
-            <strong>Manual communication only</strong>
+            <strong>Customer communication</strong>
 
             <p>
-              Do not add Send Email, Send SMS or automatic reminder controls.
-              Record changes through the approved API.
+              Contact affected customers directly if the session date, time or
+              Doctor changes.
             </p>
           </section>
 
@@ -510,7 +562,7 @@ export default function StaffEditDoctorSessionPage() {
 
             <p>{sessionTimeRangeLabel(session.startAt, session.endAt)}</p>
 
-            <p>{currentProvider?.name ?? 'Current Optometrist'}</p>
+            <p>{currentProviderLabel}</p>
           </section>
         </aside>
       </div>
@@ -539,7 +591,7 @@ export default function StaffEditDoctorSessionPage() {
                 </h2>
 
                 <p>
-                  Review all current and proposed session details before
+                  Review the current and proposed session details before
                   applying changes.
                 </p>
               </div>
@@ -549,9 +601,7 @@ export default function StaffEditDoctorSessionPage() {
               <div>
                 <span>Current Session</span>
 
-                <strong>
-                  {currentProvider?.name ?? 'Current Optometrist'}
-                </strong>
+                <strong>{currentProviderLabel}</strong>
 
                 <small>Branch: Gampaha Main Branch</small>
 
@@ -570,7 +620,9 @@ export default function StaffEditDoctorSessionPage() {
                 <span>Proposed Session</span>
 
                 <strong>
-                  {selectedProvider?.name ?? 'Selected Optometrist'}
+                  {selectedProvider
+                    ? doctorDisplayName(selectedProvider)
+                    : 'Doctor not selected'}
                 </strong>
 
                 <small>Branch: Gampaha Main Branch</small>
@@ -593,8 +645,8 @@ export default function StaffEditDoctorSessionPage() {
                 </strong>
 
                 <p>
-                  Affected customers and the Optometrist must be informed
-                  manually after saving.
+                  Inform affected customers about the updated appointment
+                  details after saving.
                 </p>
               </div>
             ) : null}
