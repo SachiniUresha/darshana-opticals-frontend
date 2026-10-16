@@ -326,6 +326,18 @@ function AppointmentBookingPage() {
   }
 
   if (confirmation) {
+    const confirmationDoctorName =
+      confirmation.doctorName ??
+      confirmation.doctor?.name ??
+      selectedProvider?.name ??
+      'Doctor';
+
+    const confirmationSpecialization =
+      confirmation.specialization ??
+      confirmation.doctor?.specialization ??
+      selectedProvider?.specialization ??
+      '';
+
     return (
       <section
         className="appointment-success-page"
@@ -349,18 +361,10 @@ function AppointmentBookingPage() {
             <div>
               <dt>Doctor</dt>
               <dd>
-                {confirmation.doctorName ||
-                  confirmation.providerName ||
-                  selectedProvider?.name ||
-                  'Doctor'}
-                {(confirmation.specialization ||
-                  selectedProvider?.specialization) && (
-                  <>
-                    {' — '}
-                    {confirmation.specialization ||
-                      selectedProvider?.specialization}
-                  </>
-                )}
+                {confirmationDoctorName}
+                {confirmationSpecialization
+                  ? ` — ${confirmationSpecialization}`
+                  : ''}
               </dd>
             </div>
 

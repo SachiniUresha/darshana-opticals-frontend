@@ -18,10 +18,18 @@ vi.mock('../src/services/appointmentService', () => ({
 
 const logout = vi.fn();
 
+const doctor = {
+  id: 'doctor-1',
+  name: 'Dr. Ruwan Perera',
+  specialization: 'Ophthalmologist',
+};
+
 const futureAppointment = {
   id: 'appointment-1',
-  staffId: 'provider-1',
-  providerName: 'Dr. Ruwan Perera',
+  doctorId: doctor.id,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
   sessionId: 'session-1',
   branchId: 'branch-1',
   dateTime: '2030-11-01T09:00:00.000Z',
@@ -73,7 +81,7 @@ describe('AppointmentDetailsPage', () => {
     cancelAppointment.mockResolvedValue(true);
   });
 
-  it('loads authoritative appointment details', async () => {
+  it('loads appointment and Doctor details', async () => {
     renderPage();
 
     expect(screen.getByRole('status')).toHaveTextContent(
@@ -82,9 +90,15 @@ describe('AppointmentDetailsPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Dr. Ruwan Perera',
+        name: doctor.name,
       }),
     ).toBeInTheDocument();
+
+    expect(screen.getAllByText(doctor.name).length).toBeGreaterThan(0);
+
+    expect(screen.getAllByText(doctor.specialization).length).toBeGreaterThan(
+      0,
+    );
 
     expect(screen.getAllByText('Confirmed').length).toBeGreaterThan(0);
 
@@ -101,7 +115,7 @@ describe('AppointmentDetailsPage', () => {
     renderPage();
 
     await screen.findByRole('heading', {
-      name: 'Dr. Ruwan Perera',
+      name: doctor.name,
     });
 
     await user.click(
@@ -121,7 +135,7 @@ describe('AppointmentDetailsPage', () => {
     expect(cancelAppointment).not.toHaveBeenCalled();
   });
 
-  it('cancels through the backend and reloads the authoritative appointment', async () => {
+  it('cancels the appointment and reloads the latest appointment', async () => {
     const user = userEvent.setup();
 
     getAppointment
@@ -131,7 +145,7 @@ describe('AppointmentDetailsPage', () => {
     renderPage();
 
     await screen.findByRole('heading', {
-      name: 'Dr. Ruwan Perera',
+      name: doctor.name,
     });
 
     await user.click(
@@ -181,7 +195,7 @@ describe('AppointmentDetailsPage', () => {
     renderPage();
 
     await screen.findByRole('heading', {
-      name: 'Dr. Ruwan Perera',
+      name: doctor.name,
     });
 
     await user.click(
@@ -213,7 +227,7 @@ describe('AppointmentDetailsPage', () => {
     });
   });
 
-  it('shows backend cancellation-window errors safely', async () => {
+  it('shows cancellation-window conflicts safely', async () => {
     const user = userEvent.setup();
 
     cancelAppointment.mockRejectedValueOnce({
@@ -224,7 +238,7 @@ describe('AppointmentDetailsPage', () => {
     renderPage();
 
     await screen.findByRole('heading', {
-      name: 'Dr. Ruwan Perera',
+      name: doctor.name,
     });
 
     await user.click(
@@ -254,6 +268,8 @@ describe('AppointmentDetailsPage', () => {
         selector: '.appointment-status--cancelled',
       }),
     ).toBeInTheDocument();
+
+    expect(screen.getAllByText(doctor.name).length).toBeGreaterThan(0);
 
     expect(
       screen.queryByRole('button', {

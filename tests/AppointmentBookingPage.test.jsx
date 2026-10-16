@@ -53,7 +53,6 @@ const sessions = [
   {
     id: '507f1f77bcf86cd799439021',
     doctorId: providers[0].id,
-    staffId: null,
     doctor: providers[0],
     doctorName: providers[0].name,
     specialization: providers[0].specialization,
@@ -67,7 +66,6 @@ const sessions = [
   {
     id: '507f1f77bcf86cd799439022',
     doctorId: providers[0].id,
-    staffId: null,
     doctor: providers[0],
     doctorName: providers[0].name,
     specialization: providers[0].specialization,
@@ -81,7 +79,6 @@ const sessions = [
   {
     id: '507f1f77bcf86cd799439023',
     doctorId: providers[1].id,
-    staffId: null,
     doctor: providers[1],
     doctorName: providers[1].name,
     specialization: providers[1].specialization,
@@ -97,11 +94,9 @@ const sessions = [
 const confirmation = {
   id: '507f1f77bcf86cd799439031',
   doctorId: providers[0].id,
-  staffId: null,
   doctor: providers[0],
   doctorName: providers[0].name,
   specialization: providers[0].specialization,
-  providerName: providers[0].name,
   sessionId: sessions[0].id,
   branchId,
   dateTime: sessions[0].startAt,
@@ -192,7 +187,7 @@ describe('AppointmentBookingPage', () => {
     createAppointment.mockResolvedValue(confirmation);
   });
 
-  it('keeps customer-facing booking instructions free from technical backend wording', async () => {
+  it('keeps customer-facing booking instructions free from technical implementation wording', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -228,7 +223,7 @@ describe('AppointmentBookingPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('loads authenticated customer details and backend appointment data', async () => {
+  it('loads authenticated customer details and available appointment data', async () => {
     renderPage();
 
     expect(screen.getByRole('status')).toHaveTextContent(
@@ -250,7 +245,7 @@ describe('AppointmentBookingPage', () => {
     expect(getAvailableDoctorSessions).toHaveBeenCalledTimes(1);
   });
 
-  it('shows doctors and specializations returned by the backend rather than hard-coded providers', async () => {
+  it('shows Doctors and specializations returned by the appointment service', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -270,12 +265,13 @@ describe('AppointmentBookingPage', () => {
     ).toBeInTheDocument();
 
     expect(screen.getByText('Ophthalmologist')).toBeInTheDocument();
+
     expect(screen.getByText('Eye Surgeon')).toBeInTheDocument();
 
     expect(screen.queryByText('Dr. Samantha Fernando')).not.toBeInTheDocument();
   });
 
-  it('shows only backend sessions belonging to the selected doctor', async () => {
+  it('shows only available sessions belonging to the selected Doctor', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -307,7 +303,7 @@ describe('AppointmentBookingPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not invent arbitrary Figma time slots', async () => {
+  it('does not invent arbitrary time slots', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -333,7 +329,7 @@ describe('AppointmentBookingPage', () => {
     expect(screen.queryByText('10:30 AM')).not.toBeInTheDocument();
   });
 
-  it('shows the customer, Doctor and selected backend session before confirmation', async () => {
+  it('shows the customer, Doctor and selected session before confirmation', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -369,7 +365,7 @@ describe('AppointmentBookingPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('submits only the selected backend session and displays authoritative confirmation', async () => {
+  it('submits only the selected session and displays the returned Doctor confirmation', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -443,7 +439,7 @@ describe('AppointmentBookingPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('handles stale session availability using the backend conflict response', async () => {
+  it('handles stale session availability using the conflict response', async () => {
     const user = userEvent.setup();
 
     getAvailableDoctorSessions
@@ -478,7 +474,7 @@ describe('AppointmentBookingPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('handles the backend 24-hour booking-window rejection and allows reselection', async () => {
+  it('handles the 24-hour booking-window rejection and allows reselection', async () => {
     const user = userEvent.setup();
 
     getAvailableDoctorSessions
