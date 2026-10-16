@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import {
@@ -19,19 +19,19 @@ const MIN_LEAD_TIME_MS = 24 * 60 * 60 * 1000;
 function moveErrorLabel(error) {
   switch (error?.code) {
     case 'SESSION_FULL':
-      return 'The selected target session is full or its availability changed. Please choose another session.';
+      return 'The selected doctor session is full or its availability has changed. Please choose another session.';
 
     case 'BOOKING_WINDOW':
-      return 'The selected target session is too close to its start time. Choose a session at least 24 hours away.';
+      return 'The selected doctor session is too close to its start time. Choose a session at least 24 hours away.';
 
     case 'DUPLICATE_BOOKING':
-      return 'This customer already has a confirmed booking in the selected target session.';
+      return 'This customer already has a confirmed booking in the selected doctor session.';
 
     case 'SAME_SESSION':
       return 'The appointment is already assigned to that doctor session.';
 
     case 'SESSION_CHANGED':
-      return 'The source session changed while the booking was being moved. Please refresh and try again.';
+      return 'This booking changed while it was being moved. Please refresh and try again.';
 
     case 'INVALID_STATUS':
       return 'Only confirmed appointments can be moved to another session.';
@@ -52,7 +52,7 @@ function moveErrorLabel(error) {
   }
 
   if (error?.status === 400 || error?.status === 409 || error?.status === 422) {
-    return 'The booking could not be moved because the latest backend state no longer allows this change.';
+    return 'The booking can no longer be moved with the selected option. Please refresh and try again.';
   }
 
   if (error?.status === 0) {
@@ -78,6 +78,28 @@ function loadErrorLabel(error) {
   return 'Unable to load booking reassignment information. Please try again.';
 }
 
+function doctorReference(doctorId) {
+  if (!doctorId) {
+    return 'Doctor unavailable';
+  }
+
+  return `Doctor …${String(doctorId).slice(-6)}`;
+}
+
+function recordDoctorId(record) {
+  return record?.doctorId ?? record?.doctor?.id ?? record?.staffId ?? null;
+}
+
+function recordDoctorName(record) {
+  return (
+    record?.doctorName ?? record?.doctor?.name ?? record?.providerName ?? null
+  );
+}
+
+function recordDoctorSpecialization(record) {
+  return record?.specialization ?? record?.doctor?.specialization ?? null;
+}
+
 export default function StaffMoveAppointmentPage() {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
@@ -85,18 +107,30 @@ export default function StaffMoveAppointmentPage() {
 
   const [appointment, setAppointment] = useState(null);
   const [sessions, setSessions] = useState([]);
-  const [providers, setProviders] = useState([]);
+  const [doctors, setDoctors] = useState([]);
 
   const [selectedSessionId, setSelectedSessionId] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [refreshingAfterMove, setRefreshingAfterMove] = useState(false);
 
   const [loadError, setLoadError] = useState('');
   const [selectionError, setSelectionError] = useState('');
   const [actionError, setActionError] = useState('');
+  const [refreshError, setRefreshError] = useState('');
 
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [moveCompleted, setMoveCompleted] = useState(false);
+
+  const reviewButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+  const restoreFocusRef = useRef(true);
+  const submittingRef = useRef(false);
+
+  useEffect(() => {
+    submittingRef.current = submitting;
+  }, [submitting]);
 
   useEffect(() => {
     let active = true;
@@ -109,7 +143,7 @@ export default function StaffMoveAppointmentPage() {
       setLoadError('');
 
       try {
-        const [appointmentData, sessionData, providerData] = await Promise.all([
+        const [appointmentData, sessionData, doctorData] = await Promise.all([
           getStaffAppointment(appointmentId),
           getDoctorSessions(),
           getAppointmentProviders(),
@@ -121,7 +155,7 @@ export default function StaffMoveAppointmentPage() {
 
         setAppointment(appointmentData);
         setSessions(sessionData);
-        setProviders(providerData);
+        setDoctors(doctorData);
       } catch (error) {
         if (!active) {
           return;
@@ -129,6 +163,7 @@ export default function StaffMoveAppointmentPage() {
 
         if (error?.status === 401) {
           logout();
+
           navigate('/login', {
             replace: true,
           });
@@ -152,15 +187,138 @@ export default function StaffMoveAppointmentPage() {
     };
   }, [appointmentId, logout, navigate]);
 
-  const providerNames = useMemo(() => {
-    const names = new Map();
-
-    for (const provider of providers) {
-      names.set(provider.id, provider.name);
+  useEffect(() => {
+    if (!showConfirmation) {
+      return undefined;
     }
 
-    return names;
-  }, [providers]);
+    const dialog = dialogRef.current;
+    const reviewButton = reviewButtonRef.current;
+
+    if (!dialog) {
+      return undefined;
+    }
+
+    function getFocusableElements() {
+      return Array.from(
+        dialog.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) =>
+          element instanceof HTMLElement &&
+          element.getAttribute('aria-hidden') !== 'true',
+      );
+    }
+
+    const focusableElements = getFocusableElements();
+
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    } else {
+      dialog.focus();
+    }
+
+    function handleDialogKeyDown(event) {
+      if (event.key === 'Escape') {
+        if (submittingRef.current) {
+          return;
+        }
+
+        event.preventDefault();
+        setShowConfirmation(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const currentFocusableElements = getFocusableElements();
+
+      if (currentFocusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = currentFocusableElements[0];
+      const lastElement =
+        currentFocusableElements[currentFocusableElements.length - 1];
+
+      if (
+        event.shiftKey &&
+        (document.activeElement === firstElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (
+        !event.shiftKey &&
+        (document.activeElement === lastElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleDialogKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleDialogKeyDown);
+
+      if (
+        restoreFocusRef.current &&
+        reviewButton &&
+        document.contains(reviewButton)
+      ) {
+        reviewButton.focus();
+      }
+    };
+  }, [showConfirmation]);
+
+  const doctorDetails = useMemo(() => {
+    const details = new Map();
+
+    function addDoctor(id, name, specialization = null) {
+      if (!id) {
+        return;
+      }
+
+      const current = details.get(id);
+
+      details.set(id, {
+        name: name ?? current?.name ?? null,
+        specialization: specialization ?? current?.specialization ?? null,
+      });
+    }
+
+    for (const doctor of doctors) {
+      addDoctor(doctor.id, doctor.name, doctor.specialization);
+    }
+
+    if (appointment) {
+      addDoctor(
+        recordDoctorId(appointment),
+        recordDoctorName(appointment),
+        recordDoctorSpecialization(appointment),
+      );
+    }
+
+    for (const session of sessions) {
+      addDoctor(
+        recordDoctorId(session),
+        recordDoctorName(session),
+        recordDoctorSpecialization(session),
+      );
+    }
+
+    return details;
+  }, [appointment, doctors, sessions]);
 
   const eligibleSessions = useMemo(() => {
     if (!appointment) {
@@ -200,23 +358,95 @@ export default function StaffMoveAppointmentPage() {
     eligibleSessions.find((session) => session.id === selectedSessionId) ??
     null;
 
-  function providerLabel(staffId) {
+  function doctorLabel(record) {
+    const doctorId = recordDoctorId(record);
+
     return (
-      providerNames.get(staffId) ?? `Provider …${String(staffId).slice(-6)}`
+      recordDoctorName(record) ??
+      doctorDetails.get(doctorId)?.name ??
+      doctorReference(doctorId)
     );
+  }
+
+  function doctorSpecialization(record) {
+    const doctorId = recordDoctorId(record);
+
+    return (
+      recordDoctorSpecialization(record) ??
+      doctorDetails.get(doctorId)?.specialization ??
+      null
+    );
+  }
+
+  function closeConfirmation() {
+    if (submitting) {
+      return;
+    }
+
+    restoreFocusRef.current = true;
+    setShowConfirmation(false);
   }
 
   function openConfirmation() {
     setSelectionError('');
     setActionError('');
+    setRefreshError('');
 
     if (!selectedSession) {
       setSelectionError('Select an available target doctor session first.');
-
       return;
     }
 
+    restoreFocusRef.current = true;
     setShowConfirmation(true);
+  }
+
+  function navigateToAppointment() {
+    navigate(
+      `/staff/appointments/bookings/${encodeURIComponent(appointment.id)}`,
+      {
+        replace: true,
+      },
+    );
+  }
+
+  async function retryAppointmentRefresh() {
+    if (refreshingAfterMove) {
+      return;
+    }
+
+    setRefreshingAfterMove(true);
+    setRefreshError('');
+
+    try {
+      const refreshedAppointment = await getStaffAppointment(appointment.id);
+
+      if (refreshedAppointment.sessionId !== selectedSessionId) {
+        setRefreshError(
+          'The booking was moved successfully, but the latest appointment details are not available yet. Please try again.',
+        );
+
+        return;
+      }
+
+      navigateToAppointment();
+    } catch (error) {
+      if (error?.status === 401) {
+        logout();
+
+        navigate('/login', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      setRefreshError(
+        'The booking was moved successfully, but the latest appointment details could not be loaded. Please try again.',
+      );
+    } finally {
+      setRefreshingAfterMove(false);
+    }
   }
 
   async function confirmMove() {
@@ -226,28 +456,16 @@ export default function StaffMoveAppointmentPage() {
 
     setSubmitting(true);
     setActionError('');
+    setRefreshError('');
 
     try {
       await reassignStaffAppointment(appointment.id, selectedSession.id);
-
-      const refreshedAppointment = await getStaffAppointment(appointment.id);
-
-      if (refreshedAppointment.sessionId !== selectedSession.id) {
-        throw Object.assign(new Error('Authoritative reassignment mismatch'), {
-          status: 409,
-          code: 'SESSION_CHANGED',
-        });
-      }
-
-      navigate(
-        `/staff/appointments/bookings/${encodeURIComponent(appointment.id)}`,
-        {
-          replace: true,
-        },
-      );
     } catch (error) {
       if (error?.status === 401) {
+        restoreFocusRef.current = false;
+
         logout();
+
         navigate('/login', {
           replace: true,
         });
@@ -255,6 +473,7 @@ export default function StaffMoveAppointmentPage() {
         return;
       }
 
+      restoreFocusRef.current = true;
       setShowConfirmation(false);
       setActionError(moveErrorLabel(error));
 
@@ -263,10 +482,44 @@ export default function StaffMoveAppointmentPage() {
 
         setSessions(refreshedSessions);
       } catch {
-        // Keep the original safe reassignment error visible.
+        // Preserve the safe reassignment error already shown.
       }
+
+      return;
     } finally {
       setSubmitting(false);
+    }
+
+    restoreFocusRef.current = false;
+    setShowConfirmation(false);
+    setMoveCompleted(true);
+
+    try {
+      const refreshedAppointment = await getStaffAppointment(appointment.id);
+
+      if (refreshedAppointment.sessionId !== selectedSession.id) {
+        setRefreshError(
+          'The booking was moved successfully, but the latest appointment details are not available yet. Please refresh the appointment.',
+        );
+
+        return;
+      }
+
+      navigateToAppointment();
+    } catch (error) {
+      if (error?.status === 401) {
+        logout();
+
+        navigate('/login', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      setRefreshError(
+        'The booking was moved successfully, but the latest appointment details could not be loaded. Please refresh the appointment.',
+      );
     }
   }
 
@@ -322,6 +575,42 @@ export default function StaffMoveAppointmentPage() {
     );
   }
 
+  if (moveCompleted) {
+    return (
+      <section className="staff-move-booking-page">
+        <div
+          className="staff-move-booking-state"
+          role="status"
+          aria-live="polite"
+        >
+          <h1>Booking moved successfully</h1>
+
+          {refreshError ? (
+            <>
+              <p>{refreshError}</p>
+
+              <button
+                type="button"
+                onClick={retryAppointmentRefresh}
+                disabled={refreshingAfterMove}
+              >
+                {refreshingAfterMove
+                  ? 'Refreshing Appointment...'
+                  : 'Refresh Appointment'}
+              </button>
+            </>
+          ) : (
+            <p>Loading the latest appointment details...</p>
+          )}
+
+          <Link to="/staff/appointments?tab=bookings">
+            Back to Customer Bookings
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="staff-move-booking-page">
       <header className="staff-move-booking-header">
@@ -333,7 +622,7 @@ export default function StaffMoveAppointmentPage() {
           <h1>Move Customer Booking</h1>
 
           <p>
-            Select another eligible doctor session for this confirmed
+            Select another available doctor session for this confirmed
             appointment.
           </p>
         </div>
@@ -373,11 +662,13 @@ export default function StaffMoveAppointmentPage() {
         </div>
 
         <div>
-          <span>Current Optometrist</span>
+          <span>Current Doctor</span>
 
-          <strong>
-            {appointment.providerName ?? providerLabel(appointment.staffId)}
-          </strong>
+          <strong>{doctorLabel(appointment)}</strong>
+
+          {doctorSpecialization(appointment) ? (
+            <small>{doctorSpecialization(appointment)}</small>
+          ) : null}
 
           <small>
             Position{' '}
@@ -391,12 +682,9 @@ export default function StaffMoveAppointmentPage() {
       <section className="staff-move-booking-selection">
         <div className="staff-move-booking-selection__heading">
           <div>
-            <h2>Available Sessions</h2>
+            <h2>Available Doctor Sessions</h2>
 
-            <p>
-              Sessions shown here are outside the current booking, have reported
-              capacity and are at least 24 hours away.
-            </p>
+            <p>Choose an available session for the customer.</p>
           </div>
 
           <strong>
@@ -410,8 +698,8 @@ export default function StaffMoveAppointmentPage() {
             <h3>No eligible target sessions</h3>
 
             <p>
-              There are currently no other sessions that satisfy the visible
-              availability rules. Refresh later or keep the current booking.
+              There are currently no other available doctor sessions for this
+              booking. Please try again later or keep the current booking.
             </p>
           </div>
         ) : (
@@ -422,6 +710,7 @@ export default function StaffMoveAppointmentPage() {
           >
             {eligibleSessions.map((session) => {
               const selected = selectedSessionId === session.id;
+              const specialization = doctorSpecialization(session);
 
               return (
                 <label
@@ -452,7 +741,9 @@ export default function StaffMoveAppointmentPage() {
                       {sessionTimeRangeLabel(session.startAt, session.endAt)}
                     </span>
 
-                    <span>{providerLabel(session.staffId)}</span>
+                    <span>{doctorLabel(session)}</span>
+
+                    {specialization ? <small>{specialization}</small> : null}
                   </div>
 
                   <div className="staff-move-booking-session__capacity">
@@ -482,6 +773,7 @@ export default function StaffMoveAppointmentPage() {
           </Link>
 
           <button
+            ref={reviewButtonRef}
             type="button"
             onClick={openConfirmation}
             disabled={submitting || eligibleSessions.length === 0}
@@ -491,22 +783,15 @@ export default function StaffMoveAppointmentPage() {
         </div>
       </section>
 
-      <section className="staff-move-booking-integrity">
-        <strong>Backend revalidation</strong>
-
-        <p>
-          The server rechecks the target session, 24-hour window, capacity,
-          duplicate booking rules and queue positions when you confirm the move.
-        </p>
-      </section>
-
       {showConfirmation && selectedSession ? (
         <div className="staff-move-booking-backdrop" role="presentation">
           <section
+            ref={dialogRef}
             className="staff-move-booking-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-booking-move-title"
+            tabIndex={-1}
           >
             <div className="staff-move-booking-modal__heading">
               <span aria-hidden="true">→</span>
@@ -516,7 +801,7 @@ export default function StaffMoveAppointmentPage() {
 
                 <p>
                   Review the current and proposed doctor sessions before
-                  applying the reassignment.
+                  confirming the move.
                 </p>
               </div>
             </div>
@@ -529,10 +814,11 @@ export default function StaffMoveAppointmentPage() {
 
                 <small>{appointmentTimeLabel(appointment.dateTime)}</small>
 
-                <small>
-                  {appointment.providerName ??
-                    providerLabel(appointment.staffId)}
-                </small>
+                <small>{doctorLabel(appointment)}</small>
+
+                {doctorSpecialization(appointment) ? (
+                  <small>{doctorSpecialization(appointment)}</small>
+                ) : null}
               </div>
 
               <strong aria-hidden="true">→</strong>
@@ -549,24 +835,27 @@ export default function StaffMoveAppointmentPage() {
                   )}
                 </small>
 
-                <small>{providerLabel(selectedSession.staffId)}</small>
+                <small>{doctorLabel(selectedSession)}</small>
+
+                {doctorSpecialization(selectedSession) ? (
+                  <small>{doctorSpecialization(selectedSession)}</small>
+                ) : null}
               </div>
             </div>
 
             <div className="staff-move-booking-modal__warning">
-              <strong>Queue positions will change</strong>
+              <strong>Booking position may change</strong>
 
               <p>
-                The backend assigns the new target position and compacts
-                positions in the original session. Inform the customer manually
-                after confirmation.
+                The customer may receive a different queue position after the
+                move. Contact the customer if needed.
               </p>
             </div>
 
             <div className="staff-move-booking-modal__actions">
               <button
                 type="button"
-                onClick={() => setShowConfirmation(false)}
+                onClick={closeConfirmation}
                 disabled={submitting}
               >
                 Keep Current Booking
