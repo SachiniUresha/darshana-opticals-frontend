@@ -289,3 +289,18 @@ describe('Public password recovery routing', () => {
     );
   });
 });
+
+// DDP-081 public forgot-password route regression.
+describe('DDP-081 public forgot-password route regression', () => {
+  it('allows a logged-out visitor to access the forgot-password form', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/forgot-password');
+    expect(
+      screen.getByRole('heading', { name: 'Forgot Password?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByTestId('current-path')).toHaveTextContent(
+      '/forgot-password',
+    );
+  });
+});

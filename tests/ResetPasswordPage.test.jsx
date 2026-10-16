@@ -207,3 +207,15 @@ describe('ResetPasswordPage', () => {
     }
   });
 });
+
+// DDP-081 empty-token regression.
+describe('DDP-081 empty-token regression', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('rejects an empty/whitespace reset token without calling the API', () => {
+    showPage('/reset-password?token=%20%20');
+    expect(screen.getByRole('alert')).toHaveTextContent(/invalid or expired/i);
+    expect(screen.queryByLabelText(/^new password$/i)).not.toBeInTheDocument();
+    expect(authService.resetPassword).not.toHaveBeenCalled();
+  });
+});

@@ -123,3 +123,29 @@ describe('ForgotPasswordPage', () => {
     );
   });
 });
+
+// DDP-081 privacy regression: even differing backend wording never leaks identity.
+describe('DDP-081 privacy regression', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it.each([
+    ['registered@example.com', 'Sensitive: registered account'],
+    ['unknown@example.com', 'Sensitive: account missing'],
+  ])(
+    'shows identical generic confirmation for %s',
+    async (email, backendMessage) => {
+      authService.requestPasswordReset.mockResolvedValueOnce({
+        success: true,
+        message: backendMessage,
+      });
+      showPage();
+      submitEmail(email);
+      expect(
+        await screen.findByText(
+          /if an eligible account exists for this email/i,
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(backendMessage)).not.toBeInTheDocument();
+    },
+  );
+});
