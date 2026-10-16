@@ -276,3 +276,16 @@ describe('Admin Doctor creation route protection', () => {
     expect(screen.getByTestId('current-path').textContent).toBe('/login');
   });
 });
+
+describe('Public password recovery routing', () => {
+  it('allows an unauthenticated visitor to open the reset form', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/reset-password?token=test-reset-token');
+    expect(
+      screen.getByRole('heading', { name: 'Reset Password' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('current-path')).toHaveTextContent(
+      '/reset-password',
+    );
+  });
+});

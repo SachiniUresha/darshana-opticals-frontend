@@ -50,6 +50,15 @@ async function requestPasswordReset(email) {
   );
 }
 
+// Public recovery endpoint. Only the reset token and new password go to the API.
+async function resetPassword({ token, newPassword }) {
+  return apiClient.post(
+    '/auth/reset-password',
+    { token, newPassword },
+    { authenticated: false },
+  );
+}
+
 function logout() {
   clearChatHistory();
   authStorage.clearAuth();
@@ -73,6 +82,7 @@ const authService = {
   register,
   login,
   requestPasswordReset,
+  resetPassword,
   logout,
   getCurrentUser,
   updateCurrentUser,

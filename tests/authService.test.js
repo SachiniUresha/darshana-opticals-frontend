@@ -127,6 +127,25 @@ describe('authService', () => {
     expect(authStorage.saveAuth).not.toHaveBeenCalled();
   });
 
+  it('resets a password through the public API using only token and newPassword', async () => {
+    apiClient.post.mockResolvedValueOnce({
+      success: true,
+      message: 'Password has been reset.',
+    });
+
+    await authService.resetPassword({
+      token: 'test-reset-token',
+      newPassword: 'NewPassword123',
+    });
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/auth/reset-password',
+      { token: 'test-reset-token', newPassword: 'NewPassword123' },
+      { authenticated: false },
+    );
+    expect(authStorage.saveAuth).not.toHaveBeenCalled();
+  });
+
   it('clears authentication storage during logout', () => {
     authService.logout();
 
