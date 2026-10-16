@@ -19,7 +19,10 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
-  const isAdminWorkspace = isAuthenticated && user?.role === SYSTEM_ADMIN;
+  const isAdminWorkspace =
+    isAuthenticated &&
+    user?.role === SYSTEM_ADMIN &&
+    (location.pathname === '/admin' || location.pathname.startsWith('/admin/'));
   const { cartCount } = useCart();
 
   const currentParams = new URLSearchParams(location.search);

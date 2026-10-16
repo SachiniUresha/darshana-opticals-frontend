@@ -94,4 +94,13 @@ describe('Admin Sidebar', () => {
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
     expect(screen.getByText('Customer footer')).toBeInTheDocument();
   });
+  it('uses the public storefront shell when SYSTEM_ADMIN visits a public route', () => {
+    showAdminAt('/');
+    expect(
+      screen.queryByRole('navigation', { name: 'Admin workspace' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Men' })).toBeInTheDocument();
+    expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    expect(screen.getByText('Customer footer')).toBeInTheDocument();
+  });
 });

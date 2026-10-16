@@ -143,4 +143,22 @@ describe('AdminDoctorCreatePage', () => {
     expect(await screen.findByText('Login screen')).toBeInTheDocument();
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
+  it.each([
+    [0, 'Network unavailable', /unable to reach the server/i],
+    [500, 'Unexpected internal details', /doctor could not be registered/i],
+  ])(
+    'handles Doctor error status %s safely',
+    async (status, message, expected) => {
+      createDoctor.mockRejectedValue(
+        Object.assign(new Error(message), { status }),
+      );
+      showPage();
+      completeForm();
+      fireEvent.click(screen.getByRole('button', { name: 'Add Doctor' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+      expect(
+        screen.queryByRole('heading', { level: 1, name: 'Doctor Created' }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

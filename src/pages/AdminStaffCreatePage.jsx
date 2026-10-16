@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BranchSelect from '../components/common/BranchSelect';
 import { BRANCH_ASSISTANT, BRANCH_MANAGER, OPTOMETRIST } from '../config/roles';
@@ -171,6 +171,7 @@ function AdminStaffCreatePage() {
     loading: branchesLoading,
     error: branchesError,
     retry,
+    unauthorized: branchesUnauthorized,
   } = useBranches();
   const [values, setValues] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -178,6 +179,14 @@ function AdminStaffCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [createdStaff, setCreatedStaff] = useState(null);
   const submittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!branchesUnauthorized) return;
+    setValues(EMPTY_FORM);
+    setErrors({});
+    logout();
+    navigate('/login', { replace: true });
+  }, [branchesUnauthorized, logout, navigate]);
 
   function update(field, value) {
     setValues((previous) => ({ ...previous, [field]: value }));

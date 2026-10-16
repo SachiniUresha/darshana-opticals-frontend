@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import Footer from '../components/common/Footer';
@@ -11,7 +11,11 @@ import './AppLayout.css';
 // Page content is rendered via the nested route <Outlet />.
 function AppLayout() {
   const { isAuthenticated, user } = useAuth();
-  const isAdminWorkspace = isAuthenticated && user?.role === SYSTEM_ADMIN;
+  const { pathname } = useLocation();
+  const isAdminWorkspace =
+    isAuthenticated &&
+    user?.role === SYSTEM_ADMIN &&
+    (pathname === '/admin' || pathname.startsWith('/admin/'));
 
   return (
     <div

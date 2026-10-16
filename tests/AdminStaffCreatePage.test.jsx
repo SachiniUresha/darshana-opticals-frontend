@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import AdminStaffCreatePage from '../src/pages/AdminStaffCreatePage';
 import { provisionStaff } from '../src/services/staffAdminService';
+
+const mockLogout = vi.hoisted(() => vi.fn());
+const mockBranchState = vi.hoisted(() => ({ unauthorized: false }));
 
 vi.mock('../src/services/staffAdminService', () => ({
   provisionStaff: vi.fn(),
 }));
 vi.mock('../src/hooks/useAuth', () => ({
-  default: () => ({ logout: vi.fn() }),
+  default: () => ({ logout: mockLogout }),
 }));
 vi.mock('../src/hooks/useBranches', () => ({
   default: () => ({
@@ -22,13 +25,17 @@ vi.mock('../src/hooks/useBranches', () => ({
     loading: false,
     error: null,
     retry: vi.fn(),
+    unauthorized: mockBranchState.unauthorized,
   }),
 }));
 
 function showPage() {
   render(
-    <MemoryRouter>
-      <AdminStaffCreatePage />
+    <MemoryRouter initialEntries={['/admin/staff/new']}>
+      <Routes>
+        <Route path="/admin/staff/new" element={<AdminStaffCreatePage />} />
+        <Route path="/login" element={<div>Login screen</div>} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -58,7 +65,10 @@ function completeForm() {
 }
 
 describe('AdminStaffCreatePage', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockBranchState.unauthorized = false;
+  });
 
   it('shows only the three approved staff roles and an optional Branch selector', () => {
     showPage();
@@ -134,4 +144,74 @@ describe('AdminStaffCreatePage', () => {
       screen.queryByRole('heading', { name: 'Staff Account Created' }),
     ).not.toBeInTheDocument();
   });
+  it('prevents repeat requests while staff creation is pending', async () => {
+    let finish;
+    provisionStaff.mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    showPage();
+    completeForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+    const waiting = screen.getByRole('button', { name: 'Creating Account...' });
+    expect(waiting).toBeDisabled();
+    fireEvent.submit(waiting.closest('form'));
+    expect(provisionStaff).toHaveBeenCalledTimes(1);
+    finish({
+      id: 'staff-id',
+      name: 'Nimal Perera',
+      email: 'nimal@example.com',
+      role: 'OPTOMETRIST',
+      branchId: null,
+    });
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Staff Account Created',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('handles staff creation 401 by logging out and returning to Login', async () => {
+    provisionStaff.mockRejectedValue(
+      Object.assign(new Error('Expired session'), { status: 401 }),
+    );
+    showPage();
+    completeForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+    expect(await screen.findByText('Login screen')).toBeInTheDocument();
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs out for an unauthorized Branch lookup instead of showing retryable error', async () => {
+    mockBranchState.unauthorized = true;
+    showPage();
+    expect(await screen.findByText('Login screen')).toBeInTheDocument();
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [403, 'Forbidden', /do not have permission/i],
+    [422, 'Staff data is invalid.', /staff data is invalid/i],
+    [0, 'Network unavailable', /unable to reach the server/i],
+    [500, 'Unexpected database failure', /staff account could not be created/i],
+  ])(
+    'handles staff creation error status %s safely',
+    async (status, message, expected) => {
+      provisionStaff.mockRejectedValue(
+        Object.assign(new Error(message), { status }),
+      );
+      showPage();
+      completeForm();
+      fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+      expect(
+        screen.queryByRole('heading', {
+          level: 1,
+          name: 'Staff Account Created',
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

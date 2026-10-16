@@ -97,4 +97,12 @@ describe('Admin workspace navigation', () => {
     expect(screen.getByTestId('customer-footer')).toBeInTheDocument();
     expect(screen.getByTestId('customer-chatbot')).toBeInTheDocument();
   });
+  it.each(['/', '/products'])(
+    'keeps the storefront Navbar for SYSTEM_ADMIN on the public route %s',
+    (path) => {
+      showNavbar(path);
+      expect(screen.getByRole('link', { name: 'Men' })).toBeInTheDocument();
+      expect(screen.getByRole('searchbox')).toBeInTheDocument();
+    },
+  );
 });

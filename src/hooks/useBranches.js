@@ -7,6 +7,7 @@ export function useBranches() {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [unauthorized, setUnauthorized] = useState(false);
   const mountedRef = useRef(false);
   const requestIdRef = useRef(0);
 
@@ -18,6 +19,7 @@ export function useBranches() {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
+    setUnauthorized(false);
 
     try {
       const nextBranches = await getBranches();
@@ -28,13 +30,18 @@ export function useBranches() {
 
       setBranches(nextBranches);
       setError(null);
-    } catch {
+    } catch (caughtError) {
       if (!mountedRef.current || requestId !== requestIdRef.current) {
         return;
       }
 
       setBranches([]);
-      setError(ERROR_MESSAGE);
+      if (caughtError?.status === 401) {
+        setUnauthorized(true);
+        setError(null);
+      } else {
+        setError(ERROR_MESSAGE);
+      }
     } finally {
       if (mountedRef.current && requestId === requestIdRef.current) {
         setLoading(false);
@@ -57,8 +64,8 @@ export function useBranches() {
   }, [loadBranches]);
 
   return useMemo(
-    () => ({ branches, loading, error, retry }),
-    [branches, loading, error, retry],
+    () => ({ branches, loading, error, retry, unauthorized }),
+    [branches, loading, error, retry, unauthorized],
   );
 }
 
