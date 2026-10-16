@@ -20,10 +20,22 @@ vi.mock('../src/services/staffAppointmentService', () => ({
 
 const logout = vi.fn();
 
+const doctor = {
+  id: '507f1f77bcf86cd799439011',
+  name: 'Dr. N. Silva',
+  specialization: 'Ophthalmologist',
+};
+
 const appointment = {
   id: '507f1f77bcf86cd799439031',
-  staffId: '507f1f77bcf86cd799439011',
-  providerName: 'Dr. N. Silva',
+  doctorId: doctor.id,
+  doctor: {
+    id: doctor.id,
+    name: doctor.name,
+    specialization: doctor.specialization,
+  },
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
   sessionId: '507f1f77bcf86cd799439021',
   branchId: '507f1f77bcf86cd799439012',
   dateTime: '2026-10-20T07:30:00.000Z',
@@ -59,6 +71,20 @@ function renderPage() {
   );
 }
 
+async function openCancellationDialog() {
+  await screen.findByText('Customer A');
+
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: 'Cancel Booking',
+    }),
+  );
+
+  return screen.getByRole('dialog', {
+    name: 'Cancel Customer Booking?',
+  });
+}
+
 describe('StaffAppointmentDetailsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,7 +103,7 @@ describe('StaffAppointmentDetailsPage', () => {
     });
   });
 
-  it('shows authoritative appointment details to Branch Assistant', async () => {
+  it('shows authoritative appointment and doctor details to Branch Assistant', async () => {
     renderPage();
 
     expect(
@@ -90,9 +116,15 @@ describe('StaffAppointmentDetailsPage', () => {
 
     expect(screen.getByText('0771234567')).toBeInTheDocument();
 
-    expect(screen.getByText('Dr. N. Silva')).toBeInTheDocument();
+    expect(screen.getByText('Doctor & Session')).toBeInTheDocument();
+
+    expect(screen.getByText(doctor.name)).toBeInTheDocument();
+
+    expect(screen.getByText(doctor.specialization)).toBeInTheDocument();
 
     expect(screen.getByText('#2')).toBeInTheDocument();
+
+    expect(screen.queryByText('Optometrist & Session')).not.toBeInTheDocument();
   });
 
   it('keeps Branch Manager read-only and hides customer contact', async () => {
@@ -124,6 +156,8 @@ describe('StaffAppointmentDetailsPage', () => {
         name: 'Move Booking',
       }),
     ).not.toBeInTheDocument();
+
+    expect(screen.getByText(doctor.name)).toBeInTheDocument();
   });
 
   it('does not show mutation controls for an already cancelled appointment', async () => {
@@ -140,26 +174,115 @@ describe('StaffAppointmentDetailsPage', () => {
         name: 'Cancel Booking',
       }),
     ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Move Booking',
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('requires confirmation before cancellation', async () => {
     renderPage();
 
-    await screen.findByText('Customer A');
+    const dialog = await openCancellationDialog();
 
-    fireEvent.click(
+    expect(dialog).toBeInTheDocument();
+
+    expect(cancelStaffAppointment).not.toHaveBeenCalled();
+  });
+
+  it('moves focus into the cancellation dialog when it opens', async () => {
+    renderPage();
+
+    await openCancellationDialog();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Keep Appointment',
+      }),
+    ).toHaveFocus();
+  });
+
+  it('traps keyboard focus inside the cancellation dialog', async () => {
+    renderPage();
+
+    await openCancellationDialog();
+
+    const keepButton = screen.getByRole('button', {
+      name: 'Keep Appointment',
+    });
+
+    const confirmButton = screen.getByRole('button', {
+      name: 'Confirm Cancellation',
+    });
+
+    confirmButton.focus();
+
+    fireEvent.keyDown(document, {
+      key: 'Tab',
+    });
+
+    expect(keepButton).toHaveFocus();
+
+    keepButton.focus();
+
+    fireEvent.keyDown(document, {
+      key: 'Tab',
+      shiftKey: true,
+    });
+
+    expect(confirmButton).toHaveFocus();
+  });
+
+  it('closes the cancellation dialog with Escape and restores focus', async () => {
+    renderPage();
+
+    await openCancellationDialog();
+
+    fireEvent.keyDown(document, {
+      key: 'Escape',
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', {
+          name: 'Cancel Customer Booking?',
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(
       screen.getByRole('button', {
         name: 'Cancel Booking',
       }),
-    );
-
-    expect(
-      screen.getByRole('dialog', {
-        name: 'Cancel Customer Booking?',
-      }),
-    ).toBeInTheDocument();
+    ).toHaveFocus();
 
     expect(cancelStaffAppointment).not.toHaveBeenCalled();
+  });
+
+  it('can dismiss the cancellation modal without mutation and restores focus', async () => {
+    renderPage();
+
+    await openCancellationDialog();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Keep Appointment',
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    expect(cancelStaffAppointment).not.toHaveBeenCalled();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Cancel Booking',
+      }),
+    ).toHaveFocus();
   });
 
   it('cancels then reloads authoritative appointment state', async () => {
@@ -169,13 +292,7 @@ describe('StaffAppointmentDetailsPage', () => {
 
     renderPage();
 
-    await screen.findByText('Customer A');
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Cancel Booking',
-      }),
-    );
+    await openCancellationDialog();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -190,18 +307,97 @@ describe('StaffAppointmentDetailsPage', () => {
     expect(getStaffAppointment).toHaveBeenCalledTimes(2);
 
     expect(
-      await screen.findByText(
-        'Appointment cancelled successfully. The latest backend state is shown below.',
-      ),
+      await screen.findByText('Appointment cancelled successfully.'),
     ).toBeInTheDocument();
 
     expect(screen.getByText('Cancelled')).toBeInTheDocument();
+
+    expect(screen.getByText('Not applicable')).toBeInTheDocument();
 
     expect(
       screen.queryByRole('button', {
         name: 'Cancel Booking',
       }),
     ).not.toBeInTheDocument();
+  });
+
+  it('keeps a successful cancellation successful when refresh fails', async () => {
+    getStaffAppointment
+      .mockResolvedValueOnce(appointment)
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Refresh failed'), {
+          status: 0,
+        }),
+      );
+
+    renderPage();
+
+    await openCancellationDialog();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Cancellation',
+      }),
+    );
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Appointment cancelled successfully',
+      }),
+    ).toBeInTheDocument();
+
+    expect(cancelStaffAppointment).toHaveBeenCalledTimes(1);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'latest appointment details could not be loaded',
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Refresh Appointment',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByText('Unable to cancel the appointment'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('retries refresh after cancellation without cancelling again', async () => {
+    getStaffAppointment
+      .mockResolvedValueOnce(appointment)
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Refresh failed'), {
+          status: 0,
+        }),
+      )
+      .mockResolvedValueOnce(cancelledAppointment);
+
+    renderPage();
+
+    await openCancellationDialog();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Cancellation',
+      }),
+    );
+
+    const refreshButton = await screen.findByRole('button', {
+      name: 'Refresh Appointment',
+    });
+
+    fireEvent.click(refreshButton);
+
+    expect(
+      await screen.findByText('Appointment cancelled successfully.'),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText('Cancelled')).toBeInTheDocument();
+
+    expect(cancelStaffAppointment).toHaveBeenCalledTimes(1);
+
+    expect(getStaffAppointment).toHaveBeenCalledTimes(3);
   });
 
   it('prevents duplicate cancellation while request is pending', async () => {
@@ -220,13 +416,7 @@ describe('StaffAppointmentDetailsPage', () => {
 
     renderPage();
 
-    await screen.findByText('Customer A');
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Cancel Booking',
-      }),
-    );
+    await openCancellationDialog();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -249,9 +439,39 @@ describe('StaffAppointmentDetailsPage', () => {
     });
 
     expect(
-      await screen.findByText(
-        'Appointment cancelled successfully. The latest backend state is shown below.',
-      ),
+      await screen.findByText('Appointment cancelled successfully.'),
+    ).toBeInTheDocument();
+
+    expect(cancelStaffAppointment).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not close the cancellation dialog with Escape while pending', async () => {
+    cancelStaffAppointment.mockImplementation(() => new Promise(() => {}));
+
+    renderPage();
+
+    await openCancellationDialog();
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Confirm Cancellation',
+      }),
+    );
+
+    expect(
+      await screen.findByRole('button', {
+        name: 'Cancelling...',
+      }),
+    ).toBeDisabled();
+
+    fireEvent.keyDown(document, {
+      key: 'Escape',
+    });
+
+    expect(
+      screen.getByRole('dialog', {
+        name: 'Cancel Customer Booking?',
+      }),
     ).toBeInTheDocument();
   });
 
@@ -265,13 +485,7 @@ describe('StaffAppointmentDetailsPage', () => {
 
     renderPage();
 
-    await screen.findByText('Customer A');
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Cancel Booking',
-      }),
-    );
+    await openCancellationDialog();
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -286,28 +500,10 @@ describe('StaffAppointmentDetailsPage', () => {
     expect(
       screen.queryByText('Internal status detail'),
     ).not.toBeInTheDocument();
-  });
 
-  it('can dismiss the cancellation modal without mutation', async () => {
-    renderPage();
-
-    await screen.findByText('Customer A');
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Cancel Booking',
-      }),
-    );
-
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Keep Appointment',
-      }),
-    );
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-
-    expect(cancelStaffAppointment).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText('Appointment cancelled successfully.'),
+    ).not.toBeInTheDocument();
   });
 
   it('logs out and redirects when appointment loading returns 401', async () => {

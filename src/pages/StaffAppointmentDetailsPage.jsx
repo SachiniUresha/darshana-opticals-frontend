@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import { BRANCH_ASSISTANT } from '../config/roles';
@@ -34,7 +34,7 @@ function cancellationErrorLabel(error) {
   }
 
   if (error?.status === 400 || error?.status === 409 || error?.status === 422) {
-    return 'The appointment could not be cancelled because its latest state no longer allows this action.';
+    return 'The appointment can no longer be cancelled. Please refresh and try again.';
   }
 
   if (error?.status === 0) {
@@ -60,6 +60,28 @@ function detailsErrorLabel(error) {
   return 'Unable to load appointment details. Please try again.';
 }
 
+function doctorReference(doctorId) {
+  if (!doctorId) {
+    return 'Doctor unavailable';
+  }
+
+  return `Doctor …${String(doctorId).slice(-6)}`;
+}
+
+function recordDoctorId(record) {
+  return record?.doctorId ?? record?.doctor?.id ?? record?.staffId ?? null;
+}
+
+function recordDoctorName(record) {
+  return (
+    record?.doctorName ?? record?.doctor?.name ?? record?.providerName ?? null
+  );
+}
+
+function recordDoctorSpecialization(record) {
+  return record?.specialization ?? record?.doctor?.specialization ?? null;
+}
+
 export default function StaffAppointmentDetailsPage() {
   const { appointmentId } = useParams();
   const navigate = useNavigate();
@@ -70,52 +92,59 @@ export default function StaffAppointmentDetailsPage() {
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionPending, setActionPending] = useState(false);
+  const [refreshingAfterCancellation, setRefreshingAfterCancellation] =
+    useState(false);
 
   const [loadError, setLoadError] = useState('');
   const [actionError, setActionError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [refreshError, setRefreshError] = useState('');
 
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [cancellationCompleted, setCancellationCompleted] = useState(false);
+
+  const cancelButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+  const restoreFocusRef = useRef(true);
+  const actionPendingRef = useRef(false);
+
+  useEffect(() => {
+    actionPendingRef.current = actionPending;
+  }, [actionPending]);
 
   const loadAppointment = useCallback(
-    async ({ showLoading = true, isActive = () => true } = {}) => {
-      if (showLoading) {
-        setLoading(true);
-      }
-
+    async ({ isActive = () => true } = {}) => {
+      setLoading(true);
       setLoadError('');
 
       try {
         const result = await getStaffAppointment(appointmentId);
 
         if (!isActive()) {
-          return null;
+          return;
         }
 
         setAppointment(result);
-
-        return result;
       } catch (error) {
         if (!isActive()) {
-          return null;
+          return;
         }
 
         setAppointment(null);
 
         if (error?.status === 401) {
           logout();
+
           navigate('/login', {
             replace: true,
           });
 
-          return null;
+          return;
         }
 
         setLoadError(detailsErrorLabel(error));
-
-        return null;
       } finally {
-        if (showLoading && isActive()) {
+        if (isActive()) {
           setLoading(false);
         }
       }
@@ -139,6 +168,164 @@ export default function StaffAppointmentDetailsPage() {
     };
   }, [loadAppointment]);
 
+  useEffect(() => {
+    if (!showCancelConfirmation) {
+      return undefined;
+    }
+
+    const dialog = dialogRef.current;
+    const cancelButton = cancelButtonRef.current;
+
+    if (!dialog) {
+      return undefined;
+    }
+
+    function getFocusableElements() {
+      return Array.from(
+        dialog.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) =>
+          element instanceof HTMLElement &&
+          element.getAttribute('aria-hidden') !== 'true',
+      );
+    }
+
+    const focusableElements = getFocusableElements();
+
+    if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    } else {
+      dialog.focus();
+    }
+
+    function handleDialogKeyDown(event) {
+      if (event.key === 'Escape') {
+        if (actionPendingRef.current) {
+          return;
+        }
+
+        event.preventDefault();
+        setShowCancelConfirmation(false);
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const currentFocusableElements = getFocusableElements();
+
+      if (currentFocusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = currentFocusableElements[0];
+      const lastElement =
+        currentFocusableElements[currentFocusableElements.length - 1];
+
+      if (
+        event.shiftKey &&
+        (document.activeElement === firstElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (
+        !event.shiftKey &&
+        (document.activeElement === lastElement ||
+          !dialog.contains(document.activeElement))
+      ) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleDialogKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleDialogKeyDown);
+
+      if (
+        restoreFocusRef.current &&
+        cancelButton &&
+        document.contains(cancelButton)
+      ) {
+        cancelButton.focus();
+      }
+    };
+  }, [showCancelConfirmation]);
+
+  const doctorId = recordDoctorId(appointment);
+
+  const doctorName = recordDoctorName(appointment) ?? doctorReference(doctorId);
+
+  const doctorSpecialization = recordDoctorSpecialization(appointment);
+
+  function openCancelConfirmation() {
+    setActionError('');
+    setSuccessMessage('');
+    setRefreshError('');
+    restoreFocusRef.current = true;
+    setShowCancelConfirmation(true);
+  }
+
+  function closeCancelConfirmation() {
+    if (actionPending) {
+      return;
+    }
+
+    restoreFocusRef.current = true;
+    setShowCancelConfirmation(false);
+  }
+
+  async function refreshCancelledAppointment() {
+    if (refreshingAfterCancellation) {
+      return;
+    }
+
+    setRefreshingAfterCancellation(true);
+    setRefreshError('');
+
+    try {
+      const refreshed = await getStaffAppointment(appointmentId);
+
+      if (refreshed.status !== 'CANCELLED') {
+        setRefreshError(
+          'The appointment was cancelled successfully, but the latest details are not available yet. Please try again.',
+        );
+
+        return;
+      }
+
+      setAppointment(refreshed);
+      setCancellationCompleted(false);
+      setSuccessMessage('Appointment cancelled successfully.');
+    } catch (error) {
+      if (error?.status === 401) {
+        logout();
+
+        navigate('/login', {
+          replace: true,
+        });
+
+        return;
+      }
+
+      setRefreshError(
+        'The appointment was cancelled successfully, but the latest appointment details could not be loaded. Please try again.',
+      );
+    } finally {
+      setRefreshingAfterCancellation(false);
+    }
+  }
+
   async function confirmCancellation() {
     if (actionPending || appointment?.status !== 'CONFIRMED') {
       return;
@@ -147,24 +334,16 @@ export default function StaffAppointmentDetailsPage() {
     setActionPending(true);
     setActionError('');
     setSuccessMessage('');
+    setRefreshError('');
 
     try {
       await cancelStaffAppointment(appointment.id);
-
-      const refreshed = await loadAppointment({
-        showLoading: false,
-      });
-
-      if (refreshed) {
-        setSuccessMessage(
-          'Appointment cancelled successfully. The latest backend state is shown below.',
-        );
-      }
-
-      setShowCancelConfirmation(false);
     } catch (error) {
       if (error?.status === 401) {
+        restoreFocusRef.current = false;
+
         logout();
+
         navigate('/login', {
           replace: true,
         });
@@ -172,11 +351,21 @@ export default function StaffAppointmentDetailsPage() {
         return;
       }
 
+      restoreFocusRef.current = true;
       setShowCancelConfirmation(false);
       setActionError(cancellationErrorLabel(error));
+
+      return;
     } finally {
       setActionPending(false);
     }
+
+    restoreFocusRef.current = false;
+    setShowCancelConfirmation(false);
+    setCancellationCompleted(true);
+    setSuccessMessage('Appointment cancelled successfully.');
+
+    await refreshCancelledAppointment();
   }
 
   if (loading) {
@@ -208,6 +397,42 @@ export default function StaffAppointmentDetailsPage() {
     );
   }
 
+  if (cancellationCompleted) {
+    return (
+      <section className="staff-appointment-details-page">
+        <div
+          className="staff-appointment-details-state"
+          role="status"
+          aria-live="polite"
+        >
+          <h1>Appointment cancelled successfully</h1>
+
+          {refreshError ? (
+            <>
+              <p>{refreshError}</p>
+
+              <button
+                type="button"
+                onClick={refreshCancelledAppointment}
+                disabled={refreshingAfterCancellation}
+              >
+                {refreshingAfterCancellation
+                  ? 'Refreshing Appointment...'
+                  : 'Refresh Appointment'}
+              </button>
+            </>
+          ) : (
+            <p>Loading the latest appointment details...</p>
+          )}
+
+          <Link to="/staff/appointments?tab=bookings">
+            Back to Customer Bookings
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
   const timing = getAppointmentTiming(appointment.dateTime);
 
   const canManageBooking =
@@ -223,7 +448,7 @@ export default function StaffAppointmentDetailsPage() {
 
           <h1>Appointment Details</h1>
 
-          <p>Review the backend-authoritative customer booking record.</p>
+          <p>Review this customer booking and appointment information.</p>
         </div>
 
         <Link
@@ -309,13 +534,20 @@ export default function StaffAppointmentDetailsPage() {
         </section>
 
         <section className="staff-appointment-details-card">
-          <h2>Optometrist & Session</h2>
+          <h2>Doctor & Session</h2>
 
           <dl>
             <div>
-              <dt>Optometrist</dt>
-              <dd>{appointment.providerName ?? 'Provider unavailable'}</dd>
+              <dt>Doctor</dt>
+              <dd>{doctorName}</dd>
             </div>
+
+            {doctorSpecialization ? (
+              <div>
+                <dt>Specialization</dt>
+                <dd>{doctorSpecialization}</dd>
+              </div>
+            ) : null}
 
             <div>
               <dt>Session ID</dt>
@@ -361,8 +593,7 @@ export default function StaffAppointmentDetailsPage() {
             <strong>Customer contact restricted</strong>
 
             <p>
-              Branch Manager access is read-only and does not include the Branch
-              Assistant customer-contact projection.
+              Customer contact details are available to Branch Assistants only.
             </p>
           </div>
         )}
@@ -375,8 +606,8 @@ export default function StaffAppointmentDetailsPage() {
           <p>
             {isBranchAssistant
               ? appointment.status === 'CONFIRMED'
-                ? 'Move or cancel this confirmed booking using backend-approved operations.'
-                : 'This booking is cancelled. No further booking mutation is available.'
+                ? 'You can move or cancel this confirmed booking.'
+                : 'This booking has been cancelled.'
               : 'Branch Manager access is read-only.'}
           </p>
         </div>
@@ -392,13 +623,10 @@ export default function StaffAppointmentDetailsPage() {
             </Link>
 
             <button
+              ref={cancelButtonRef}
               type="button"
               className="staff-appointment-details-cancel"
-              onClick={() => {
-                setActionError('');
-                setSuccessMessage('');
-                setShowCancelConfirmation(true);
-              }}
+              onClick={openCancelConfirmation}
             >
               Cancel Booking
             </button>
@@ -406,23 +634,15 @@ export default function StaffAppointmentDetailsPage() {
         ) : null}
       </section>
 
-      <section className="staff-appointment-details-integrity">
-        <strong>Backend-authoritative position</strong>
-
-        <p>
-          Queue position is displayed exactly as returned by the backend. After
-          cancellation or reassignment, the page reloads the latest appointment
-          state rather than recalculating positions in React.
-        </p>
-      </section>
-
       {showCancelConfirmation ? (
         <div className="staff-appointment-cancel-backdrop" role="presentation">
           <section
+            ref={dialogRef}
             className="staff-appointment-cancel-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="staff-cancel-booking-title"
+            tabIndex={-1}
           >
             <div className="staff-appointment-cancel-modal__heading">
               <span aria-hidden="true">!</span>
@@ -433,8 +653,7 @@ export default function StaffAppointmentDetailsPage() {
                 </h2>
 
                 <p>
-                  This action will mark the confirmed appointment as cancelled
-                  and the backend will compact the remaining queue positions.
+                  Confirm that you want to cancel this customer appointment.
                 </p>
               </div>
             </div>
@@ -456,26 +675,28 @@ export default function StaffAppointmentDetailsPage() {
               </div>
 
               <div>
-                <span>Optometrist</span>
-                <strong>
-                  {appointment.providerName ?? 'Provider unavailable'}
-                </strong>
+                <span>Doctor</span>
+                <strong>{doctorName}</strong>
               </div>
+
+              {doctorSpecialization ? (
+                <div>
+                  <span>Specialization</span>
+                  <strong>{doctorSpecialization}</strong>
+                </div>
+              ) : null}
             </div>
 
             <div className="staff-appointment-cancel-modal__warning">
-              <strong>Manual communication required</strong>
+              <strong>Customer communication</strong>
 
-              <p>
-                Inform the affected customer manually after the cancellation is
-                confirmed.
-              </p>
+              <p>Inform the customer about the cancellation if needed.</p>
             </div>
 
             <div className="staff-appointment-cancel-modal__actions">
               <button
                 type="button"
-                onClick={() => setShowCancelConfirmation(false)}
+                onClick={closeCancelConfirmation}
                 disabled={actionPending}
               >
                 Keep Appointment
