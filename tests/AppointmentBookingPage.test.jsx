@@ -38,22 +38,26 @@ const providers = [
   {
     id: '507f1f77bcf86cd799439011',
     name: 'Dr. Ruwan Perera',
-    role: 'OPTOMETRIST',
-    branchId: '507f1f77bcf86cd799439012',
+    specialization: 'Ophthalmologist',
   },
   {
     id: '507f1f77bcf86cd799439013',
     name: 'Dr. Nirmali Jayawardena',
-    role: 'OPTOMETRIST',
-    branchId: '507f1f77bcf86cd799439012',
+    specialization: 'Eye Surgeon',
   },
 ];
+
+const branchId = '507f1f77bcf86cd799439012';
 
 const sessions = [
   {
     id: '507f1f77bcf86cd799439021',
-    staffId: providers[0].id,
-    branchId: providers[0].branchId,
+    doctorId: providers[0].id,
+    staffId: null,
+    doctor: providers[0],
+    doctorName: providers[0].name,
+    specialization: providers[0].specialization,
+    branchId,
     startAt: '2026-11-01T09:00:00.000Z',
     endAt: '2026-11-01T10:00:00.000Z',
     capacity: 8,
@@ -62,8 +66,12 @@ const sessions = [
   },
   {
     id: '507f1f77bcf86cd799439022',
-    staffId: providers[0].id,
-    branchId: providers[0].branchId,
+    doctorId: providers[0].id,
+    staffId: null,
+    doctor: providers[0],
+    doctorName: providers[0].name,
+    specialization: providers[0].specialization,
+    branchId,
     startAt: '2026-11-02T09:00:00.000Z',
     endAt: '2026-11-02T10:00:00.000Z',
     capacity: 8,
@@ -72,8 +80,12 @@ const sessions = [
   },
   {
     id: '507f1f77bcf86cd799439023',
-    staffId: providers[1].id,
-    branchId: providers[1].branchId,
+    doctorId: providers[1].id,
+    staffId: null,
+    doctor: providers[1],
+    doctorName: providers[1].name,
+    specialization: providers[1].specialization,
+    branchId,
     startAt: '2026-11-03T09:00:00.000Z',
     endAt: '2026-11-03T10:00:00.000Z',
     capacity: 6,
@@ -84,10 +96,14 @@ const sessions = [
 
 const confirmation = {
   id: '507f1f77bcf86cd799439031',
-  staffId: providers[0].id,
+  doctorId: providers[0].id,
+  staffId: null,
+  doctor: providers[0],
+  doctorName: providers[0].name,
+  specialization: providers[0].specialization,
   providerName: providers[0].name,
   sessionId: sessions[0].id,
-  branchId: providers[0].branchId,
+  branchId,
   dateTime: sessions[0].startAt,
   status: 'CONFIRMED',
   position: 4,
@@ -198,7 +214,7 @@ describe('AppointmentBookingPage', () => {
     expect(getAvailableDoctorSessions).toHaveBeenCalledTimes(1);
   });
 
-  it('shows doctors returned by the backend rather than hard-coded Figma doctors', async () => {
+  it('shows doctors and specializations returned by the backend rather than hard-coded providers', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -216,6 +232,9 @@ describe('AppointmentBookingPage', () => {
         name: /dr\. nirmali jayawardena/i,
       }),
     ).toBeInTheDocument();
+
+    expect(screen.getByText('Ophthalmologist')).toBeInTheDocument();
+    expect(screen.getByText('Eye Surgeon')).toBeInTheDocument();
 
     expect(screen.queryByText('Dr. Samantha Fernando')).not.toBeInTheDocument();
   });
@@ -278,7 +297,7 @@ describe('AppointmentBookingPage', () => {
     expect(screen.queryByText('10:30 AM')).not.toBeInTheDocument();
   });
 
-  it('shows the customer, provider and selected backend session before confirmation', async () => {
+  it('shows the customer, Doctor and selected backend session before confirmation', async () => {
     const user = userEvent.setup();
 
     renderPage();
@@ -296,7 +315,7 @@ describe('AppointmentBookingPage', () => {
     expect(within(reviewSection).getByText(profile.name)).toBeInTheDocument();
 
     expect(
-      within(reviewSection).getByText(/Dr\. Ruwan Perera — Optometrist/i),
+      within(reviewSection).getByText(/Dr\. Ruwan Perera — Ophthalmologist/i),
     ).toBeInTheDocument();
 
     expect(
@@ -340,6 +359,10 @@ describe('AppointmentBookingPage', () => {
     expect(screen.getByText('Confirmed')).toBeInTheDocument();
 
     expect(screen.getByText('4')).toBeInTheDocument();
+
+    expect(
+      screen.getByText('Dr. Ruwan Perera — Ophthalmologist'),
+    ).toBeInTheDocument();
 
     expect(screen.getByText(confirmation.id)).toBeInTheDocument();
   });
@@ -458,7 +481,7 @@ describe('AppointmentBookingPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('refreshes availability when the selected provider is no longer valid', async () => {
+  it('refreshes availability when the selected Doctor is no longer valid', async () => {
     const user = userEvent.setup();
 
     getAvailableDoctorSessions

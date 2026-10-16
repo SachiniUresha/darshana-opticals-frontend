@@ -182,7 +182,7 @@ function AppointmentBookingPage() {
   );
 
   const providerSessions = useMemo(
-    () => sessions.filter((session) => session.staffId === selectedProviderId),
+    () => sessions.filter((session) => session.doctorId === selectedProviderId),
     [sessions, selectedProviderId],
   );
 
@@ -349,9 +349,18 @@ function AppointmentBookingPage() {
             <div>
               <dt>Doctor</dt>
               <dd>
-                {confirmation.providerName ||
+                {confirmation.doctorName ||
+                  confirmation.providerName ||
                   selectedProvider?.name ||
-                  'Optometrist'}
+                  'Doctor'}
+                {(confirmation.specialization ||
+                  selectedProvider?.specialization) && (
+                  <>
+                    {' — '}
+                    {confirmation.specialization ||
+                      selectedProvider?.specialization}
+                  </>
+                )}
               </dd>
             </div>
 
@@ -410,7 +419,7 @@ function AppointmentBookingPage() {
 
         <p>
           Schedule a professional eye examination with one of our available
-          optometrists.
+          doctors.
         </p>
       </header>
 
@@ -510,7 +519,7 @@ function AppointmentBookingPage() {
 
             {providers.length === 0 ? (
               <div className="appointment-empty-state">
-                <p>No eligible optometrists are currently available.</p>
+                <p>No doctors are currently available.</p>
 
                 <button
                   type="button"
@@ -524,7 +533,7 @@ function AppointmentBookingPage() {
               <div className="doctor-choice-list">
                 {providers.map((provider) => {
                   const providerSessionCount = sessions.filter(
-                    (session) => session.staffId === provider.id,
+                    (session) => session.doctorId === provider.id,
                   ).length;
 
                   const selected = selectedProviderId === provider.id;
@@ -548,7 +557,7 @@ function AppointmentBookingPage() {
 
                       <span className="doctor-choice-card__details">
                         <strong>{provider.name}</strong>
-                        <span>Optometrist</span>
+                        <span>{provider.specialization}</span>
                         <small>
                           {providerSessionCount > 0
                             ? `${providerSessionCount} available ${
@@ -768,7 +777,12 @@ function AppointmentBookingPage() {
 
               <div>
                 <dt>Doctor</dt>
-                <dd>{selectedProvider?.name} — Optometrist</dd>
+                <dd>
+                  {selectedProvider?.name}
+                  {selectedProvider?.specialization
+                    ? ` — ${selectedProvider.specialization}`
+                    : ''}
+                </dd>
               </div>
 
               <div>
