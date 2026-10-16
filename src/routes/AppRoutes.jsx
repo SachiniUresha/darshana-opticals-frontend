@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
+import AdminStaffCreatePage from '../pages/AdminStaffCreatePage';
 import SignupPage from '../pages/SignupPage';
 import LoginPage from '../pages/LoginPage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -41,6 +42,7 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[SYSTEM_ADMIN]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/staff/new" element={<AdminStaffCreatePage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
