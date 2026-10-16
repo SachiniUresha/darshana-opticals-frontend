@@ -78,6 +78,7 @@ describe('AdminDoctorCreatePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Dr. Nimal Perera')).toBeInTheDocument();
     expect(screen.getByText('Ophthalmologist')).toBeInTheDocument();
+    expect(document.querySelector('.admin-doctor__success-icon')).toBeNull();
     expect(screen.queryByText(/password/i)).not.toBeInTheDocument();
   });
 

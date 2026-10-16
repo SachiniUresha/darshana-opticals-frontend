@@ -69,14 +69,8 @@ function DoctorSuccess({ doctor, onAnother }) {
       className="admin-doctor__success"
       aria-labelledby="doctor-success-heading"
     >
-      <span className="admin-doctor__success-icon" aria-hidden="true">
-        âœ“
-      </span>
       <h2 id="doctor-success-heading">Doctor Registered Successfully</h2>
-      <p role="status">
-        The doctor is now available in the Doctor directory for appointment
-        workflows.
-      </p>
+      <p role="status">Doctor added successfully.</p>
       <dl className="admin-doctor__details">
         <div>
           <dt>Doctor Name</dt>
@@ -87,9 +81,6 @@ function DoctorSuccess({ doctor, onAnother }) {
           <dd>{doctor.specialization}</dd>
         </div>
       </dl>
-      <p className="admin-doctor__notice">
-        This record does not create a login account or assign any permissions.
-      </p>
       <div className="admin-doctor__actions admin-doctor__actions--center">
         <Link className="admin-doctor__secondary" to="/admin">
           Back to Dashboard
@@ -200,7 +191,7 @@ function AdminDoctorCreatePage() {
               </span>
               <div>
                 <h2 id="doctor-details-heading">Doctor Information</h2>
-                <p>Details for the appointment provider directory</p>
+                <p>Doctor details</p>
               </div>
             </div>
             <form onSubmit={handleSubmit} noValidate aria-busy={submitting}>
@@ -241,23 +232,6 @@ function AdminDoctorCreatePage() {
               </div>
             </form>
           </section>
-          <aside
-            className="admin-doctor__aside"
-            aria-label="Doctor registration information"
-          >
-            <section className="admin-doctor__card admin-doctor__side-card">
-              <h2>Doctor Directory</h2>
-              <p>
-                Registered doctors can be selected when staff create appointment
-                sessions.
-              </p>
-              <ul>
-                <li>Only name and specialization are required</li>
-                <li>Registration is limited to System Administrators</li>
-                <li>No doctor login account is created</li>
-              </ul>
-            </section>
-          </aside>
         </div>
       )}
     </div>

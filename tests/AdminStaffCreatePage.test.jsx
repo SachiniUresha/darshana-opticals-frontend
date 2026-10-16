@@ -116,6 +116,7 @@ describe('AdminStaffCreatePage', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.queryByText('Secure123')).not.toBeInTheDocument();
+    expect(document.querySelector('.admin-staff__success-mark')).toBeNull();
     expect(screen.getByText('nimal@example.com')).toBeInTheDocument();
   });
 

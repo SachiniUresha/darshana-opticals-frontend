@@ -126,14 +126,8 @@ function StaffSuccess({ staff, onAnother }) {
       className="admin-staff__success"
       aria-labelledby="staff-success-heading"
     >
-      <span className="admin-staff__success-mark" aria-hidden="true">
-        OK
-      </span>
       <h2 id="staff-success-heading">Staff Account Created</h2>
-      <p role="status">
-        Staff member added successfully. Share initial login details securely
-        outside this screen.
-      </p>
+      <p role="status">Staff account created successfully.</p>
       <dl className="admin-staff__summary">
         <div>
           <dt>Full Name</dt>
@@ -152,9 +146,6 @@ function StaffSuccess({ staff, onAnother }) {
           <dd>{staff.branchId ? 'Assigned' : 'Not assigned (optional)'}</dd>
         </div>
       </dl>
-      <p className="admin-staff__notice">
-        For security, passwords are never displayed on this confirmation screen.
-      </p>
       <div className="admin-staff__actions admin-staff__actions--center">
         <Link className="admin-staff__secondary" to="/admin">
           Back to Dashboard
@@ -417,10 +408,6 @@ function AdminStaffCreatePage() {
                   error={errors.confirmPassword}
                 />
               </div>
-              <p className="admin-staff__notice">
-                Only approved staff roles can be assigned. Passwords are never
-                displayed in the created-account record.
-              </p>
               {requestError ? (
                 <p className="admin-staff__request-error" role="alert">
                   {requestError}
@@ -446,7 +433,6 @@ function AdminStaffCreatePage() {
           >
             <section className="admin-staff__card admin-staff__side-card">
               <h2>Approved Designations</h2>
-              <p>Only current canonical staff roles are available.</p>
               <ul>
                 {STAFF_ROLES.map(({ value, label, description }) => (
                   <li key={value}>
@@ -454,16 +440,6 @@ function AdminStaffCreatePage() {
                     <span>{description}</span>
                   </li>
                 ))}
-              </ul>
-            </section>
-            <section className="admin-staff__card admin-staff__side-card">
-              <h2>Account Security</h2>
-              <p>Only System Administrators may create staff accounts.</p>
-              <ul className="admin-staff__security-list">
-                <li>One approved role per account</li>
-                <li>Duplicate emails are rejected</li>
-                <li>Passwords are securely handled</li>
-                <li>Branch selection is optional</li>
               </ul>
             </section>
           </aside>

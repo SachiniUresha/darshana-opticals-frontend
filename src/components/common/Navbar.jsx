@@ -19,6 +19,7 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
+  const isAdminWorkspace = isAuthenticated && user?.role === SYSTEM_ADMIN;
   const { cartCount } = useCart();
 
   const currentParams = new URLSearchParams(location.search);
@@ -69,11 +70,18 @@ function Navbar() {
 
   return (
     <header className="site-header">
-      <nav className="navbar" aria-label="Main navigation">
+      <nav
+        className={isAdminWorkspace ? 'navbar navbar--admin' : 'navbar'}
+        aria-label="Main navigation"
+      >
         <Link
           className="navbar__brand"
-          to="/"
-          aria-label="Darshana Opticals home"
+          to={isAdminWorkspace ? '/admin' : '/'}
+          aria-label={
+            isAdminWorkspace
+              ? 'Darshana Opticals admin dashboard'
+              : 'Darshana Opticals home'
+          }
         >
           <img
             src={logo}
@@ -99,27 +107,31 @@ function Navbar() {
           <span aria-hidden="true">☰</span>
         </button>
 
-        <ul className="navbar__categories">
-          {categoryLinks.map((category) => (
-            <li key={category}>
-              <Link
-                to={`/products?category=${encodeURIComponent(category)}`}
-                className="navbar__category-link"
-              >
-                {category}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {!isAdminWorkspace ? (
+          <>
+            <ul className="navbar__categories">
+              {categoryLinks.map((category) => (
+                <li key={category}>
+                  <Link
+                    to={`/products?category=${encodeURIComponent(category)}`}
+                    className="navbar__category-link"
+                  >
+                    {category}
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
-        <div className="navbar__search">
-          <SearchBar
-            value={query}
-            onChange={setQuery}
-            onSubmit={handleSearch}
-            compact
-          />
-        </div>
+            <div className="navbar__search">
+              <SearchBar
+                value={query}
+                onChange={setQuery}
+                onSubmit={handleSearch}
+                compact
+              />
+            </div>
+          </>
+        ) : null}
 
         <ul
           id="navbar-account-menu"

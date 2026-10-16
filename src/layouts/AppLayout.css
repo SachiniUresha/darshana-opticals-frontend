@@ -17,3 +17,31 @@
     padding: 1rem;
   }
 }
+
+/* DDP-068: same application shell, with a left sidebar only for SYSTEM_ADMIN. */
+.app-shell--admin {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.app-shell--admin .app-main--admin {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 1.5rem clamp(1rem, 3vw, 3rem) 2rem;
+  background: #f7f8fb;
+}
+
+@media (max-width: 760px) {
+  .app-shell--admin {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-shell--admin .app-main--admin {
+    padding: 1rem;
+  }
+}

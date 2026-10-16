@@ -43,9 +43,11 @@
 }
 .admin-doctor__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 780px;
   gap: 1.4rem;
   align-items: start;
+  margin: 0 auto;
 }
 .admin-doctor__card,
 .admin-doctor__success {
@@ -182,19 +184,8 @@
   margin: 0 auto;
   text-align: center;
 }
-.admin-doctor__success-icon {
-  display: inline-grid;
-  place-items: center;
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background: #eaf7ed;
-  color: #287344;
-  font-size: 1.9rem;
-  font-weight: 800;
-}
 .admin-doctor__success h2 {
-  margin: 1.3rem 0 0.75rem;
+  margin: 0 0 0.75rem;
 }
 .admin-doctor__success > p {
   color: #4d607b;
