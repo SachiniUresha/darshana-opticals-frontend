@@ -183,7 +183,7 @@
   text-align: center;
 }
 
-.staff-overview-empty > div,
+.staff-overview-empty > div[aria-hidden='true'],
 .staff-overview-message__icon {
   display: grid;
   width: 72px;
@@ -233,7 +233,21 @@
 
 .staff-overview-empty__actions {
   display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.staff-overview-empty__actions > button,
+.staff-overview-empty__actions > a {
+  display: inline-flex;
+  min-width: 160px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .staff-overview-message--error .staff-overview-message__icon {
@@ -368,9 +382,14 @@
     min-height: 320px;
     padding: 1.25rem;
   }
-
   .staff-overview-empty__actions {
     width: 100%;
+    max-width: 280px;
     flex-direction: column;
+  }
+
+  .staff-overview-empty__actions > button,
+  .staff-overview-empty__actions > a {
+    width: 100%;
   }
 }
