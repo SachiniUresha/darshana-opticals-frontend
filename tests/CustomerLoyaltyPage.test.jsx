@@ -93,7 +93,7 @@ describe('CustomerLoyaltyPage', () => {
       await screen.findByRole('heading', { name: 'My Loyalty' }),
     ).toBeInTheDocument();
 
-    expect(screen.getByText('285.00')).toBeInTheDocument();
+    expect(await screen.findByText('285.00')).toBeInTheDocument();
     expect(screen.getByText('Points earned')).toBeInTheDocument();
     expect(screen.getByText('Points reversed')).toBeInTheDocument();
 

@@ -1,0 +1,226 @@
+.staff-loyalty-page {
+  width: 100%;
+  padding: 2rem 0 3rem;
+  color: #101828;
+}
+
+.staff-loyalty-page__heading {
+  margin-bottom: 1.5rem;
+}
+
+.staff-loyalty-page__heading h1 {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  line-height: 1.1;
+}
+
+.staff-loyalty-page__heading p,
+.staff-loyalty-card__header p {
+  margin: 0.35rem 0 0;
+  color: #667085;
+}
+
+.staff-loyalty-card {
+  overflow: hidden;
+  border: 1px solid #eef0f3;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 6%);
+}
+
+.staff-loyalty-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eef0f3;
+}
+
+.staff-loyalty-card__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.staff-loyalty-card button {
+  border: 1px solid #d0d5dd;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #1c398e;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.85rem;
+  cursor: pointer;
+}
+
+.staff-loyalty-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.staff-loyalty-filters {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eef0f3;
+  background: #f9fafb;
+}
+
+.staff-loyalty-filters__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.staff-loyalty-filters label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: #344054;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.staff-loyalty-filters input,
+.staff-loyalty-filters select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid #d0d5dd;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #101828;
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+}
+
+.staff-loyalty-filters__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.staff-loyalty-filters__actions button[type='submit'] {
+  border-color: #1c398e;
+  background: #1c398e;
+  color: #fff;
+}
+
+.staff-loyalty-button--secondary {
+  background: #fff;
+}
+
+.staff-loyalty-state {
+  margin: 0;
+  padding: 3rem 1.5rem;
+  color: #667085;
+  text-align: center;
+}
+
+.staff-loyalty-state p {
+  margin: 0 0 0.75rem;
+}
+
+.staff-loyalty-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.staff-loyalty-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+.staff-loyalty-table__caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.staff-loyalty-table th,
+.staff-loyalty-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #eef0f3;
+  text-align: left;
+  vertical-align: top;
+}
+
+.staff-loyalty-table th {
+  background: #f9fafb;
+  color: #475467;
+  font-size: 0.8rem;
+}
+
+.staff-loyalty-table td {
+  color: #344054;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.staff-loyalty-event {
+  color: #1c398e;
+  font-weight: 700;
+}
+
+.staff-loyalty-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+.staff-loyalty-pagination > span {
+  color: #667085;
+  font-size: 0.85rem;
+}
+
+.staff-loyalty-pagination nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.staff-loyalty-pagination nav span {
+  color: #475467;
+  font-size: 0.85rem;
+}
+
+.staff-loyalty-page :focus-visible {
+  outline: 3px solid #8eb8ff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .staff-loyalty-filters__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .staff-loyalty-page {
+    padding-top: 1.25rem;
+  }
+
+  .staff-loyalty-card__header,
+  .staff-loyalty-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-loyalty-filters__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-loyalty-filters__actions {
+    flex-direction: column;
+  }
+
+  .staff-loyalty-pagination nav {
+    justify-content: space-between;
+  }
+}

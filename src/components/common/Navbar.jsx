@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
@@ -196,6 +196,12 @@ function Navbar() {
                   <Link to="/staff/orders">Staff Orders</Link>
                 </li>
               )}
+
+              {user?.role === BRANCH_MANAGER ? (
+                <li>
+                  <Link to="/staff/loyalty">Loyalty Monitoring</Link>
+                </li>
+              ) : null}
 
               {canViewStaffAppointments ? (
                 <li>

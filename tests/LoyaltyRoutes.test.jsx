@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Outlet, useLocation } from 'react-router-dom';
 import AppRoutes from '../src/routes/AppRoutes';
-import { BRANCH_MANAGER, CUSTOMER } from '../src/config/roles';
+import {
+  BRANCH_ASSISTANT,
+  BRANCH_MANAGER,
+  CUSTOMER,
+  OPTOMETRIST,
+  SYSTEM_ADMIN,
+} from '../src/config/roles';
 
 const mockAuth = vi.hoisted(() => ({
   current: {
@@ -24,6 +30,10 @@ vi.mock('../src/pages/CustomerLoyaltyPage', () => ({
   default: () => <h1>Customer Loyalty Page</h1>,
 }));
 
+vi.mock('../src/pages/StaffLoyaltyPage', () => ({
+  default: () => <h1>Staff Loyalty Page</h1>,
+}));
+
 vi.mock('../src/pages/HomePage', () => ({
   default: () => <h1>Home destination</h1>,
 }));
@@ -38,9 +48,9 @@ function CurrentLocation() {
   return <output data-testid="current-path">{location.pathname}</output>;
 }
 
-function renderRoute() {
+function renderRoute(path) {
   return render(
-    <MemoryRouter initialEntries={['/profile/loyalty']}>
+    <MemoryRouter initialEntries={[path]}>
       <AppRoutes />
       <CurrentLocation />
     </MemoryRouter>,
@@ -58,7 +68,7 @@ describe('Customer loyalty route protection', () => {
   });
 
   it('allows an authenticated CUSTOMER to view own loyalty', () => {
-    renderRoute();
+    renderRoute('/profile/loyalty');
 
     expect(
       screen.getByRole('heading', {
@@ -77,7 +87,7 @@ describe('Customer loyalty route protection', () => {
       user: null,
     };
 
-    renderRoute();
+    renderRoute('/profile/loyalty');
 
     expect(
       screen.getByRole('heading', {
@@ -88,22 +98,89 @@ describe('Customer loyalty route protection', () => {
     expect(screen.getByTestId('current-path')).toHaveTextContent('/login');
   });
 
-  it('blocks BRANCH_MANAGER from the Customer loyalty route', () => {
+  it.each([BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST, SYSTEM_ADMIN])(
+    'blocks %s from the Customer loyalty route',
+    (role) => {
+      mockAuth.current = {
+        isAuthenticated: true,
+        user: {
+          role,
+        },
+      };
+
+      renderRoute('/profile/loyalty');
+
+      expect(
+        screen.getByRole('heading', {
+          name: 'Home destination',
+        }),
+      ).toBeInTheDocument();
+
+      expect(screen.getByTestId('current-path')).toHaveTextContent('/');
+    },
+  );
+});
+
+describe('Loyalty monitoring route protection', () => {
+  beforeEach(() => {
     mockAuth.current = {
       isAuthenticated: true,
       user: {
         role: BRANCH_MANAGER,
       },
     };
+  });
 
-    renderRoute();
+  it('allows BRANCH_MANAGER to access loyalty monitoring', () => {
+    renderRoute('/staff/loyalty');
 
     expect(
       screen.getByRole('heading', {
-        name: 'Home destination',
+        name: 'Staff Loyalty Page',
       }),
     ).toBeInTheDocument();
 
-    expect(screen.getByTestId('current-path')).toHaveTextContent('/');
+    expect(screen.getByTestId('current-path')).toHaveTextContent(
+      '/staff/loyalty',
+    );
   });
+
+  it('redirects an unauthenticated user to Login', () => {
+    mockAuth.current = {
+      isAuthenticated: false,
+      user: null,
+    };
+
+    renderRoute('/staff/loyalty');
+
+    expect(
+      screen.getByRole('heading', {
+        name: 'Login destination',
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/login');
+  });
+
+  it.each([CUSTOMER, BRANCH_ASSISTANT, OPTOMETRIST, SYSTEM_ADMIN])(
+    'blocks %s from loyalty monitoring',
+    (role) => {
+      mockAuth.current = {
+        isAuthenticated: true,
+        user: {
+          role,
+        },
+      };
+
+      renderRoute('/staff/loyalty');
+
+      expect(
+        screen.getByRole('heading', {
+          name: 'Home destination',
+        }),
+      ).toBeInTheDocument();
+
+      expect(screen.getByTestId('current-path')).toHaveTextContent('/');
+    },
+  );
 });

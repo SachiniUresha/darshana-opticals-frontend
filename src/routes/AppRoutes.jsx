@@ -38,6 +38,7 @@ import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
 import StaffAppointmentDetailsPage from '../pages/StaffAppointmentDetailsPage';
 import StaffMoveAppointmentPage from '../pages/StaffMoveAppointmentPage';
 import CustomerLoyaltyPage from '../pages/CustomerLoyaltyPage';
+import StaffLoyaltyPage from '../pages/StaffLoyaltyPage';
 
 function AppRoutes() {
   return (
@@ -118,6 +119,10 @@ function AppRoutes() {
             path="/staff/appointments/bookings/:appointmentId"
             element={<StaffAppointmentDetailsPage />}
           />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[BRANCH_MANAGER]} />}>
+          <Route path="/staff/loyalty" element={<StaffLoyaltyPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[BRANCH_ASSISTANT]} />}>

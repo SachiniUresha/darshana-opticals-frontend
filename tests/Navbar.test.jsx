@@ -470,4 +470,43 @@ describe('Navbar authentication controls', () => {
       expect(screen.queryByText('Branch Assistant')).not.toBeInTheDocument();
     },
   );
+
+  it('shows Loyalty Monitoring only to BRANCH_MANAGER', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: BRANCH_MANAGER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Loyalty Monitoring',
+      }),
+    ).toHaveAttribute('href', '/staff/loyalty');
+  });
+
+  it.each([CUSTOMER, BRANCH_ASSISTANT, OPTOMETRIST, SYSTEM_ADMIN])(
+    'hides Loyalty Monitoring from %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: {
+          role,
+        },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.queryByRole('link', {
+          name: 'Loyalty Monitoring',
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });
