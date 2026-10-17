@@ -52,13 +52,12 @@ function validateLoginForm(values) {
   return errors;
 }
 
-// Static, link-styled "Forgot password?" control.
-// No password reset flow is currently part of this issue.
+// Reuse the login form's existing inline-link styling.
 function ForgotPasswordLink() {
   return (
-    <button type="button" className="auth-inline-link">
+    <Link to="/forgot-password" className="auth-inline-link">
       Forgot password?
-    </button>
+    </Link>
   );
 }
 

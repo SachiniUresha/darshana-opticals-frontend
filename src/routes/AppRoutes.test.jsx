@@ -276,3 +276,31 @@ describe('Admin Doctor creation route protection', () => {
     expect(screen.getByTestId('current-path').textContent).toBe('/login');
   });
 });
+
+describe('Public password recovery routing', () => {
+  it('allows an unauthenticated visitor to open the reset form', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/reset-password?token=test-reset-token');
+    expect(
+      screen.getByRole('heading', { name: 'Reset Password' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('current-path')).toHaveTextContent(
+      '/reset-password',
+    );
+  });
+});
+
+// DDP-081 public forgot-password route regression.
+describe('DDP-081 public forgot-password route regression', () => {
+  it('allows a logged-out visitor to access the forgot-password form', () => {
+    mockAuth.current = { isAuthenticated: false, user: null };
+    show('/forgot-password');
+    expect(
+      screen.getByRole('heading', { name: 'Forgot Password?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByTestId('current-path')).toHaveTextContent(
+      '/forgot-password',
+    );
+  });
+});
