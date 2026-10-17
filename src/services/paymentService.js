@@ -76,7 +76,11 @@ function isValidDate(value) {
   return !Number.isNaN(new Date(value).getTime());
 }
 
-function normalizePaymentAttempt(attempt, errorMessage) {
+function normalizePaymentAttempt(
+  attempt,
+  errorMessage,
+  { allowNullableExpiresAt = false } = {},
+) {
   if (!isObject(attempt)) {
     throw new Error(errorMessage);
   }
@@ -84,6 +88,10 @@ function normalizePaymentAttempt(attempt, errorMessage) {
   const paymentId = String(attempt.paymentId || '');
   const orderId = String(attempt.orderId || '');
   const amount = Number(attempt.amount);
+
+  const validExpiresAt =
+    (allowNullableExpiresAt && attempt.expiresAt === null) ||
+    isValidDate(attempt.expiresAt);
 
   if (
     !isValidObjectId(paymentId) ||
@@ -93,7 +101,7 @@ function normalizePaymentAttempt(attempt, errorMessage) {
     attempt.currency !== PAYMENT_CURRENCY ||
     attempt.method !== PAYMENT_METHOD ||
     !PAYMENT_STATUSES.has(attempt.status) ||
-    !isValidDate(attempt.expiresAt) ||
+    !validExpiresAt ||
     typeof attempt.reconciliationRequired !== 'boolean' ||
     !isValidDate(attempt.createdAt) ||
     !isValidDate(attempt.updatedAt)
@@ -178,7 +186,9 @@ function normalizeNullableAttempt(attempt) {
     return null;
   }
 
-  return normalizePaymentAttempt(attempt, INVALID_PAYMENT_STATUS_RESPONSE);
+  return normalizePaymentAttempt(attempt, INVALID_PAYMENT_STATUS_RESPONSE, {
+    allowNullableExpiresAt: true,
+  });
 }
 
 function normalizePaymentStatusResponse(response) {
@@ -200,7 +210,9 @@ function normalizePaymentStatusResponse(response) {
   }
 
   const attempts = data.attempts.map((attempt) =>
-    normalizePaymentAttempt(attempt, INVALID_PAYMENT_STATUS_RESPONSE),
+    normalizePaymentAttempt(attempt, INVALID_PAYMENT_STATUS_RESPONSE, {
+      allowNullableExpiresAt: true,
+    }),
   );
 
   const latestAttempt = normalizeNullableAttempt(data.latestAttempt);

@@ -242,7 +242,7 @@ describe('PaymentResultPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not offer retry while reconciliation is required', async () => {
+  it('shows payment review instead of failure while reconciliation is required', async () => {
     const reconciliationStatus = paymentStatus('failed');
 
     reconciliationStatus.summary = {
@@ -256,9 +256,54 @@ describe('PaymentResultPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Payment failed',
+        name: 'Payment review required',
       }),
     ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(/needs additional verification/i),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Payment failed',
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not show an unqualified completion while reconciliation is required', async () => {
+    const reconciliationStatus = paymentStatus('completed');
+
+    reconciliationStatus.summary = {
+      ...reconciliationStatus.summary,
+      reconciliationRequired: true,
+    };
+
+    getPaymentStatus.mockResolvedValueOnce(reconciliationStatus);
+
+    renderPage('return');
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Payment review required',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(/do not start another payment attempt/i),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Payment completed',
+      }),
+    ).not.toBeInTheDocument();
 
     expect(
       screen.queryByRole('link', {

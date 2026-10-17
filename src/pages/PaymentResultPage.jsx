@@ -134,7 +134,11 @@ function PaymentResultPage() {
   }
 
   const paid = Boolean(paymentStatus.summary?.paid);
+  const reconciliationRequired = Boolean(
+    paymentStatus.summary?.reconciliationRequired,
+  );
   const status = latestPayment?.status ?? '';
+
   const retryExpiry = latestPayment?.expiresAt
     ? new Date(latestPayment.expiresAt).getTime()
     : Number.NaN;
@@ -143,7 +147,7 @@ function PaymentResultPage() {
     (status === 'failed' || status === 'cancelled') &&
     paymentStatus.orderStatus === 'ORDER_CREATED' &&
     !paid &&
-    !paymentStatus.summary?.reconciliationRequired &&
+    !reconciliationRequired &&
     Number.isFinite(retryExpiry) &&
     retryExpiry > Date.now();
 
@@ -152,7 +156,12 @@ function PaymentResultPage() {
     'Your payment has not been confirmed yet. Check again shortly for the latest verified status.';
   let stateClass = 'payment-result-card--pending';
 
-  if (paid || status === 'completed') {
+  if (reconciliationRequired) {
+    heading = 'Payment review required';
+    description =
+      'This payment needs additional verification before it can be confirmed. Please do not start another payment attempt while the payment is under review.';
+    stateClass = 'payment-result-card--warning';
+  } else if (paid || status === 'completed') {
     heading = 'Payment completed';
     description =
       'Your payment has been verified successfully. Your order can now continue processing.';
@@ -181,6 +190,9 @@ function PaymentResultPage() {
       'No confirmed payment attempt is available for this order yet.';
   }
 
+  const paymentConfirmed =
+    !reconciliationRequired && (paid || status === 'completed');
+
   return (
     <section
       className="payment-result-page"
@@ -188,7 +200,7 @@ function PaymentResultPage() {
     >
       <div className={`payment-result-card ${stateClass}`}>
         <div className="payment-result-card__indicator" aria-hidden="true">
-          {paid || status === 'completed' ? '✓' : 'i'}
+          {paymentConfirmed ? '✓' : 'i'}
         </div>
 
         <h1 id="payment-result-title">{heading}</h1>

@@ -1,4 +1,5 @@
-import { Navigate, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './PaymentEntryPage.css';
 
 const PAYMENT_ORDER_STORAGE_KEY = 'osms.payment.orderId';
@@ -12,26 +13,52 @@ function readPaymentOrderId() {
       return '';
     }
 
-    sessionStorage.removeItem(PAYMENT_ORDER_STORAGE_KEY);
-
     return storedOrderId;
   } catch {
     return '';
   }
 }
 
+function clearPaymentOrderId(orderId) {
+  try {
+    if (sessionStorage.getItem(PAYMENT_ORDER_STORAGE_KEY) === orderId) {
+      sessionStorage.removeItem(PAYMENT_ORDER_STORAGE_KEY);
+    }
+  } catch {
+    // Payment result recovery must still continue when session storage
+    // is unavailable.
+  }
+}
+
 function PaymentReturnPage() {
   const location = useLocation();
-  const orderId = readPaymentOrderId();
+  const navigate = useNavigate();
+  const [orderId] = useState(readPaymentOrderId);
 
   const source = location.pathname.endsWith('/cancel') ? 'cancel' : 'return';
 
+  useEffect(() => {
+    if (!orderId) {
+      return;
+    }
+
+    navigate(
+      `/payments/result/${encodeURIComponent(orderId)}?source=${source}`,
+      {
+        replace: true,
+      },
+    );
+
+    clearPaymentOrderId(orderId);
+  }, [navigate, orderId, source]);
+
   if (orderId) {
     return (
-      <Navigate
-        to={`/payments/result/${encodeURIComponent(orderId)}?source=${source}`}
-        replace
-      />
+      <section className="payment-page">
+        <div className="payment-page__state">
+          <p role="status">Checking payment status...</p>
+        </div>
+      </section>
     );
   }
 

@@ -334,6 +334,57 @@ describe('paymentService', () => {
     expect(result.orderStatus).toBe('PROCESSING');
   });
 
+  it('accepts nullable expiresAt for legacy payment status records', async () => {
+    const legacyAttempt = {
+      ...paymentAttempt,
+      expiresAt: null,
+    };
+
+    apiClient.get.mockResolvedValueOnce({
+      success: true,
+      data: {
+        orderId,
+        orderStatus: 'ORDER_CREATED',
+        summary: {
+          paid: false,
+          reconciliationRequired: false,
+          activeAttempt: false,
+          attemptCount: 1,
+        },
+        latestAttempt: legacyAttempt,
+        completedAttempt: null,
+        attempts: [legacyAttempt],
+      },
+    });
+
+    const result = await getPaymentStatus(orderId);
+
+    expect(result.latestAttempt.expiresAt).toBeNull();
+    expect(result.attempts[0].expiresAt).toBeNull();
+  });
+
+  it('still requires expiresAt for a newly initiated payment', async () => {
+    apiClient.post.mockResolvedValueOnce({
+      ...initiationResponse,
+      data: {
+        ...initiationResponse.data,
+        payment: {
+          ...paymentAttempt,
+          expiresAt: null,
+        },
+      },
+    });
+
+    await expect(
+      initiatePayment({
+        orderId,
+        city: 'Colombo',
+      }),
+    ).rejects.toThrow(
+      'Invalid payment initiation response received from the server.',
+    );
+  });
+
   it('rejects malformed payment status responses', async () => {
     apiClient.get.mockResolvedValueOnce({
       success: true,
