@@ -120,3 +120,47 @@ export async function getActiveReorderAlerts(branchId, page = 1) {
 
   return result;
 }
+
+/** Read the backend's authoritative global reorder threshold. */
+export async function getGlobalReorderThreshold() {
+  const response = await apiClient.get('/inventory/reorder-threshold');
+  const threshold = response?.data?.threshold;
+
+  if (
+    response?.success !== true ||
+    typeof threshold !== 'number' ||
+    !Number.isFinite(threshold) ||
+    threshold < 0
+  ) {
+    throw new Error('Invalid reorder threshold response.');
+  }
+
+  return threshold;
+}
+
+/** Backend reconciles alerts; never update frontend stock/alert state locally. */
+export async function updateGlobalReorderThreshold(threshold) {
+  if (
+    typeof threshold !== 'number' ||
+    !Number.isFinite(threshold) ||
+    threshold < 0
+  ) {
+    throw new Error('Threshold must be a non-negative number.');
+  }
+
+  const response = await apiClient.put('/inventory/reorder-threshold', {
+    threshold,
+  });
+  const confirmed = response?.data?.threshold;
+
+  if (
+    response?.success !== true ||
+    typeof confirmed !== 'number' ||
+    !Number.isFinite(confirmed) ||
+    confirmed < 0
+  ) {
+    throw new Error('Invalid reorder threshold update response.');
+  }
+
+  return confirmed;
+}

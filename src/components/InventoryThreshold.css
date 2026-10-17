@@ -1,0 +1,57 @@
+.inventory-threshold h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+.inventory-threshold p {
+  color: #4e5d77;
+}
+.inventory-threshold__current {
+  margin: 1.15rem 0;
+}
+.inventory-threshold__current strong {
+  color: #192955;
+}
+.inventory-threshold form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 520px;
+}
+.inventory-threshold label {
+  font-weight: 600;
+}
+.inventory-threshold__controls {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.inventory-threshold input {
+  flex: 1 1 130px;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+  font: inherit;
+}
+.inventory-threshold button {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+  background: #192955;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.inventory-threshold button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.inventory-threshold p[role='alert'],
+.inventory-threshold div[role='alert'] p {
+  color: #9b1c1c;
+}
+.inventory-threshold p[role='status'] {
+  color: #1c5e3d;
+}

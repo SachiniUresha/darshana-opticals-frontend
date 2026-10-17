@@ -7,6 +7,8 @@ import {
   createInventoryItem,
   updateInventoryItem,
   overrideInventoryPrice,
+  getGlobalReorderThreshold,
+  updateGlobalReorderThreshold,
 } from '../src/services/inventoryService';
 
 const state = vi.hoisted(() => ({
@@ -38,6 +40,8 @@ vi.mock('../src/services/inventoryService', () => ({
     .fn()
     .mockResolvedValue({ alerts: [], total: 0, page: 1, limit: 20 }),
   updateInventoryQuantity: vi.fn(),
+  getGlobalReorderThreshold: vi.fn().mockResolvedValue(5),
+  updateGlobalReorderThreshold: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -373,5 +377,36 @@ describe('Inventory create/edit permissions and operations', () => {
       screen.queryByText('Sensitive backend error'),
     ).not.toBeInTheDocument();
     expect(getBranchInventory).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Inventory global threshold integration', () => {
+  it('lets System Admin view the global threshold even before selecting a branch', async () => {
+    state.user = { role: 'SYSTEM_ADMIN' };
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('5', { selector: 'strong' }),
+    ).toBeInTheDocument();
+    expect(getGlobalReorderThreshold).toHaveBeenCalledOnce();
+    expect(getBranchInventory).not.toHaveBeenCalled();
+  });
+
+  it('refreshes branch inventory after the backend confirms a global threshold update', async () => {
+    getBranchInventory.mockResolvedValue([]);
+    updateGlobalReorderThreshold.mockResolvedValueOnce(6);
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('No inventory items found for this branch.'),
+    ).toBeInTheDocument();
+    const user = userEvent.setup();
+    const input = await screen.findByRole('spinbutton', {
+      name: 'New global threshold',
+    });
+    await user.clear(input);
+    await user.type(input, '6');
+    await user.click(screen.getByRole('button', { name: 'Update Threshold' }));
+    await waitFor(() => expect(getBranchInventory).toHaveBeenCalledTimes(2));
+    expect(updateGlobalReorderThreshold).toHaveBeenCalledWith(6);
+    expect(screen.getByText('6', { selector: 'strong' })).toBeInTheDocument();
   });
 });

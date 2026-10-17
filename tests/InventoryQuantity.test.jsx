@@ -35,6 +35,8 @@ vi.mock('../src/services/inventoryService', () => ({
   createInventoryItem: vi.fn(),
   updateInventoryItem: vi.fn(),
   overrideInventoryPrice: vi.fn(),
+  getGlobalReorderThreshold: vi.fn().mockResolvedValue(5),
+  updateGlobalReorderThreshold: vi.fn(),
 }));
 
 const item = {

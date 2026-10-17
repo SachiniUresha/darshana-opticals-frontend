@@ -14,6 +14,7 @@ import {
 import InventoryEditor from '../components/InventoryEditor';
 import InventoryQuantityEditor from '../components/InventoryQuantityEditor';
 import InventoryReorderAlerts from '../components/InventoryReorderAlerts';
+import InventoryThreshold from '../components/InventoryThreshold';
 import './InventoryPage.css';
 
 const money = new Intl.NumberFormat('en-LK', {
@@ -393,6 +394,11 @@ function InventoryPage() {
           key={branchId}
           branchId={branchId}
           refreshCount={refreshCount}
+        />
+      )}
+      {(manager || admin) && (
+        <InventoryThreshold
+          onUpdated={() => setRefreshCount((count) => count + 1)}
         />
       )}
     </div>
