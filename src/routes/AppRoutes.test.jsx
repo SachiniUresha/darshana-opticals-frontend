@@ -57,6 +57,10 @@ vi.mock('../pages/HomePage', () => ({
   default: () => <div>Home page</div>,
 }));
 
+vi.mock('../pages/PaymentEntryPage', () => ({
+  default: () => <div>Customer payment page</div>,
+}));
+
 function CurrentLocation() {
   const location = useLocation();
 
@@ -83,6 +87,7 @@ describe('Customer order route protection', () => {
   it.each([
     ['/orders', 'Customer order history page'],
     ['/orders/507f1f77bcf86cd799439021', 'Customer order details page'],
+    ['/payments/507f1f77bcf86cd799439021', 'Customer payment page'],
   ])('allows CUSTOMER access to %s', (path, expectedPage) => {
     show(path);
 
@@ -90,41 +95,45 @@ describe('Customer order route protection', () => {
     expect(screen.getByTestId('current-path').textContent).toBe(path);
   });
 
-  it.each(['/orders', '/orders/507f1f77bcf86cd799439021'])(
-    'redirects unauthenticated users from %s to Login',
-    (path) => {
-      mockAuth.current = {
-        isAuthenticated: false,
-        user: null,
-      };
+  it.each([
+    '/orders',
+    '/orders/507f1f77bcf86cd799439021',
+    '/payments/507f1f77bcf86cd799439021',
+  ])('redirects unauthenticated users from %s to Login', (path) => {
+    mockAuth.current = {
+      isAuthenticated: false,
+      user: null,
+    };
 
-      show(path);
+    show(path);
 
-      expect(screen.getByText('Login page')).toBeTruthy();
-      expect(screen.getByTestId('current-path').textContent).toBe('/login');
+    expect(screen.getByText('Login page')).toBeTruthy();
+    expect(screen.getByTestId('current-path').textContent).toBe('/login');
 
-      expect(screen.queryByText('Customer order history page')).toBeNull();
-      expect(screen.queryByText('Customer order details page')).toBeNull();
-    },
-  );
+    expect(screen.queryByText('Customer order history page')).toBeNull();
+    expect(screen.queryByText('Customer order details page')).toBeNull();
+    expect(screen.queryByText('Customer payment page')).toBeNull();
+  });
 
-  it.each(['/orders', '/orders/507f1f77bcf86cd799439021'])(
-    'blocks non-CUSTOMER access to %s',
-    (path) => {
-      mockAuth.current = {
-        isAuthenticated: true,
-        user: { role: BRANCH_MANAGER },
-      };
+  it.each([
+    '/orders',
+    '/orders/507f1f77bcf86cd799439021',
+    '/payments/507f1f77bcf86cd799439021',
+  ])('blocks non-CUSTOMER access to %s', (path) => {
+    mockAuth.current = {
+      isAuthenticated: true,
+      user: { role: BRANCH_MANAGER },
+    };
 
-      show(path);
+    show(path);
 
-      expect(screen.getByText('Home page')).toBeTruthy();
-      expect(screen.getByTestId('current-path').textContent).toBe('/');
+    expect(screen.getByText('Home page')).toBeTruthy();
+    expect(screen.getByTestId('current-path').textContent).toBe('/');
 
-      expect(screen.queryByText('Customer order history page')).toBeNull();
-      expect(screen.queryByText('Customer order details page')).toBeNull();
-    },
-  );
+    expect(screen.queryByText('Customer order history page')).toBeNull();
+    expect(screen.queryByText('Customer order details page')).toBeNull();
+    expect(screen.queryByText('Customer payment page')).toBeNull();
+  });
 });
 
 describe('Staff order route protection', () => {

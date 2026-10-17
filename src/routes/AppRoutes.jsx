@@ -31,6 +31,7 @@ import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 import AppointmentBookingPage from '../pages/AppointmentBookingPage';
 import AppointmentHistoryPage from '../pages/AppointmentHistoryPage';
 import AppointmentDetailsPage from '../pages/AppointmentDetailsPage';
+import PaymentEntryPage from '../pages/PaymentEntryPage';
 
 function AppRoutes() {
   return (
@@ -64,6 +65,7 @@ function AppRoutes() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutEntryPage />} />
+          <Route path="/payments/:orderId" element={<PaymentEntryPage />} />
 
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />

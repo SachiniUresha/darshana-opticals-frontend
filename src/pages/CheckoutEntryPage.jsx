@@ -203,8 +203,11 @@ function CheckoutEntryPage() {
               View My Orders
             </Link>
 
-            <Link to="/" className="checkout-confirmation__primary">
-              Back to Home
+            <Link
+              to={`/payments/${encodeURIComponent(order.id)}`}
+              className="checkout-confirmation__primary"
+            >
+              Continue to Payment
             </Link>
           </div>
         </div>
