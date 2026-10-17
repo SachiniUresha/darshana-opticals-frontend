@@ -14,11 +14,25 @@ vi.mock('../src/services/appointmentService', () => ({
 
 const logout = vi.fn();
 
+const doctorOne = {
+  id: 'doctor-1',
+  name: 'Dr. Ruwan Perera',
+  specialization: 'Ophthalmologist',
+};
+
+const doctorTwo = {
+  id: 'doctor-2',
+  name: 'Dr. Nirmali Jayawardena',
+  specialization: 'Eye Surgeon',
+};
+
 const appointments = [
   {
     id: 'appointment-1',
-    staffId: 'provider-1',
-    providerName: 'Dr. Ruwan Perera',
+    doctorId: doctorOne.id,
+    doctor: doctorOne,
+    doctorName: doctorOne.name,
+    specialization: doctorOne.specialization,
     sessionId: 'session-1',
     branchId: 'branch-1',
     dateTime: '2030-11-01T09:00:00.000Z',
@@ -29,8 +43,10 @@ const appointments = [
   },
   {
     id: 'appointment-2',
-    staffId: 'provider-2',
-    providerName: 'Dr. Nirmali Jayawardena',
+    doctorId: doctorTwo.id,
+    doctor: doctorTwo,
+    doctorName: doctorTwo.name,
+    specialization: doctorTwo.specialization,
     sessionId: 'session-2',
     branchId: 'branch-1',
     dateTime: '2020-01-01T09:00:00.000Z',
@@ -69,16 +85,20 @@ describe('AppointmentHistoryPage', () => {
     getCustomerAppointments.mockResolvedValue(appointments);
   });
 
-  it('loads the authenticated customer appointment history', async () => {
+  it('loads the authenticated customer appointment history with Doctor details', async () => {
     renderPage();
 
     expect(screen.getByRole('status')).toHaveTextContent(
       'Loading your appointments...',
     );
 
-    expect(await screen.findByText('Dr. Ruwan Perera')).toBeInTheDocument();
+    expect(await screen.findByText(doctorOne.name)).toBeInTheDocument();
 
-    expect(screen.getByText('Dr. Nirmali Jayawardena')).toBeInTheDocument();
+    expect(screen.getByText(doctorTwo.name)).toBeInTheDocument();
+
+    expect(screen.getByText(doctorOne.specialization)).toBeInTheDocument();
+
+    expect(screen.getByText(doctorTwo.specialization)).toBeInTheDocument();
 
     expect(getCustomerAppointments).toHaveBeenCalledTimes(1);
   });
@@ -93,7 +113,7 @@ describe('AppointmentHistoryPage', () => {
     expect(screen.queryByText('Completed')).not.toBeInTheDocument();
   });
 
-  it('classifies appointments as upcoming or past without changing backend status', async () => {
+  it('classifies appointments as upcoming or past without changing appointment status', async () => {
     renderPage();
 
     expect(await screen.findByText('Upcoming')).toBeInTheDocument();

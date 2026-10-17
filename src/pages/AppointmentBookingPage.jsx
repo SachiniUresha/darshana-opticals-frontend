@@ -182,7 +182,7 @@ function AppointmentBookingPage() {
   );
 
   const providerSessions = useMemo(
-    () => sessions.filter((session) => session.staffId === selectedProviderId),
+    () => sessions.filter((session) => session.doctorId === selectedProviderId),
     [sessions, selectedProviderId],
   );
 
@@ -326,6 +326,18 @@ function AppointmentBookingPage() {
   }
 
   if (confirmation) {
+    const confirmationDoctorName =
+      confirmation.doctorName ??
+      confirmation.doctor?.name ??
+      selectedProvider?.name ??
+      'Doctor';
+
+    const confirmationSpecialization =
+      confirmation.specialization ??
+      confirmation.doctor?.specialization ??
+      selectedProvider?.specialization ??
+      '';
+
     return (
       <section
         className="appointment-success-page"
@@ -349,9 +361,10 @@ function AppointmentBookingPage() {
             <div>
               <dt>Doctor</dt>
               <dd>
-                {confirmation.providerName ||
-                  selectedProvider?.name ||
-                  'Optometrist'}
+                {confirmationDoctorName}
+                {confirmationSpecialization
+                  ? ` — ${confirmationSpecialization}`
+                  : ''}
               </dd>
             </div>
 
@@ -410,7 +423,7 @@ function AppointmentBookingPage() {
 
         <p>
           Schedule a professional eye examination with one of our available
-          optometrists.
+          doctors.
         </p>
       </header>
 
@@ -510,7 +523,7 @@ function AppointmentBookingPage() {
 
             {providers.length === 0 ? (
               <div className="appointment-empty-state">
-                <p>No eligible optometrists are currently available.</p>
+                <p>No doctors are currently available.</p>
 
                 <button
                   type="button"
@@ -524,7 +537,7 @@ function AppointmentBookingPage() {
               <div className="doctor-choice-list">
                 {providers.map((provider) => {
                   const providerSessionCount = sessions.filter(
-                    (session) => session.staffId === provider.id,
+                    (session) => session.doctorId === provider.id,
                   ).length;
 
                   const selected = selectedProviderId === provider.id;
@@ -548,7 +561,7 @@ function AppointmentBookingPage() {
 
                       <span className="doctor-choice-card__details">
                         <strong>{provider.name}</strong>
-                        <span>Optometrist</span>
+                        <span>{provider.specialization}</span>
                         <small>
                           {providerSessionCount > 0
                             ? `${providerSessionCount} available ${
@@ -601,8 +614,7 @@ function AppointmentBookingPage() {
             <h2 id="date-step-title">Pick a date &amp; time</h2>
 
             <p className="appointment-step-description">
-              Only backend-confirmed sessions that are currently bookable are
-              shown.
+              Choose an available date and time for your eye test.
             </p>
 
             {bookingError ? (
@@ -768,7 +780,12 @@ function AppointmentBookingPage() {
 
               <div>
                 <dt>Doctor</dt>
-                <dd>{selectedProvider?.name} — Optometrist</dd>
+                <dd>
+                  {selectedProvider?.name}
+                  {selectedProvider?.specialization
+                    ? ` — ${selectedProvider.specialization}`
+                    : ''}
+                </dd>
               </div>
 
               <div>
@@ -791,11 +808,6 @@ function AppointmentBookingPage() {
                 <dd>Darshana Opticals — Gampaha Main Branch</dd>
               </div>
             </dl>
-
-            <div className="appointment-server-note">
-              Appointment availability will be revalidated by the server when
-              you confirm the booking.
-            </div>
 
             {bookingError ? (
               <div className="appointment-inline-error" role="alert">

@@ -10,6 +10,18 @@ import {
 } from '../components/appointments/appointmentView';
 import './AppointmentManagement.css';
 
+function appointmentDoctorName(appointment) {
+  return (
+    appointment?.doctorName ?? appointment?.doctor?.name ?? 'Doctor unavailable'
+  );
+}
+
+function appointmentDoctorSpecialization(appointment) {
+  return (
+    appointment?.specialization ?? appointment?.doctor?.specialization ?? ''
+  );
+}
+
 function AppointmentHistoryPage() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -78,9 +90,8 @@ function AppointmentHistoryPage() {
         <div className="appointment-management-toolbar">
           <div>
             <h2>Your appointments</h2>
-            <p>
-              Appointment information is based on the latest backend records.
-            </p>
+
+            <p>View your upcoming and previous eye test bookings.</p>
           </div>
 
           <Link
@@ -130,6 +141,9 @@ function AppointmentHistoryPage() {
           <div className="appointment-history-list">
             {appointments.map((appointment) => {
               const timing = appointmentTimingLabel(appointment.dateTime);
+              const doctorName = appointmentDoctorName(appointment);
+              const specialization =
+                appointmentDoctorSpecialization(appointment);
 
               return (
                 <article
@@ -137,7 +151,12 @@ function AppointmentHistoryPage() {
                   className="appointment-history-card"
                 >
                   <div className="appointment-history-card__main">
-                    <div className="appointment-history-card__icon">◉</div>
+                    <div
+                      className="appointment-history-card__icon"
+                      aria-hidden="true"
+                    >
+                      ◉
+                    </div>
 
                     <div>
                       <div className="appointment-history-card__badges">
@@ -152,7 +171,9 @@ function AppointmentHistoryPage() {
                         </span>
                       </div>
 
-                      <h3>{appointment.providerName || 'Optometrist'}</h3>
+                      <h3>{doctorName}</h3>
+
+                      {specialization ? <p>{specialization}</p> : null}
 
                       <p>{appointmentDateTimeLabel(appointment.dateTime)}</p>
 

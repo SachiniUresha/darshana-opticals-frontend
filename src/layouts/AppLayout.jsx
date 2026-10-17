@@ -12,21 +12,33 @@ import './AppLayout.css';
 function AppLayout() {
   const { isAuthenticated, user } = useAuth();
   const { pathname } = useLocation();
+
   const isAdminWorkspace =
     isAuthenticated &&
     user?.role === SYSTEM_ADMIN &&
     (pathname === '/admin' || pathname.startsWith('/admin/'));
+
+  const isCustomerAppointmentPage =
+    pathname === '/appointments' || pathname === '/appointments/book';
 
   return (
     <div
       className={isAdminWorkspace ? 'app-shell app-shell--admin' : 'app-shell'}
     >
       {isAdminWorkspace ? <AdminSidebar /> : <Navbar />}
+
       <main
-        className={isAdminWorkspace ? 'app-main app-main--admin' : 'app-main'}
+        className={
+          isAdminWorkspace
+            ? 'app-main app-main--admin'
+            : isCustomerAppointmentPage
+              ? 'app-main app-main--customer-appointments'
+              : 'app-main'
+        }
       >
         <Outlet />
       </main>
+
       {!isAdminWorkspace ? <Footer /> : null}
       {!isAdminWorkspace ? <ChatbotWidget /> : null}
     </div>
