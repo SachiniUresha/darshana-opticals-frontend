@@ -61,6 +61,14 @@ vi.mock('../pages/PaymentEntryPage', () => ({
   default: () => <div>Customer payment page</div>,
 }));
 
+vi.mock('../pages/PaymentReturnPage', () => ({
+  default: () => <div>Customer payment return page</div>,
+}));
+
+vi.mock('../pages/PaymentResultPage', () => ({
+  default: () => <div>Customer payment result page</div>,
+}));
+
 function CurrentLocation() {
   const location = useLocation();
 
@@ -88,6 +96,12 @@ describe('Customer order route protection', () => {
     ['/orders', 'Customer order history page'],
     ['/orders/507f1f77bcf86cd799439021', 'Customer order details page'],
     ['/payments/507f1f77bcf86cd799439021', 'Customer payment page'],
+    ['/payments/return', 'Customer payment return page'],
+    ['/payments/cancel', 'Customer payment return page'],
+    [
+      '/payments/result/507f1f77bcf86cd799439021',
+      'Customer payment result page',
+    ],
   ])('allows CUSTOMER access to %s', (path, expectedPage) => {
     show(path);
 
@@ -99,6 +113,9 @@ describe('Customer order route protection', () => {
     '/orders',
     '/orders/507f1f77bcf86cd799439021',
     '/payments/507f1f77bcf86cd799439021',
+    '/payments/return',
+    '/payments/cancel',
+    '/payments/result/507f1f77bcf86cd799439021',
   ])('redirects unauthenticated users from %s to Login', (path) => {
     mockAuth.current = {
       isAuthenticated: false,
@@ -113,12 +130,17 @@ describe('Customer order route protection', () => {
     expect(screen.queryByText('Customer order history page')).toBeNull();
     expect(screen.queryByText('Customer order details page')).toBeNull();
     expect(screen.queryByText('Customer payment page')).toBeNull();
+    expect(screen.queryByText('Customer payment return page')).toBeNull();
+    expect(screen.queryByText('Customer payment result page')).toBeNull();
   });
 
   it.each([
     '/orders',
     '/orders/507f1f77bcf86cd799439021',
     '/payments/507f1f77bcf86cd799439021',
+    '/payments/return',
+    '/payments/cancel',
+    '/payments/result/507f1f77bcf86cd799439021',
   ])('blocks non-CUSTOMER access to %s', (path) => {
     mockAuth.current = {
       isAuthenticated: true,
@@ -133,6 +155,8 @@ describe('Customer order route protection', () => {
     expect(screen.queryByText('Customer order history page')).toBeNull();
     expect(screen.queryByText('Customer order details page')).toBeNull();
     expect(screen.queryByText('Customer payment page')).toBeNull();
+    expect(screen.queryByText('Customer payment return page')).toBeNull();
+    expect(screen.queryByText('Customer payment result page')).toBeNull();
   });
 });
 
