@@ -98,6 +98,17 @@ function recordProviderSpecialization(record) {
   return record?.specialization ?? record?.doctor?.specialization ?? null;
 }
 
+function recordProviderDisplayLabel(record) {
+  const name = recordProviderName(record);
+  const specialization = recordProviderSpecialization(record);
+
+  if (!name) {
+    return null;
+  }
+
+  return specialization ? `${name} — ${specialization}` : name;
+}
+
 function AppointmentMetrics({
   todaySessions,
   upcomingSessions,
@@ -108,7 +119,7 @@ function AppointmentMetrics({
     {
       label: "Today's Sessions",
       value: todaySessions,
-      note: 'Authoritative API data',
+      note: 'Sessions scheduled today',
     },
     {
       label: 'Upcoming Sessions',
@@ -118,12 +129,12 @@ function AppointmentMetrics({
     {
       label: 'Confirmed Bookings',
       value: confirmedBookings,
-      note: 'Backend booking records',
+      note: 'Confirmed customer bookings',
     },
     {
       label: 'Available Places',
       value: availablePlaces,
-      note: 'Backend capacity values',
+      note: 'Open places in upcoming sessions',
     },
   ];
 
@@ -159,7 +170,7 @@ function LoadingOverview() {
           <article key={label} className="staff-overview-metric">
             <span>{label}</span>
             <strong>—</strong>
-            <small>Waiting for API response</small>
+            <small>Loading...</small>
           </article>
         ))}
       </section>
@@ -178,6 +189,7 @@ function LoadingOverview() {
         </div>
 
         <div className="staff-overview-loading__rows">
+          <span />
           <span />
           <span />
           <span />
@@ -205,8 +217,8 @@ function ErrorState({ accessDenied, onRetry }) {
 
       <p>
         {accessDenied
-          ? 'No session, booking, customer or provider data is displayed.'
-          : 'Please check your connection and try again. No unconfirmed booking change has been applied.'}
+          ? 'No session, booking, customer or doctor details are displayed.'
+          : 'Please check your connection and try again.'}
       </p>
 
       {!accessDenied ? (
@@ -289,9 +301,13 @@ export default function StaffAppointmentsPage() {
         if (error?.status === 403) {
           setAccessDenied(true);
         } else if (error?.status === 0) {
-          setErrorMessage('Unable to reach the appointment service.');
+          setErrorMessage(
+            'Unable to load appointments. Please check your connection and try again.',
+          );
         } else {
-          setErrorMessage('Unable to load approved appointment information.');
+          setErrorMessage(
+            'Unable to load appointment information. Please try again.',
+          );
         }
       } finally {
         if (isActive()) {
@@ -356,9 +372,17 @@ export default function StaffAppointmentsPage() {
   }, [appointments, providers, sessions]);
 
   const providerLabel = useCallback(
-    (providerId) =>
-      providerDetails.get(providerId)?.name ??
-      shortProviderReference(providerId),
+    (providerId) => {
+      const details = providerDetails.get(providerId);
+
+      if (!details?.name) {
+        return shortProviderReference(providerId);
+      }
+
+      return details.specialization
+        ? `${details.name} — ${details.specialization}`
+        : details.name;
+    },
     [providerDetails],
   );
 
@@ -556,7 +580,7 @@ export default function StaffAppointmentsPage() {
       title="Appointment Management"
       description={
         loading
-          ? 'Loading authoritative doctor-session data.'
+          ? 'Loading doctor sessions and customer bookings.'
           : 'Manage doctor sessions and customer bookings for Gampaha Main Branch.'
       }
       activeTab={activeTab}
@@ -646,9 +670,11 @@ export default function StaffAppointmentsPage() {
               {filteredSessions.length === 0 ? (
                 <section className="staff-overview-empty">
                   <div aria-hidden="true">□</div>
+
                   <h3>No doctor sessions found</h3>
+
                   <p>
-                    No sessions match your date and provider filters. Clear
+                    No sessions match your date and doctor filters. Clear
                     filters to see other sessions.
                   </p>
 
@@ -702,6 +728,7 @@ export default function StaffAppointmentsPage() {
                             </td>
 
                             <td>{session.capacity}</td>
+
                             <td>{session.confirmedCount}</td>
 
                             <td
@@ -816,6 +843,7 @@ export default function StaffAppointmentsPage() {
               <div className="staff-overview-filters">
                 <label>
                   <span>Search</span>
+
                   <input
                     type="search"
                     value={bookingSearch}
@@ -826,6 +854,7 @@ export default function StaffAppointmentsPage() {
 
                 <label>
                   <span>Date</span>
+
                   <select
                     value={bookingDateFilter}
                     onChange={(event) =>
@@ -841,6 +870,7 @@ export default function StaffAppointmentsPage() {
 
                 <label>
                   <span>Doctor</span>
+
                   <select
                     value={bookingProviderFilter}
                     onChange={(event) =>
@@ -848,6 +878,7 @@ export default function StaffAppointmentsPage() {
                     }
                   >
                     <option value="ALL">All</option>
+
                     {bookingProviderOptions.map((provider) => (
                       <option key={provider.id} value={provider.id}>
                         {provider.label}
@@ -858,6 +889,7 @@ export default function StaffAppointmentsPage() {
 
                 <label>
                   <span>Booking Status</span>
+
                   <select
                     value={bookingStatusFilter}
                     onChange={(event) =>
@@ -874,7 +906,9 @@ export default function StaffAppointmentsPage() {
               {filteredAppointments.length === 0 ? (
                 <section className="staff-overview-empty">
                   <div aria-hidden="true">≡</div>
+
                   <h3>No customer bookings found</h3>
+
                   <p>
                     There are no bookings matching the selected filters. Try
                     another date or clear filters.
@@ -916,6 +950,7 @@ export default function StaffAppointmentsPage() {
 
                           <td>
                             {appointmentDateLabel(appointment.dateTime)}
+
                             <small className="staff-overview-table__secondary">
                               {appointmentTimeLabel(appointment.dateTime)}
                               {' · '}
@@ -927,7 +962,7 @@ export default function StaffAppointmentsPage() {
                           </td>
 
                           <td>
-                            {recordProviderName(appointment) ??
+                            {recordProviderDisplayLabel(appointment) ??
                               providerLabel(recordProviderId(appointment))}
                           </td>
 
