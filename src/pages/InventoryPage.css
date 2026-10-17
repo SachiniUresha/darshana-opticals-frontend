@@ -120,3 +120,85 @@
     padding: 1rem;
   }
 }
+
+.inventory-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.inventory-page__header-actions button,
+.inventory-page__item-action {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #192955;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.inventory-page__editor {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #f5f7fc;
+  border: 1px solid #dfe6f3;
+  border-radius: 12px;
+}
+.inventory-page__editor h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+}
+.inventory-page__editor form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.inventory-page__editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+.inventory-page__editor input {
+  min-width: 0;
+  padding: 0.7rem;
+  font: inherit;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+}
+.inventory-page__editor form > p[role='alert'] {
+  grid-column: 1 / -1;
+  color: #9b1c1c;
+  margin: 0;
+}
+.inventory-page__editor-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+.inventory-page__editor-actions button {
+  padding: 0.65rem 1rem;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+  background: #fff;
+  color: #192955;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.inventory-page__editor-actions button[type='submit'] {
+  background: #192955;
+  color: white;
+  border-color: #192955;
+}
+.inventory-page__save-notice {
+  margin: 1rem 0;
+  color: #1c5e3d;
+}
+@media (max-width: 640px) {
+  .inventory-page__editor form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

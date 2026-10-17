@@ -3,8 +3,14 @@ import useAuth from '../hooks/useAuth';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { useBranches } from '../hooks/useBranches';
 import BranchSelect from '../components/common/BranchSelect';
-import { BRANCH_MANAGER } from '../config/roles';
-import { getBranchInventory } from '../services/inventoryService';
+import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
+import {
+  getBranchInventory,
+  createInventoryItem,
+  updateInventoryItem,
+  overrideInventoryPrice,
+} from '../services/inventoryService';
+import InventoryEditor from '../components/InventoryEditor';
 import './InventoryPage.css';
 
 const money = new Intl.NumberFormat('en-LK', {
@@ -43,6 +49,7 @@ function InventoryPage() {
   useDocumentTitle('Inventory Management | Darshana Opticals');
   const { user } = useAuth();
   const manager = user?.role === BRANCH_MANAGER;
+  const admin = user?.role === SYSTEM_ADMIN;
   const {
     branches,
     loading: branchesLoading,
@@ -56,6 +63,10 @@ function InventoryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [refreshCount, setRefreshCount] = useState(0);
+  const [editor, setEditor] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveNotice, setSaveNotice] = useState('');
 
   // Manager scope comes from login identity; never allow a manager to select a different branch.
   const branchId = manager ? user?.branchId || '' : selectedBranchId;
@@ -102,6 +113,69 @@ function InventoryPage() {
     };
   }, [branchId, canLoad, refreshCount]);
 
+  function selectBranch(id) {
+    if (saving) return;
+    setEditor(null);
+    setSaveError('');
+    setSaveNotice('');
+    setSelectedBranchId(id);
+  }
+
+  function refresh() {
+    if (saving) return;
+    setEditor(null);
+    setSaveError('');
+    setSaveNotice('');
+    setRefreshCount((count) => count + 1);
+  }
+
+  function openEditor(type, item = null) {
+    setSaveError('');
+    setSaveNotice('');
+    setEditor({ type, item });
+  }
+
+  async function saveItem(values) {
+    if (!editor || !canLoad || loading || error || saving) return;
+    const { type, item } = editor;
+    const itemId = item?._id || item?.id;
+
+    setSaving(true);
+    setSaveError('');
+    try {
+      if (type === 'create' && manager) {
+        await createInventoryItem(branchId, values);
+      } else if (type === 'edit' && manager && itemId) {
+        await updateInventoryItem(itemId, values);
+      } else if (type === 'price' && admin && itemId) {
+        await overrideInventoryPrice(itemId, values.price);
+      } else {
+        setSaveError('This inventory action is not permitted.');
+        return;
+      }
+
+      setEditor(null);
+      setSaveNotice(
+        type === 'create' ? 'Inventory item added.' : 'Inventory item updated.',
+      );
+      setRefreshCount((count) => count + 1);
+    } catch (caught) {
+      if (caught?.status === 401) {
+        setSaveError('Your session has expired. Please log in again.');
+      } else if (caught?.status === 403) {
+        setSaveError(
+          'You do not have permission to change this inventory item.',
+        );
+      } else if (caught?.status === 422 || caught?.status === 400) {
+        setSaveError('Check the item information and try again.');
+      } else {
+        setSaveError('Unable to save inventory changes. Please try again.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="inventory-page">
       <header className="inventory-page__header">
@@ -110,14 +184,25 @@ function InventoryPage() {
           <h1>Inventory Management</h1>
           <p>View up-to-date inventory for an authorized branch.</p>
         </div>
-        <button
-          type="button"
-          className="inventory-page__refresh"
-          onClick={() => setRefreshCount((count) => count + 1)}
-          disabled={!canLoad || loading}
-        >
-          Refresh
-        </button>
+        <div className="inventory-page__header-actions">
+          {manager && canLoad && !error && (
+            <button
+              type="button"
+              onClick={() => openEditor('create')}
+              disabled={loading || saving}
+            >
+              Add Inventory Item
+            </button>
+          )}
+          <button
+            type="button"
+            className="inventory-page__refresh"
+            onClick={refresh}
+            disabled={!canLoad || loading || saving}
+          >
+            Refresh
+          </button>
+        </div>
       </header>
 
       <section className="inventory-page__panel" aria-label="Branch inventory">
@@ -145,10 +230,32 @@ function InventoryPage() {
             label="Branch"
             branches={branches}
             value={selectedBranchId}
-            onChange={setSelectedBranchId}
+            onChange={selectBranch}
+            disabled={saving}
             loading={branchesLoading}
             error={branchesError}
             onRetry={retryBranches}
+          />
+        )}
+
+        {saveNotice && (
+          <p role="status" className="inventory-page__save-notice">
+            {saveNotice}
+          </p>
+        )}
+
+        {editor && canLoad && !loading && !error && (
+          <InventoryEditor
+            key={`${editor.type}-${editor.item?._id || editor.item?.id || 'new'}`}
+            mode={editor.type}
+            item={editor.item}
+            saving={saving}
+            error={saveError}
+            onCancel={() => {
+              setEditor(null);
+              setSaveError('');
+            }}
+            onSave={saveItem}
           />
         )}
 
@@ -205,6 +312,7 @@ function InventoryPage() {
                   <th scope="col">Brand</th>
                   <th scope="col">Price</th>
                   <th scope="col">Quantity</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -223,6 +331,21 @@ function InventoryPage() {
                     </td>
                     <td>
                       {typeof item.quantity === 'number' ? item.quantity : '—'}
+                    </td>
+                    <td>
+                      {(manager || admin) && (item._id || item.id) && (
+                        <button
+                          type="button"
+                          className="inventory-page__item-action"
+                          onClick={() =>
+                            openEditor(manager ? 'edit' : 'price', item)
+                          }
+                          disabled={saving}
+                          aria-label={`${manager ? 'Edit' : 'Edit price for'} ${item.itemName || 'inventory item'}`}
+                        >
+                          {manager ? 'Edit' : 'Edit Price'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

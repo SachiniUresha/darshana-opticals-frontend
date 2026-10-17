@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InventoryPage from '../src/pages/InventoryPage';
-import { getBranchInventory } from '../src/services/inventoryService';
+import {
+  getBranchInventory,
+  createInventoryItem,
+  updateInventoryItem,
+  overrideInventoryPrice,
+} from '../src/services/inventoryService';
 
 const state = vi.hoisted(() => ({
   user: { role: 'BRANCH_MANAGER', branchId: 'branch-1' },
@@ -26,6 +31,9 @@ vi.mock('../src/hooks/useBranches', () => ({
 }));
 vi.mock('../src/services/inventoryService', () => ({
   getBranchInventory: vi.fn(),
+  createInventoryItem: vi.fn(),
+  updateInventoryItem: vi.fn(),
+  overrideInventoryPrice: vi.fn(),
 }));
 
 beforeEach(() => {
@@ -118,5 +126,248 @@ describe('Inventory overview', () => {
       screen.getByText('No assigned branch is available for this account.'),
     ).toBeInTheDocument();
     expect(getBranchInventory).not.toHaveBeenCalled();
+  });
+});
+
+describe('Inventory create/edit permissions and operations', () => {
+  const item = {
+    _id: 'item-1',
+    itemName: 'Blue Frame',
+    category: 'Men',
+    brand: 'Nova',
+    quantity: 7,
+    price: 1500,
+  };
+
+  it('lets a manager create an item with approved fields and refreshes after backend confirmation', async () => {
+    getBranchInventory.mockResolvedValue([]);
+    createInventoryItem.mockResolvedValue({ _id: 'new-item' });
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('No inventory items found for this branch.'),
+    ).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: 'Add Inventory Item' }),
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Item Name' }),
+      '  Pilot  ',
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Category' }),
+      '  Frames  ',
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Brand' }), '  Nova  ');
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '2500',
+    );
+    await user.clear(
+      screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
+    );
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
+      '3',
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Item' }));
+
+    await waitFor(() =>
+      expect(createInventoryItem).toHaveBeenCalledWith('branch-1', {
+        itemName: 'Pilot',
+        category: 'Frames',
+        brand: 'Nova',
+        price: 2500,
+        quantity: 3,
+      }),
+    );
+    expect(
+      await screen.findByText('Inventory item added.'),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(getBranchInventory).toHaveBeenCalledTimes(2));
+  });
+
+  it('rejects invalid creation values without a backend request', async () => {
+    getBranchInventory.mockResolvedValueOnce([]);
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('No inventory items found for this branch.'),
+    ).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: 'Add Inventory Item' }),
+    );
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '-5',
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Item' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('non-negative price');
+    expect(createInventoryItem).not.toHaveBeenCalled();
+  });
+
+  it('rejects fractional or negative initial quantities', async () => {
+    getBranchInventory.mockResolvedValueOnce([]);
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('No inventory items found for this branch.'),
+    ).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: 'Add Inventory Item' }),
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Item Name' }),
+      'Frame',
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Category' }), 'Men');
+    await user.type(screen.getByRole('textbox', { name: 'Brand' }), 'Nova');
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '100',
+    );
+    await user.clear(
+      screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
+    );
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
+      '1.5',
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Item' }));
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'whole-number quantity',
+    );
+    expect(createInventoryItem).not.toHaveBeenCalled();
+  });
+
+  it('disables repeated submissions while a creation request is pending', async () => {
+    let finishCreate;
+    getBranchInventory.mockResolvedValue([]);
+    createInventoryItem.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishCreate = resolve;
+        }),
+    );
+    render(<InventoryPage />);
+    expect(
+      await screen.findByText('No inventory items found for this branch.'),
+    ).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: 'Add Inventory Item' }),
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Item Name' }),
+      'Frame',
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Category' }), 'Men');
+    await user.type(screen.getByRole('textbox', { name: 'Brand' }), 'Nova');
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '100',
+    );
+    await user.click(screen.getByRole('button', { name: 'Add Item' }));
+    expect(
+      await screen.findByRole('button', { name: 'Saving...' }),
+    ).toBeDisabled();
+    expect(createInventoryItem).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      finishCreate({ _id: 'new-item' });
+    });
+    expect(
+      await screen.findByText('Inventory item added.'),
+    ).toBeInTheDocument();
+  });
+
+  it('lets a manager edit metadata but not quantity within this form', async () => {
+    getBranchInventory.mockResolvedValue([item]);
+    updateInventoryItem.mockResolvedValue({ ...item, price: 1600 });
+    render(<InventoryPage />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole('button', { name: 'Edit Blue Frame' }),
+    );
+    expect(
+      screen.queryByRole('spinbutton', { name: 'Initial Quantity' }),
+    ).not.toBeInTheDocument();
+    await user.clear(screen.getByRole('spinbutton', { name: 'Price (LKR)' }));
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '1600',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await waitFor(() =>
+      expect(updateInventoryItem).toHaveBeenCalledWith('item-1', {
+        itemName: 'Blue Frame',
+        category: 'Men',
+        brand: 'Nova',
+        price: 1600,
+      }),
+    );
+    expect(createInventoryItem).not.toHaveBeenCalled();
+    expect(overrideInventoryPrice).not.toHaveBeenCalled();
+  });
+
+  it('restricts System Admin to price-only override on selected branch', async () => {
+    state.user = { role: 'SYSTEM_ADMIN' };
+    getBranchInventory.mockResolvedValue([item]);
+    overrideInventoryPrice.mockResolvedValue({ ...item, price: 1900 });
+    render(<InventoryPage />);
+    const user = userEvent.setup();
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Branch' }),
+      'branch-2',
+    );
+    await user.click(
+      await screen.findByRole('button', { name: 'Edit price for Blue Frame' }),
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Add Inventory Item' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Item Name' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Category' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('spinbutton', { name: 'Initial Quantity' }),
+    ).not.toBeInTheDocument();
+    await user.clear(screen.getByRole('spinbutton', { name: 'Price (LKR)' }));
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
+      '1900',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await waitFor(() =>
+      expect(overrideInventoryPrice).toHaveBeenCalledWith('item-1', 1900),
+    );
+    expect(updateInventoryItem).not.toHaveBeenCalled();
+    expect(createInventoryItem).not.toHaveBeenCalled();
+  });
+
+  it('keeps authoritative inventory unchanged when update fails and shows safe feedback', async () => {
+    getBranchInventory.mockResolvedValueOnce([item]);
+    updateInventoryItem.mockRejectedValueOnce(
+      Object.assign(new Error('Sensitive backend error'), { status: 403 }),
+    );
+    render(<InventoryPage />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole('button', { name: 'Edit Blue Frame' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'do not have permission',
+    );
+    expect(
+      screen.getByText('Blue Frame', { selector: 'td' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Sensitive backend error'),
+    ).not.toBeInTheDocument();
+    expect(getBranchInventory).toHaveBeenCalledTimes(1);
   });
 });
