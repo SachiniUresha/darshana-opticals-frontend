@@ -1,6 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import './InventoryImageUpload.css';
 
-function InventoryEditor({ mode, item, onCancel, onSave, saving, error }) {
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+function InventoryEditor({
+  mode,
+  item,
+  onCancel,
+  onSave,
+  saving,
+  uploading = false,
+  error,
+}) {
   const creating = mode === 'create';
   const priceOnly = mode === 'price';
   const [values, setValues] = useState({
@@ -11,6 +23,38 @@ function InventoryEditor({ mode, item, onCancel, onSave, saving, error }) {
     quantity: creating ? '0' : '',
   });
   const [validationError, setValidationError] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageError, setImageError] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewFailed, setPreviewFailed] = useState(false);
+
+  useEffect(() => {
+    if (!imageFile || typeof URL.createObjectURL !== 'function') {
+      setPreviewUrl('');
+      return undefined;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setPreviewUrl(url);
+    setPreviewFailed(false);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  function selectImage(event) {
+    const file = event.target.files?.[0] ?? null;
+    setValidationError('');
+    setImageError('');
+    setImageFile(null);
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setImageError('Choose a JPG, PNG or WebP image.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setImageError('Image must be 5 MB or smaller.');
+      return;
+    }
+    setImageFile(file);
+  }
 
   function change(event) {
     const { name, value } = event.target;
@@ -53,6 +97,7 @@ function InventoryEditor({ mode, item, onCancel, onSave, saving, error }) {
         return;
       }
       payload.quantity = quantity;
+      if (imageFile) payload.imageFile = imageFile;
     }
 
     onSave(payload);
@@ -133,6 +178,34 @@ function InventoryEditor({ mode, item, onCancel, onSave, saving, error }) {
             />
           </label>
         )}
+        {creating && (
+          <div className="inventory-page__image-upload">
+            <label htmlFor="inventory-create-image">
+              Inventory Image (optional)
+            </label>
+            <input
+              id="inventory-create-image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={selectImage}
+              disabled={saving}
+              aria-describedby="inventory-image-help"
+            />
+            <small id="inventory-image-help">
+              JPG, PNG or WebP — maximum 5 MB.
+            </small>
+            {imageFile && <small>Selected image: {imageFile.name}</small>}
+            {previewUrl && !previewFailed && (
+              <img
+                className="inventory-page__selected-image"
+                src={previewUrl}
+                alt="Selected inventory image preview"
+                onError={() => setPreviewFailed(true)}
+              />
+            )}
+          </div>
+        )}
+        {imageError && <p role="alert">{imageError}</p>}
         {validationError && <p role="alert">{validationError}</p>}
         {error && <p role="alert">{error}</p>}
         <div className="inventory-page__editor-actions">
@@ -140,7 +213,13 @@ function InventoryEditor({ mode, item, onCancel, onSave, saving, error }) {
             Cancel
           </button>
           <button type="submit" disabled={saving}>
-            {saving ? 'Saving...' : creating ? 'Add Item' : 'Save Changes'}
+            {uploading
+              ? 'Uploading image...'
+              : saving
+                ? 'Saving...'
+                : creating
+                  ? 'Add Item'
+                  : 'Save Changes'}
           </button>
         </div>
       </form>

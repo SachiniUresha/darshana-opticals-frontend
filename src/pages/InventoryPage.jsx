@@ -7,6 +7,7 @@ import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
 import {
   getBranchInventory,
   createInventoryItem,
+  uploadInventoryImage,
   updateInventoryItem,
   overrideInventoryPrice,
   updateInventoryQuantity,
@@ -69,6 +70,7 @@ function InventoryPage() {
   const [refreshCount, setRefreshCount] = useState(0);
   const [editor, setEditor] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveNotice, setSaveNotice] = useState('');
 
@@ -146,9 +148,22 @@ function InventoryPage() {
 
     setSaving(true);
     setSaveError('');
+    let imageUploadPending = false;
     try {
       if (type === 'create' && manager) {
-        await createInventoryItem(branchId, values);
+        let uploadedImage = null;
+        if (values.imageFile) {
+          imageUploadPending = true;
+          setUploading(true);
+          uploadedImage = await uploadInventoryImage(values.imageFile);
+          imageUploadPending = false;
+          setUploading(false);
+        }
+        if (uploadedImage) {
+          await createInventoryItem(branchId, values, uploadedImage);
+        } else {
+          await createInventoryItem(branchId, values);
+        }
       } else if (type === 'edit' && manager && itemId) {
         await updateInventoryItem(itemId, values);
       } else if (type === 'price' && admin && itemId) {
@@ -168,6 +183,19 @@ function InventoryPage() {
     } catch (caught) {
       if (caught?.status === 401) {
         setSaveError('Your session has expired. Please log in again.');
+      } else if (imageUploadPending && caught?.status === 403) {
+        setSaveError(
+          'You do not have permission to upload an inventory image.',
+        );
+      } else if (
+        imageUploadPending &&
+        [400, 413, 422].includes(caught?.status)
+      ) {
+        setSaveError(
+          'The image was rejected. Select a JPG, PNG or WebP image up to 5 MB.',
+        );
+      } else if (imageUploadPending) {
+        setSaveError('Unable to upload inventory image. Please try again.');
       } else if (caught?.status === 403) {
         setSaveError(
           'You do not have permission to change this inventory item.',
@@ -178,6 +206,7 @@ function InventoryPage() {
         setSaveError('Unable to save inventory changes. Please try again.');
       }
     } finally {
+      setUploading(false);
       setSaving(false);
     }
   }
@@ -274,6 +303,7 @@ function InventoryPage() {
             key={editor.item?._id || editor.item?.id}
             item={editor.item}
             saving={saving}
+            uploading={uploading}
             error={saveError}
             onCancel={() => {
               setEditor(null);

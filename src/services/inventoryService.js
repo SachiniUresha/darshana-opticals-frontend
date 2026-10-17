@@ -17,16 +17,42 @@ export async function getBranchInventory(branchId) {
   return response.data;
 }
 
+/** Upload one image via the protected backend; the browser never calls Cloudinary directly. */
+export async function uploadInventoryImage(file) {
+  const body = new FormData();
+  body.append('image', file);
+  const response = await apiClient.post('/inventory/images', body);
+  const imageUrl = response?.data?.imageUrl;
+  const imagePublicId = response?.data?.imagePublicId;
+
+  if (
+    response?.success !== true ||
+    typeof imageUrl !== 'string' ||
+    !imageUrl.startsWith('https://') ||
+    typeof imagePublicId !== 'string' ||
+    !imagePublicId.startsWith('osms/inventory/')
+  ) {
+    throw new Error('Invalid inventory image upload response.');
+  }
+
+  return { imageUrl, imagePublicId };
+}
+
 /** Create using supported fields; branch scope is checked again by the backend. */
-export async function createInventoryItem(branchId, values) {
-  const response = await apiClient.post('/inventory', {
+export async function createInventoryItem(branchId, values, imageMetadata) {
+  const payload = {
     branchId,
     itemName: values.itemName,
     category: values.category,
     brand: values.brand,
     price: values.price,
     quantity: values.quantity,
-  });
+  };
+  if (imageMetadata) {
+    payload.imageUrl = imageMetadata.imageUrl;
+    payload.imagePublicId = imageMetadata.imagePublicId;
+  }
+  const response = await apiClient.post('/inventory', payload);
 
   if (!response?.data || response.success !== true) {
     throw new Error('Invalid inventory creation response.');
