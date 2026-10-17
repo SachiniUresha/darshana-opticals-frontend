@@ -24,6 +24,7 @@ const completedAttempt = {
   currency: 'LKR',
   method: 'online_gateway',
   status: 'completed',
+  expiresAt: '2099-10-17T10:00:00.000Z',
   reconciliationRequired: false,
 };
 
@@ -100,6 +101,12 @@ describe('PaymentResultPage', () => {
     expect(getPaymentStatus).toHaveBeenCalledWith(orderId);
     expect(screen.getByText('Rs.29,000')).toBeInTheDocument();
     expect(screen.getByText('LKR')).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('does not treat a PayHere browser return as proof of success', async () => {
@@ -140,9 +147,15 @@ describe('PaymentResultPage', () => {
         name: 'Payment cancelled',
       }),
     ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
   });
 
-  it('shows failed Payment from backend status', async () => {
+  it('shows failed Payment from backend status with an eligible retry action', async () => {
     getPaymentStatus.mockResolvedValueOnce(paymentStatus('failed'));
 
     renderPage();
@@ -152,9 +165,15 @@ describe('PaymentResultPage', () => {
         name: 'Payment failed',
       }),
     ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).toHaveAttribute('href', `/payments/${orderId}`);
   });
 
-  it('shows cancelled Payment from backend status', async () => {
+  it('shows cancelled Payment from backend status with an eligible retry action', async () => {
     getPaymentStatus.mockResolvedValueOnce(paymentStatus('cancelled'));
 
     renderPage('cancel');
@@ -164,6 +183,12 @@ describe('PaymentResultPage', () => {
         name: 'Payment cancelled',
       }),
     ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).toHaveAttribute('href', `/payments/${orderId}`);
   });
 
   it('shows processing without allowing the redirect to imply success', async () => {
@@ -180,6 +205,86 @@ describe('PaymentResultPage', () => {
     expect(
       screen.queryByRole('heading', {
         name: 'Payment completed',
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer retry after the original payment window has expired', async () => {
+    const expiredStatus = paymentStatus('failed');
+
+    expiredStatus.latestAttempt = {
+      ...expiredStatus.latestAttempt,
+      expiresAt: '2000-01-01T00:00:00.000Z',
+    };
+
+    expiredStatus.attempts = [expiredStatus.latestAttempt];
+
+    getPaymentStatus.mockResolvedValueOnce(expiredStatus);
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Payment failed',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer retry while reconciliation is required', async () => {
+    const reconciliationStatus = paymentStatus('failed');
+
+    reconciliationStatus.summary = {
+      ...reconciliationStatus.summary,
+      reconciliationRequired: true,
+    };
+
+    getPaymentStatus.mockResolvedValueOnce(reconciliationStatus);
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Payment failed',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not offer retry when the Order is no longer eligible for payment', async () => {
+    getPaymentStatus.mockResolvedValueOnce(
+      paymentStatus('failed', {
+        orderStatus: 'CANCELLED',
+      }),
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Payment failed',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('link', {
+        name: 'Retry Payment',
       }),
     ).not.toBeInTheDocument();
   });

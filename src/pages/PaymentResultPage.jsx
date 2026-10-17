@@ -135,6 +135,17 @@ function PaymentResultPage() {
 
   const paid = Boolean(paymentStatus.summary?.paid);
   const status = latestPayment?.status ?? '';
+  const retryExpiry = latestPayment?.expiresAt
+    ? new Date(latestPayment.expiresAt).getTime()
+    : Number.NaN;
+
+  const retryAllowed =
+    (status === 'failed' || status === 'cancelled') &&
+    paymentStatus.orderStatus === 'ORDER_CREATED' &&
+    !paid &&
+    !paymentStatus.summary?.reconciliationRequired &&
+    Number.isFinite(retryExpiry) &&
+    retryExpiry > Date.now();
 
   let heading = 'Payment status pending';
   let description =
@@ -220,6 +231,12 @@ function PaymentResultPage() {
         ) : null}
 
         <div className="payment-result-actions">
+          {retryAllowed ? (
+            <Link to={`/payments/${encodeURIComponent(orderId)}`}>
+              Retry Payment
+            </Link>
+          ) : null}
+
           <Link to={`/orders/${orderId}`}>View Order</Link>
 
           <button
