@@ -149,11 +149,11 @@ function CheckoutEntryPage() {
             ✓
           </div>
 
-          <h1>Order Confirmed!</h1>
+          <h1>Order Created</h1>
 
           <p className="checkout-confirmation__intro">
-            Thank you for your purchase. Your order has been created
-            successfully.
+            Your order has been created successfully. Continue to payment to
+            complete your purchase.
           </p>
 
           <div

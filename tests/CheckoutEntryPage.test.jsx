@@ -258,7 +258,7 @@ describe('CheckoutEntryPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Order Confirmed!',
+        name: 'Order Created',
       }),
     ).toBeInTheDocument();
   });
@@ -278,7 +278,7 @@ describe('CheckoutEntryPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Order Confirmed!',
+        name: 'Order Created',
       }),
     ).toBeInTheDocument();
 
