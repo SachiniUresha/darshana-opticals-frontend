@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+﻿import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
@@ -37,6 +37,7 @@ import StaffDoctorSessionDetailsPage from '../pages/StaffDoctorSessionDetailsPag
 import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
 import StaffAppointmentDetailsPage from '../pages/StaffAppointmentDetailsPage';
 import StaffMoveAppointmentPage from '../pages/StaffMoveAppointmentPage';
+import CustomerLoyaltyPage from '../pages/CustomerLoyaltyPage';
 
 function AppRoutes() {
   return (
@@ -62,6 +63,7 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/loyalty" element={<CustomerLoyaltyPage />} />
 
           <Route
             path="/profile/prescriptions"

@@ -314,6 +314,10 @@ function ProfilePage() {
               Prescription History
             </Link>
 
+            <Link to="/profile/loyalty" className="profile-sidebar__nav-link">
+              Loyalty
+            </Link>
+
             <Link to="/appointments" className="profile-sidebar__nav-link">
               My Appointments
             </Link>
