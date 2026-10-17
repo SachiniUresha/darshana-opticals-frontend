@@ -202,3 +202,38 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.inventory-page__alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.inventory-page__alerts-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+.inventory-page__alerts-header p {
+  margin: 0.4rem 0 0;
+  color: #4e5d77;
+}
+.inventory-page__alerts-header strong {
+  color: #9b1c1c;
+}
+.inventory-page__alerts-pages {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.inventory-page__alerts-pages button {
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  background: #fff;
+  border: 1px solid #a8b8dd;
+  border-radius: 8px;
+  color: #192955;
+  cursor: pointer;
+}

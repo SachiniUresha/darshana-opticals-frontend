@@ -29,6 +29,9 @@ vi.mock('../src/hooks/useBranches', () => ({
 vi.mock('../src/services/inventoryService', () => ({
   getBranchInventory: vi.fn(),
   updateInventoryQuantity: vi.fn(),
+  getActiveReorderAlerts: vi
+    .fn()
+    .mockResolvedValue({ alerts: [], total: 0, page: 1, limit: 20 }),
   createInventoryItem: vi.fn(),
   updateInventoryItem: vi.fn(),
   overrideInventoryPrice: vi.fn(),

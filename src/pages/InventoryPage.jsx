@@ -13,6 +13,7 @@ import {
 } from '../services/inventoryService';
 import InventoryEditor from '../components/InventoryEditor';
 import InventoryQuantityEditor from '../components/InventoryQuantityEditor';
+import InventoryReorderAlerts from '../components/InventoryReorderAlerts';
 import './InventoryPage.css';
 
 const money = new Intl.NumberFormat('en-LK', {
@@ -387,6 +388,13 @@ function InventoryPage() {
           </div>
         )}
       </section>
+      {canLoad && !loading && !error && (
+        <InventoryReorderAlerts
+          key={branchId}
+          branchId={branchId}
+          refreshCount={refreshCount}
+        />
+      )}
     </div>
   );
 }

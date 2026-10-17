@@ -90,3 +90,33 @@ export async function overrideInventoryPrice(id, price) {
 
   return response.data;
 }
+
+/** Retrieve only active reorder alerts from the backend for an authorized branch. */
+export async function getActiveReorderAlerts(branchId, page = 1) {
+  if (typeof branchId !== 'string' || !branchId.trim()) {
+    throw new Error('A branch is required to load reorder alerts.');
+  }
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new Error('An invalid reorder alert page was requested.');
+  }
+
+  const response = await apiClient.get(
+    `/inventory/reorder-alerts/branch/${encodeURIComponent(branchId)}?page=${page}&limit=20`,
+  );
+  const result = response?.data;
+
+  if (
+    response?.success !== true ||
+    !Array.isArray(result?.alerts) ||
+    !Number.isSafeInteger(result?.total) ||
+    result.total < 0 ||
+    !Number.isSafeInteger(result?.page) ||
+    result.page < 1 ||
+    !Number.isSafeInteger(result?.limit) ||
+    result.limit < 1
+  ) {
+    throw new Error('Invalid reorder alerts response.');
+  }
+
+  return result;
+}
