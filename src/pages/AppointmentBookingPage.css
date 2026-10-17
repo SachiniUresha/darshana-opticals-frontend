@@ -1,15 +1,15 @@
 .eye-test-page {
+  width: 100%;
   min-height: 70vh;
-  margin-top: -1.5rem;
+  margin: 0;
   background: #f7f8fa;
   color: #172033;
 }
 
 .eye-test-hero {
   position: relative;
-  left: 50%;
-  width: 100vw;
-  margin-left: -50vw;
+  box-sizing: border-box;
+  width: 100%;
   overflow: hidden;
   padding: 3.25rem 1rem 3.5rem;
   background: #192d68;
@@ -686,10 +686,6 @@
 
   .eye-test-card__actions {
     align-items: stretch;
-  }
-
-  .eye-test-page {
-    margin-top: -1rem;
   }
 }
 
