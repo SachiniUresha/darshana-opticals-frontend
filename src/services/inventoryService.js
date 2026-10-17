@@ -54,6 +54,27 @@ export async function updateInventoryItem(id, values) {
   return response.data;
 }
 
+/** Quantity is an absolute stock count. The backend handles alerts and scope. */
+export async function updateInventoryQuantity(id, quantity) {
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('An inventory item is required.');
+  }
+  if (!Number.isSafeInteger(quantity) || quantity < 0) {
+    throw new Error('Quantity must be a non-negative whole number.');
+  }
+
+  const response = await apiClient.patch(
+    `/inventory/${encodeURIComponent(id)}/quantity`,
+    { quantity },
+  );
+
+  if (!response?.data || response.success !== true) {
+    throw new Error('Invalid inventory quantity response.');
+  }
+
+  return response.data;
+}
+
 /** System Admin has price-only override; never send other metadata. */
 export async function overrideInventoryPrice(id, price) {
   const response = await apiClient.patch(

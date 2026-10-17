@@ -9,8 +9,10 @@ import {
   createInventoryItem,
   updateInventoryItem,
   overrideInventoryPrice,
+  updateInventoryQuantity,
 } from '../services/inventoryService';
 import InventoryEditor from '../components/InventoryEditor';
+import InventoryQuantityEditor from '../components/InventoryQuantityEditor';
 import './InventoryPage.css';
 
 const money = new Intl.NumberFormat('en-LK', {
@@ -149,6 +151,8 @@ function InventoryPage() {
         await updateInventoryItem(itemId, values);
       } else if (type === 'price' && admin && itemId) {
         await overrideInventoryPrice(itemId, values.price);
+      } else if (type === 'quantity' && manager && itemId) {
+        await updateInventoryQuantity(itemId, values.quantity);
       } else {
         setSaveError('This inventory action is not permitted.');
         return;
@@ -244,10 +248,28 @@ function InventoryPage() {
           </p>
         )}
 
-        {editor && canLoad && !loading && !error && (
-          <InventoryEditor
-            key={`${editor.type}-${editor.item?._id || editor.item?.id || 'new'}`}
-            mode={editor.type}
+        {editor &&
+          editor.type !== 'quantity' &&
+          canLoad &&
+          !loading &&
+          !error && (
+            <InventoryEditor
+              key={`${editor.type}-${editor.item?._id || editor.item?.id || 'new'}`}
+              mode={editor.type}
+              item={editor.item}
+              saving={saving}
+              error={saveError}
+              onCancel={() => {
+                setEditor(null);
+                setSaveError('');
+              }}
+              onSave={saveItem}
+            />
+          )}
+
+        {editor?.type === 'quantity' && canLoad && !loading && !error && (
+          <InventoryQuantityEditor
+            key={editor.item?._id || editor.item?.id}
             item={editor.item}
             saving={saving}
             error={saveError}
@@ -344,6 +366,17 @@ function InventoryPage() {
                           aria-label={`${manager ? 'Edit' : 'Edit price for'} ${item.itemName || 'inventory item'}`}
                         >
                           {manager ? 'Edit' : 'Edit Price'}
+                        </button>
+                      )}
+                      {manager && (item._id || item.id) && (
+                        <button
+                          type="button"
+                          className="inventory-page__item-action inventory-page__item-action--quantity"
+                          onClick={() => openEditor('quantity', item)}
+                          disabled={saving}
+                          aria-label={`Update quantity for ${item.itemName || 'inventory item'}`}
+                        >
+                          Update Stock
                         </button>
                       )}
                     </td>

@@ -34,6 +34,7 @@ vi.mock('../src/services/inventoryService', () => ({
   createInventoryItem: vi.fn(),
   updateInventoryItem: vi.fn(),
   overrideInventoryPrice: vi.fn(),
+  updateInventoryQuantity: vi.fn(),
 }));
 
 beforeEach(() => {
