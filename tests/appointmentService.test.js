@@ -17,17 +17,22 @@ vi.mock('../src/services/apiClient', () => ({
   },
 }));
 
-const provider = {
+const doctor = {
   id: '507f1f77bcf86cd799439011',
-  name: 'Dr. Perera',
-  role: 'OPTOMETRIST',
-  branchId: '507f1f77bcf86cd799439012',
+  name: 'Dr. Nimal Perera',
+  specialization: 'Ophthalmologist',
 };
+
+const branchId = '507f1f77bcf86cd799439012';
 
 const doctorSession = {
   id: '507f1f77bcf86cd799439021',
-  staffId: provider.id,
-  branchId: provider.branchId,
+  doctorId: doctor.id,
+  staffId: null,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
+  branchId,
   startAt: '2026-11-01T09:00:00.000Z',
   endAt: '2026-11-01T10:00:00.000Z',
   capacity: 8,
@@ -37,10 +42,14 @@ const doctorSession = {
 
 const appointment = {
   id: '507f1f77bcf86cd799439031',
-  staffId: provider.id,
-  providerName: provider.name,
+  doctorId: doctor.id,
+  staffId: null,
+  doctor,
+  doctorName: doctor.name,
+  specialization: doctor.specialization,
+  providerName: doctor.name,
   sessionId: doctorSession.id,
-  branchId: provider.branchId,
+  branchId,
   dateTime: doctorSession.startAt,
   status: 'CONFIRMED',
   position: 4,
@@ -53,20 +62,20 @@ describe('appointmentService', () => {
     vi.clearAllMocks();
   });
 
-  it('retrieves eligible Optometrists through the shared API client', async () => {
+  it('retrieves eligible Doctors through the shared API client', async () => {
     apiClient.get.mockResolvedValueOnce({
       success: true,
-      data: [provider],
+      data: [doctor],
     });
 
-    await expect(getAppointmentProviders()).resolves.toEqual([provider]);
+    await expect(getAppointmentProviders()).resolves.toEqual([doctor]);
 
     expect(apiClient.get).toHaveBeenCalledWith('/appointments/providers', {
       authenticated: true,
     });
   });
 
-  it('retrieves backend-authoritative available doctor sessions', async () => {
+  it('retrieves backend-authoritative available Doctor sessions', async () => {
     apiClient.get.mockResolvedValueOnce({
       success: true,
       data: [doctorSession],
@@ -102,7 +111,7 @@ describe('appointmentService', () => {
     );
   });
 
-  it('does not submit customer identity, status, provider, position or time when booking', async () => {
+  it('does not submit customer identity, status, doctor, position or time when booking', async () => {
     apiClient.post.mockResolvedValueOnce({
       success: true,
       data: appointment,
@@ -117,6 +126,7 @@ describe('appointmentService', () => {
     });
 
     expect(requestBody).not.toHaveProperty('customerId');
+    expect(requestBody).not.toHaveProperty('doctorId');
     expect(requestBody).not.toHaveProperty('staffId');
     expect(requestBody).not.toHaveProperty('status');
     expect(requestBody).not.toHaveProperty('position');
@@ -152,6 +162,27 @@ describe('appointmentService', () => {
     );
   });
 
+  it('supports legacy appointments without a Doctor record', async () => {
+    const legacyAppointment = {
+      ...appointment,
+      doctorId: null,
+      doctor: null,
+      doctorName: null,
+      specialization: null,
+      staffId: '507f1f77bcf86cd799439099',
+      providerName: 'Legacy Optometrist',
+    };
+
+    apiClient.get.mockResolvedValueOnce({
+      success: true,
+      data: legacyAppointment,
+    });
+
+    await expect(getAppointment(legacyAppointment.id)).resolves.toEqual(
+      legacyAppointment,
+    );
+  });
+
   it('cancels an appointment without sending a request body', async () => {
     apiClient.patch.mockResolvedValueOnce({
       success: true,
@@ -171,13 +202,13 @@ describe('appointmentService', () => {
     );
   });
 
-  it('rejects a malformed provider response instead of trusting unsafe data', async () => {
+  it('rejects a malformed Doctor response instead of trusting unsafe data', async () => {
     apiClient.get.mockResolvedValueOnce({
       success: true,
       data: [
         {
-          ...provider,
-          role: 'BRANCH_MANAGER',
+          id: doctor.id,
+          name: doctor.name,
         },
       ],
     });
@@ -187,7 +218,7 @@ describe('appointmentService', () => {
     );
   });
 
-  it('rejects booking when no doctor session has been selected', async () => {
+  it('rejects booking when no Doctor session has been selected', async () => {
     await expect(createAppointment('')).rejects.toThrow(
       'A valid doctor session is required.',
     );

@@ -71,6 +71,9 @@ function Navbar() {
     setIsAccountMenuOpen((current) => !current);
   }
 
+  const canViewStaffAppointments =
+    user?.role === BRANCH_ASSISTANT || user?.role === BRANCH_MANAGER;
+
   return (
     <header className="site-header">
       <nav
@@ -193,6 +196,12 @@ function Navbar() {
                   <Link to="/staff/orders">Staff Orders</Link>
                 </li>
               )}
+
+              {canViewStaffAppointments ? (
+                <li>
+                  <Link to="/staff/appointments">Appointments</Link>
+                </li>
+              ) : null}
 
               {(user?.role === BRANCH_MANAGER ||
                 user?.role === BRANCH_ASSISTANT) && (

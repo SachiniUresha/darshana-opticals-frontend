@@ -29,25 +29,46 @@ function normalizeNullableId(value) {
   return value.trim();
 }
 
-function normalizeProvider(provider) {
+function normalizeOptionalString(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (!isNonEmptyString(value)) {
+    invalidResponse();
+  }
+
+  return value.trim();
+}
+
+function normalizeDoctor(doctor, { required = false } = {}) {
+  if (doctor === undefined || doctor === null) {
+    if (required) {
+      invalidResponse();
+    }
+
+    return null;
+  }
+
   if (
-    !provider ||
-    typeof provider !== 'object' ||
-    Array.isArray(provider) ||
-    !isNonEmptyString(provider.id) ||
-    !isNonEmptyString(provider.name) ||
-    provider.role !== 'OPTOMETRIST' ||
-    !isNonEmptyString(provider.branchId)
+    typeof doctor !== 'object' ||
+    Array.isArray(doctor) ||
+    !isNonEmptyString(doctor.id) ||
+    !isNonEmptyString(doctor.name) ||
+    !isNonEmptyString(doctor.specialization)
   ) {
     invalidResponse();
   }
 
   return {
-    id: provider.id.trim(),
-    name: provider.name.trim(),
-    role: provider.role,
-    branchId: provider.branchId.trim(),
+    id: doctor.id.trim(),
+    name: doctor.name.trim(),
+    specialization: doctor.specialization.trim(),
   };
+}
+
+function normalizeProvider(provider) {
+  return normalizeDoctor(provider, { required: true });
 }
 
 function normalizeDoctorSession(session) {
@@ -56,7 +77,6 @@ function normalizeDoctorSession(session) {
     typeof session !== 'object' ||
     Array.isArray(session) ||
     !isNonEmptyString(session.id) ||
-    !isNonEmptyString(session.staffId) ||
     !isNonEmptyString(session.branchId) ||
     !isValidDate(session.startAt) ||
     !isValidDate(session.endAt) ||
@@ -81,9 +101,25 @@ function normalizeDoctorSession(session) {
     invalidResponse();
   }
 
+  const doctorId = normalizeNullableId(session.doctorId);
+  const staffId = normalizeNullableId(session.staffId);
+  const doctor = normalizeDoctor(session.doctor);
+
+  if (doctor && doctorId && doctor.id !== doctorId) {
+    invalidResponse();
+  }
+
   return {
     id: session.id.trim(),
-    staffId: session.staffId.trim(),
+    doctorId,
+    staffId,
+    doctor,
+    doctorName:
+      normalizeOptionalString(session.doctorName) ?? doctor?.name ?? null,
+    specialization:
+      normalizeOptionalString(session.specialization) ??
+      doctor?.specialization ??
+      null,
     branchId: session.branchId.trim(),
     startAt: session.startAt,
     endAt: session.endAt,
@@ -99,7 +135,6 @@ function normalizeAppointment(appointment) {
     typeof appointment !== 'object' ||
     Array.isArray(appointment) ||
     !isNonEmptyString(appointment.id) ||
-    !isNonEmptyString(appointment.staffId) ||
     !isValidDate(appointment.dateTime) ||
     !APPOINTMENT_STATUSES.has(appointment.status)
   ) {
@@ -128,14 +163,26 @@ function normalizeAppointment(appointment) {
     invalidResponse();
   }
 
-  const providerName = isNonEmptyString(appointment.providerName)
-    ? appointment.providerName.trim()
-    : null;
+  const doctorId = normalizeNullableId(appointment.doctorId);
+  const staffId = normalizeNullableId(appointment.staffId);
+  const doctor = normalizeDoctor(appointment.doctor);
+
+  if (doctor && doctorId && doctor.id !== doctorId) {
+    invalidResponse();
+  }
 
   return {
     id: appointment.id.trim(),
-    staffId: appointment.staffId.trim(),
-    providerName,
+    doctorId,
+    staffId,
+    doctor,
+    doctorName:
+      normalizeOptionalString(appointment.doctorName) ?? doctor?.name ?? null,
+    specialization:
+      normalizeOptionalString(appointment.specialization) ??
+      doctor?.specialization ??
+      null,
+    providerName: normalizeOptionalString(appointment.providerName),
     sessionId: normalizeNullableId(appointment.sessionId),
     branchId: normalizeNullableId(appointment.branchId),
     dateTime: appointment.dateTime,

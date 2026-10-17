@@ -12,6 +12,12 @@
   padding: 1.5rem 1rem;
 }
 
+.app-main.app-main--customer-appointments {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
 @media (max-width: 600px) {
   .app-main {
     padding: 1rem;

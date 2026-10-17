@@ -15,6 +15,18 @@ import {
 } from '../components/appointments/appointmentView';
 import './AppointmentManagement.css';
 
+function appointmentDoctorName(appointment) {
+  return (
+    appointment?.doctorName ?? appointment?.doctor?.name ?? 'Doctor unavailable'
+  );
+}
+
+function appointmentDoctorSpecialization(appointment) {
+  return (
+    appointment?.specialization ?? appointment?.doctor?.specialization ?? ''
+  );
+}
+
 function AppointmentDetailsPage() {
   const { id } = useParams();
   const { logout } = useAuth();
@@ -145,6 +157,9 @@ function AppointmentDetailsPage() {
 
   const canCancel = appointment && canCustomerCancelAppointment(appointment);
 
+  const doctorName = appointmentDoctorName(appointment);
+  const doctorSpecialization = appointmentDoctorSpecialization(appointment);
+
   return (
     <section className="appointment-management-page">
       <header className="appointment-management-hero">
@@ -183,9 +198,16 @@ function AppointmentDetailsPage() {
                   Appointment
                 </span>
 
-                <h2>{appointment.providerName || 'Optometrist'}</h2>
+                <h2>{doctorName}</h2>
 
-                <p>Darshana Opticals — Gampaha Main Branch</p>
+                {doctorSpecialization ? (
+                  <p>
+                    {doctorSpecialization} · Darshana Opticals — Gampaha Main
+                    Branch
+                  </p>
+                ) : (
+                  <p>Darshana Opticals — Gampaha Main Branch</p>
+                )}
               </div>
 
               <div className="appointment-details-card__statuses">
@@ -220,6 +242,18 @@ function AppointmentDetailsPage() {
               </div>
 
               <div>
+                <dt>Doctor</dt>
+                <dd>{doctorName}</dd>
+              </div>
+
+              {doctorSpecialization ? (
+                <div>
+                  <dt>Specialization</dt>
+                  <dd>{doctorSpecialization}</dd>
+                </div>
+              ) : null}
+
+              <div>
                 <dt>Location</dt>
                 <dd>Gampaha Main Branch</dd>
               </div>
@@ -239,11 +273,6 @@ function AppointmentDetailsPage() {
                 <dd>{appointment.id}</dd>
               </div>
             </dl>
-
-            <div className="appointment-details-note">
-              Appointment status and cancellation eligibility are verified by
-              the server.
-            </div>
 
             {canCancel ? (
               <>

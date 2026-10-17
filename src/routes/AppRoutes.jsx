@@ -34,6 +34,12 @@ import AppointmentDetailsPage from '../pages/AppointmentDetailsPage';
 import PaymentEntryPage from '../pages/PaymentEntryPage';
 import PaymentReturnPage from '../pages/PaymentReturnPage';
 import PaymentResultPage from '../pages/PaymentResultPage';
+import StaffAppointmentsPage from '../pages/StaffAppointmentsPage';
+import StaffCreateDoctorSessionPage from '../pages/StaffCreateDoctorSessionPage';
+import StaffDoctorSessionDetailsPage from '../pages/StaffDoctorSessionDetailsPage';
+import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
+import StaffAppointmentDetailsPage from '../pages/StaffAppointmentDetailsPage';
+import StaffMoveAppointmentPage from '../pages/StaffMoveAppointmentPage';
 
 function AppRoutes() {
   return (
@@ -67,6 +73,7 @@ function AppRoutes() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutEntryPage />} />
+
           <Route path="/payments/:orderId" element={<PaymentEntryPage />} />
           <Route path="/payments/return" element={<PaymentReturnPage />} />
           <Route path="/payments/cancel" element={<PaymentReturnPage />} />
@@ -97,6 +104,7 @@ function AppRoutes() {
             element={<OptometristPrescriptionPage />}
           />
         </Route>
+
         <Route
           element={
             <ProtectedRoute allowedRoles={[BRANCH_ASSISTANT, BRANCH_MANAGER]} />
@@ -104,7 +112,40 @@ function AppRoutes() {
         >
           <Route path="/staff/orders" element={<StaffOrdersPage />} />
           <Route path="/staff/orders/:id" element={<StaffOrderDetailsPage />} />
+
+          <Route
+            path="/staff/appointments"
+            element={<StaffAppointmentsPage />}
+          />
+
+          <Route
+            path="/staff/appointments/sessions/:sessionId"
+            element={<StaffDoctorSessionDetailsPage />}
+          />
+
+          <Route
+            path="/staff/appointments/bookings/:appointmentId"
+            element={<StaffAppointmentDetailsPage />}
+          />
         </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[BRANCH_ASSISTANT]} />}>
+          <Route
+            path="/staff/appointments/sessions/new"
+            element={<StaffCreateDoctorSessionPage />}
+          />
+
+          <Route
+            path="/staff/appointments/sessions/:sessionId/edit"
+            element={<StaffEditDoctorSessionPage />}
+          />
+
+          <Route
+            path="/staff/appointments/bookings/:appointmentId/move"
+            element={<StaffMoveAppointmentPage />}
+          />
+        </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
