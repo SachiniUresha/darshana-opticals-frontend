@@ -32,6 +32,7 @@ import AppointmentBookingPage from '../pages/AppointmentBookingPage';
 import AppointmentHistoryPage from '../pages/AppointmentHistoryPage';
 import AppointmentDetailsPage from '../pages/AppointmentDetailsPage';
 import StaffAppointmentsPage from '../pages/StaffAppointmentsPage';
+import InventoryPage from '../pages/InventoryPage';
 import StaffCreateDoctorSessionPage from '../pages/StaffCreateDoctorSessionPage';
 import StaffDoctorSessionDetailsPage from '../pages/StaffDoctorSessionDetailsPage';
 import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
@@ -55,6 +56,7 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[SYSTEM_ADMIN]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/inventory" element={<InventoryPage />} />
           <Route path="/admin/staff/new" element={<AdminStaffCreatePage />} />
           <Route
             path="/admin/doctors/new"
@@ -88,6 +90,10 @@ function AppRoutes() {
             path="/appointments/:id"
             element={<AppointmentDetailsPage />}
           />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[BRANCH_MANAGER]} />}>
+          <Route path="/staff/inventory" element={<InventoryPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>

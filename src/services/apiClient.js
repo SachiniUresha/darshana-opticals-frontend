@@ -15,7 +15,10 @@ async function request(path, options = {}) {
     ...headers,
   };
 
-  if (body !== undefined) {
+  // FormData lets the browser set the correct multipart boundary automatically.
+  const isFormData =
+    typeof FormData !== 'undefined' && body instanceof FormData;
+  if (body !== undefined && !isFormData) {
     requestHeaders['Content-Type'] = 'application/json';
   }
 
@@ -33,7 +36,11 @@ async function request(path, options = {}) {
     response = await fetch(buildUrl(path), {
       method,
       headers: requestHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: isFormData
+        ? body
+        : body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
     });
   } catch {
     const error = new Error(

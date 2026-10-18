@@ -24,7 +24,9 @@ function Navbar() {
     user?.role === SYSTEM_ADMIN &&
     (location.pathname === '/admin' || location.pathname.startsWith('/admin/'));
   const { cartCount } = useCart();
-
+  const isStaffWorkspace =
+    isAuthenticated &&
+    (user?.role === BRANCH_MANAGER || user?.role === BRANCH_ASSISTANT);
   const currentParams = new URLSearchParams(location.search);
 
   const currentSearch = location.pathname.startsWith('/products')
@@ -77,7 +79,13 @@ function Navbar() {
   return (
     <header className="site-header">
       <nav
-        className={isAdminWorkspace ? 'navbar navbar--admin' : 'navbar'}
+        className={
+          isAdminWorkspace
+            ? 'navbar navbar--admin'
+            : isStaffWorkspace
+              ? 'navbar navbar--staff'
+              : 'navbar'
+        }
         aria-label="Main navigation"
       >
         <Link
@@ -113,7 +121,7 @@ function Navbar() {
           <span aria-hidden="true">☰</span>
         </button>
 
-        {!isAdminWorkspace ? (
+        {!isAdminWorkspace && !isStaffWorkspace ? (
           <>
             <ul className="navbar__categories">
               {categoryLinks.map((category) => (
@@ -208,6 +216,12 @@ function Navbar() {
                   <Link to="/staff/appointments">Appointments</Link>
                 </li>
               ) : null}
+
+              {user?.role === BRANCH_MANAGER && (
+                <li>
+                  <Link to="/staff/inventory">Inventory</Link>
+                </li>
+              )}
 
               {(user?.role === BRANCH_MANAGER ||
                 user?.role === BRANCH_ASSISTANT) && (

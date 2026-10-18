@@ -1,0 +1,23 @@
+.inventory-page__image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.inventory-page__image-upload input {
+  width: 100%;
+}
+
+.inventory-page__image-upload small {
+  color: #526580;
+}
+
+.inventory-page__selected-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #dfe6f3;
+}
