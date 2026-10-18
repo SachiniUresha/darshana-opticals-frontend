@@ -463,7 +463,7 @@ function InventoryPage() {
                           disabled={saving}
                           aria-label={`Update quantity for ${item.itemName || 'inventory item'}`}
                         >
-                          Update Stock
+                          Stock
                         </button>
                       )}
                     </td>
