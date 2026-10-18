@@ -342,7 +342,24 @@ function PaymentEntryPage() {
             </div>
           ) : null}
 
-          {paid ? (
+          {reconciliationRequired ? (
+            <section className="payment-result payment-result--pending">
+              <h2>Payment review in progress</h2>
+
+              <p>
+                This payment needs verification. Please do not start another
+                payment attempt.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => loadPaymentContext({ refreshing: true })}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? 'Checking...' : 'Check Payment Status'}
+              </button>
+            </section>
+          ) : paid ? (
             <section className="payment-result payment-result--success">
               <h2>Payment completed</h2>
 
@@ -369,23 +386,6 @@ function PaymentEntryPage() {
               ) : null}
 
               <Link to={`/orders/${orderId}`}>View Order</Link>
-            </section>
-          ) : reconciliationRequired ? (
-            <section className="payment-result payment-result--pending">
-              <h2>Payment review in progress</h2>
-
-              <p>
-                This payment needs verification. Please do not start another
-                payment attempt.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => loadPaymentContext({ refreshing: true })}
-                disabled={isRefreshing}
-              >
-                {isRefreshing ? 'Checking...' : 'Check Payment Status'}
-              </button>
             </section>
           ) : preparedPayment ? (
             <section className="payment-review" aria-live="polite">

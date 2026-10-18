@@ -371,6 +371,68 @@ describe('PaymentEntryPage', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('prioritizes reconciliation review when backend reports paid and reconciliation required', async () => {
+    getPaymentStatus.mockResolvedValueOnce({
+      ...emptyPaymentStatus,
+      orderStatus: 'PROCESSING',
+      summary: {
+        ...emptyPaymentStatus.summary,
+        paid: true,
+        reconciliationRequired: true,
+        attemptCount: 1,
+      },
+      latestAttempt: {
+        ...preparedPayment.payment,
+        status: 'completed',
+        reconciliationRequired: true,
+      },
+      completedAttempt: {
+        ...preparedPayment.payment,
+        status: 'completed',
+        reconciliationRequired: true,
+      },
+      attempts: [
+        {
+          ...preparedPayment.payment,
+          status: 'completed',
+          reconciliationRequired: true,
+        },
+      ],
+    });
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Payment review in progress',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('heading', {
+        name: 'Payment completed',
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Check Payment Status',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Review Payment',
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('button', {
+        name: 'Continue to PayHere',
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it('blocks another attempt while reconciliation is required', async () => {
     getPaymentStatus.mockResolvedValueOnce({
       ...emptyPaymentStatus,
