@@ -470,4 +470,96 @@ describe('Navbar authentication controls', () => {
       expect(screen.queryByText('Branch Assistant')).not.toBeInTheDocument();
     },
   );
+
+  it('hides customer shopping navigation from BRANCH_MANAGER while keeping staff navigation', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: BRANCH_MANAGER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(screen.queryByRole('link', { name: 'Men' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Women' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Kids' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Sunglasses' }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('searchbox', {
+        name: /search frames/i,
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Staff Orders',
+      }),
+    ).toHaveAttribute('href', '/staff/orders');
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Loyalty Monitoring',
+      }),
+    ).toHaveAttribute('href', '/staff/loyalty');
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Appointments',
+      }),
+    ).toHaveAttribute('href', '/staff/appointments');
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Inventory',
+      }),
+    ).toHaveAttribute('href', '/staff/inventory');
+  });
+
+  it('shows Loyalty Monitoring only to BRANCH_MANAGER', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        role: BRANCH_MANAGER,
+      },
+      logout: vi.fn(),
+    });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Loyalty Monitoring',
+      }),
+    ).toHaveAttribute('href', '/staff/loyalty');
+  });
+
+  it.each([CUSTOMER, BRANCH_ASSISTANT, OPTOMETRIST, SYSTEM_ADMIN])(
+    'hides Loyalty Monitoring from %s',
+    (role) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: {
+          role,
+        },
+        logout: vi.fn(),
+      });
+
+      renderNavbar();
+
+      expect(
+        screen.queryByRole('link', {
+          name: 'Loyalty Monitoring',
+        }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

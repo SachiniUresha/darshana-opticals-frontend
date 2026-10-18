@@ -41,6 +41,8 @@ import StaffDoctorSessionDetailsPage from '../pages/StaffDoctorSessionDetailsPag
 import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
 import StaffAppointmentDetailsPage from '../pages/StaffAppointmentDetailsPage';
 import StaffMoveAppointmentPage from '../pages/StaffMoveAppointmentPage';
+import CustomerLoyaltyPage from '../pages/CustomerLoyaltyPage';
+import StaffLoyaltyPage from '../pages/StaffLoyaltyPage';
 
 function AppRoutes() {
   return (
@@ -67,6 +69,7 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[CUSTOMER]} />}>
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/loyalty" element={<CustomerLoyaltyPage />} />
 
           <Route
             path="/profile/prescriptions"
@@ -133,6 +136,10 @@ function AppRoutes() {
             path="/staff/appointments/bookings/:appointmentId"
             element={<StaffAppointmentDetailsPage />}
           />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[BRANCH_MANAGER]} />}>
+          <Route path="/staff/loyalty" element={<StaffLoyaltyPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[BRANCH_ASSISTANT]} />}>
