@@ -1,0 +1,111 @@
+.report-details {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: 1.25rem;
+  color: #1e293b;
+}
+.report-details__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.report-details__header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+.report-details__header p,
+.report-details__note {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin: 0 0 1rem;
+}
+.report-details__exports,
+.report-details__pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.report-details button {
+  background: #173f70;
+  border: 0;
+  border-radius: 0.4rem;
+  padding: 0.65rem 0.9rem;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.report-details button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.report-details__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.report-details__controls label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  min-width: min(100%, 180px);
+}
+.report-details__controls select {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  padding: 0.6rem;
+  background: #fff;
+  color: inherit;
+}
+.report-details__table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.report-details table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  text-align: left;
+  font-size: 0.88rem;
+}
+.report-details caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.55rem 0;
+}
+.report-details th,
+.report-details td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 0.65rem;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.report-details th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+.report-details__pagination {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.report-details__pagination span {
+  font-size: 0.88rem;
+  color: #475569;
+}
+.report-details__error {
+  color: #9b1c1c;
+}
+@media (max-width: 520px) {
+  .report-details__controls {
+    display: grid;
+  }
+  .report-details__pagination {
+    justify-content: flex-start;
+  }
+}

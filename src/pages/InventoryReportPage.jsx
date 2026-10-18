@@ -6,6 +6,7 @@ import { useBranches } from '../hooks/useBranches';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
 import { getInventoryReport } from '../services/reportService';
+import ReportDetails from '../components/reports/ReportDetails';
 import './InventoryReportPage.css';
 
 const GROUP_OPTIONS = [
@@ -296,6 +297,15 @@ export default function InventoryReportPage() {
           <p role="status">No inventory report is available.</p>
         )}
       </section>
+      {!loading && !safeReportError && report && (
+        <ReportDetails
+          key={`${scopeKey}:${JSON.stringify(applied)}`}
+          kind="inventory"
+          applied={applied}
+          admin={admin}
+          scopeId={scopeKey}
+        />
+      )}
     </div>
   );
 }

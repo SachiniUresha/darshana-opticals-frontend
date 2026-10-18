@@ -33,6 +33,10 @@ vi.mock('../src/hooks/useBranches', () => ({
 }));
 vi.mock('../src/services/reportService', () => ({
   getSalesReport: vi.fn(),
+  getSalesOrders: vi.fn().mockResolvedValue({
+    orders: [],
+    pagination: { page: 1, limit: 20, totalRecords: 0, totalPages: 0 },
+  }),
 }));
 
 const response = {

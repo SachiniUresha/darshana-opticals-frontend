@@ -6,6 +6,7 @@ import { useBranches } from '../hooks/useBranches';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
 import { getSalesReport } from '../services/reportService';
+import ReportDetails from '../components/reports/ReportDetails';
 import './SalesReportPage.css';
 
 const PRESETS = [
@@ -320,6 +321,15 @@ export default function SalesReportPage() {
           <p role="status">No sales report is available.</p>
         )}
       </section>
+      {!loading && !error && report && (
+        <ReportDetails
+          key={`${user?.role || ''}:${user?.branchId || ''}:${JSON.stringify(applied)}`}
+          kind="sales"
+          applied={applied}
+          admin={admin}
+          scopeId={`${user?.role || ''}:${user?.branchId || ''}`}
+        />
+      )}
     </div>
   );
 }
