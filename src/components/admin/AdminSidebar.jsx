@@ -5,6 +5,7 @@ import './AdminSidebar.css';
 
 const adminLinks = [
   { to: '/admin', title: 'Dashboard', end: true, icon: 'dashboard' },
+  { to: '/admin/inventory', title: 'Inventory', icon: 'inventory' },
   { to: '/admin/staff/new', title: 'Add Staff Member', icon: 'staff' },
   { to: '/admin/doctors/new', title: 'Add Doctor', icon: 'doctor' },
 ];
@@ -23,6 +24,20 @@ function NavIcon({ name }) {
         <rect x="14" y="3" width="7" height="7" rx="1" />
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    );
+  }
+  if (name === 'inventory') {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        aria-hidden="true"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M3 10h18M8 10v10M15 10v10" />
       </svg>
     );
   }
