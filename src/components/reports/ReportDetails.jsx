@@ -284,7 +284,12 @@ export default function ReportDetails({ kind, applied, admin, scopeId }) {
       ) : !rows?.length ? (
         <p role="status">No records match the selected report filters.</p>
       ) : (
-        <div className="report-details__table-wrap">
+        <div
+          className="report-details__table-wrap"
+          role="region"
+          aria-label={sales ? 'Sales orders table' : 'Inventory items table'}
+          tabIndex={0}
+        >
           <table>
             <caption>
               {sales ? 'Masked sales orders' : 'Current stock items'}

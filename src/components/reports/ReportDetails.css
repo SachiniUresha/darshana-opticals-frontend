@@ -109,3 +109,18 @@
     justify-content: flex-start;
   }
 }
+
+/* DDP-064 accessible focus states */
+.report-details {
+  min-width: 0;
+}
+.report-details button:focus-visible,
+.report-details select:focus-visible,
+.report-details__table-wrap:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+.report-details__exports button,
+.report-details__pagination button {
+  min-height: 2.5rem;
+}

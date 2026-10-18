@@ -10,14 +10,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1.5rem;
-  border-radius: 14px;
-  background: #192955;
-  color: white;
+  padding: 0;
+  color: #1b2b58;
 }
 .inventory-page__eyebrow {
   margin: 0 0 0.5rem;
-  color: #fcca18;
+  color: #526580;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -115,7 +113,6 @@
   .inventory-page {
     padding: 1rem 0.7rem 2rem;
   }
-  .inventory-page__header,
   .inventory-page__panel {
     padding: 1rem;
   }

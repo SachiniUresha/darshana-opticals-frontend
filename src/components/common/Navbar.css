@@ -300,3 +300,51 @@
 .navbar--staff .navbar__logout-button {
   white-space: nowrap;
 }
+
+/* Staff workspace navigation refinement */
+@media (min-width: 521px) {
+  .navbar--staff {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.55rem;
+    padding: 0.75rem 0;
+  }
+
+  .navbar--staff .navbar__account-links {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    justify-self: stretch;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #e5eaf2;
+  }
+
+  .navbar--staff .navbar__account-links a,
+  .navbar--staff .navbar__logout-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #dde6f2;
+    border-radius: 8px;
+    background: #f4f7fb;
+    color: #173d92;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .navbar--staff .navbar__account-links a:hover,
+  .navbar--staff .navbar__account-links a:focus-visible,
+  .navbar--staff .navbar__logout-button:hover,
+  .navbar--staff .navbar__logout-button:focus-visible {
+    background: #e9f1fc;
+    border-color: #9fb9db;
+  }
+
+  .navbar--staff .navbar__staff-role {
+    margin-left: auto;
+  }
+}

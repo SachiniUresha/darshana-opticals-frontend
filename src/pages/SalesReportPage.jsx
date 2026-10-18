@@ -6,6 +6,7 @@ import { useBranches } from '../hooks/useBranches';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
 import { getSalesReport } from '../services/reportService';
+import ReportBreakdown from '../components/reports/ReportBreakdown';
 import ReportDetails from '../components/reports/ReportDetails';
 import './SalesReportPage.css';
 
@@ -322,13 +323,20 @@ export default function SalesReportPage() {
         )}
       </section>
       {!loading && !error && report && (
-        <ReportDetails
-          key={`${user?.role || ''}:${user?.branchId || ''}:${JSON.stringify(applied)}`}
-          kind="sales"
-          applied={applied}
-          admin={admin}
-          scopeId={`${user?.role || ''}:${user?.branchId || ''}`}
-        />
+        <>
+          <ReportBreakdown
+            kind="sales"
+            groupBy={applied.groupBy}
+            breakdowns={report.breakdowns}
+          />
+          <ReportDetails
+            key={`${user?.role || ''}:${user?.branchId || ''}:${JSON.stringify(applied)}`}
+            kind="sales"
+            applied={applied}
+            admin={admin}
+            scopeId={`${user?.role || ''}:${user?.branchId || ''}`}
+          />
+        </>
       )}
     </div>
   );

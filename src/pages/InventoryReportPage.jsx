@@ -6,6 +6,7 @@ import { useBranches } from '../hooks/useBranches';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { BRANCH_MANAGER, SYSTEM_ADMIN } from '../config/roles';
 import { getInventoryReport } from '../services/reportService';
+import ReportBreakdown from '../components/reports/ReportBreakdown';
 import ReportDetails from '../components/reports/ReportDetails';
 import './InventoryReportPage.css';
 
@@ -298,13 +299,20 @@ export default function InventoryReportPage() {
         )}
       </section>
       {!loading && !safeReportError && report && (
-        <ReportDetails
-          key={`${scopeKey}:${JSON.stringify(applied)}`}
-          kind="inventory"
-          applied={applied}
-          admin={admin}
-          scopeId={scopeKey}
-        />
+        <>
+          <ReportBreakdown
+            kind="inventory"
+            groupBy={applied.groupBy}
+            breakdowns={report.breakdowns}
+          />
+          <ReportDetails
+            key={`${scopeKey}:${JSON.stringify(applied)}`}
+            kind="inventory"
+            applied={applied}
+            admin={admin}
+            scopeId={scopeKey}
+          />
+        </>
       )}
     </div>
   );
