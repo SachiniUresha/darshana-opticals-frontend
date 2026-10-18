@@ -8,6 +8,8 @@ import {
   getBranchInventory,
   createInventoryItem,
   uploadInventoryImage,
+  replaceInventoryImage,
+  removeInventoryImage,
   updateInventoryItem,
   overrideInventoryPrice,
   updateInventoryQuantity,
@@ -16,6 +18,7 @@ import InventoryEditor from '../components/InventoryEditor';
 import InventoryQuantityEditor from '../components/InventoryQuantityEditor';
 import InventoryReorderAlerts from '../components/InventoryReorderAlerts';
 import InventoryThreshold from '../components/InventoryThreshold';
+import InventoryImageManager from '../components/InventoryImageManager';
 import './InventoryPage.css';
 
 const money = new Intl.NumberFormat('en-LK', {
@@ -164,6 +167,20 @@ function InventoryPage() {
         } else {
           await createInventoryItem(branchId, values);
         }
+      } else if (type === 'image' && manager && itemId && values.imageFile) {
+        imageUploadPending = true;
+        setUploading(true);
+        const imageMetadata = await uploadInventoryImage(values.imageFile);
+        imageUploadPending = false;
+        setUploading(false);
+        await replaceInventoryImage(itemId, imageMetadata);
+      } else if (
+        type === 'image' &&
+        manager &&
+        itemId &&
+        values.remove === true
+      ) {
+        await removeInventoryImage(itemId);
       } else if (type === 'edit' && manager && itemId) {
         await updateInventoryItem(itemId, values);
       } else if (type === 'price' && admin && itemId) {
@@ -177,7 +194,13 @@ function InventoryPage() {
 
       setEditor(null);
       setSaveNotice(
-        type === 'create' ? 'Inventory item added.' : 'Inventory item updated.',
+        type === 'create'
+          ? 'Inventory item added.'
+          : type === 'image'
+            ? values.remove === true
+              ? 'Inventory image removed.'
+              : 'Inventory image updated.'
+            : 'Inventory item updated.',
       );
       setRefreshCount((count) => count + 1);
     } catch (caught) {
@@ -281,6 +304,7 @@ function InventoryPage() {
 
         {editor &&
           editor.type !== 'quantity' &&
+          editor.type !== 'image' &&
           canLoad &&
           !loading &&
           !error && (
@@ -295,6 +319,26 @@ function InventoryPage() {
                 setSaveError('');
               }}
               onSave={saveItem}
+            />
+          )}
+
+        {editor?.type === 'image' &&
+          manager &&
+          canLoad &&
+          !loading &&
+          !error && (
+            <InventoryImageManager
+              key={editor.item?._id || editor.item?.id}
+              item={editor.item}
+              saving={saving}
+              uploading={uploading}
+              error={saveError}
+              onCancel={() => {
+                setEditor(null);
+                setSaveError('');
+              }}
+              onReplace={(imageFile) => saveItem({ imageFile })}
+              onRemove={() => saveItem({ remove: true })}
             />
           )}
 
@@ -398,6 +442,17 @@ function InventoryPage() {
                           aria-label={`${manager ? 'Edit' : 'Edit price for'} ${item.itemName || 'inventory item'}`}
                         >
                           {manager ? 'Edit' : 'Edit Price'}
+                        </button>
+                      )}
+                      {manager && (item._id || item.id) && (
+                        <button
+                          type="button"
+                          className="inventory-page__item-action"
+                          onClick={() => openEditor('image', item)}
+                          disabled={saving}
+                          aria-label={`Manage image for ${item.itemName || 'inventory item'}`}
+                        >
+                          Image
                         </button>
                       )}
                       {manager && (item._id || item.id) && (

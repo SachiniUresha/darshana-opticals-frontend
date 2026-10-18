@@ -190,3 +190,43 @@ export async function updateGlobalReorderThreshold(threshold) {
 
   return confirmed;
 }
+
+/** Replace an item's image using only metadata approved by the backend upload endpoint. */
+export async function replaceInventoryImage(id, imageMetadata) {
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('An inventory item is required.');
+  }
+  if (
+    typeof imageMetadata?.imageUrl !== 'string' ||
+    !imageMetadata.imageUrl.startsWith('https://') ||
+    typeof imageMetadata?.imagePublicId !== 'string' ||
+    !imageMetadata.imagePublicId.startsWith('osms/inventory/')
+  ) {
+    throw new Error('Approved inventory image metadata is required.');
+  }
+  const response = await apiClient.patch(
+    `/inventory/${encodeURIComponent(id)}`,
+    {
+      imageUrl: imageMetadata.imageUrl,
+      imagePublicId: imageMetadata.imagePublicId,
+    },
+  );
+  if (response?.success !== true || !response?.data) {
+    throw new Error('Invalid inventory image replacement response.');
+  }
+  return response.data;
+}
+
+/** Remove an item's existing image; backend enforces branch ownership and cleans up assets. */
+export async function removeInventoryImage(id) {
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('An inventory item is required.');
+  }
+  const response = await apiClient.delete(
+    `/inventory/${encodeURIComponent(id)}/image`,
+  );
+  if (response?.success !== true || !response?.data) {
+    throw new Error('Invalid inventory image removal response.');
+  }
+  return response.data;
+}
