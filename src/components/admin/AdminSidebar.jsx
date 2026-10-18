@@ -7,6 +7,11 @@ const adminLinks = [
   { to: '/admin', title: 'Dashboard', end: true, icon: 'dashboard' },
   { to: '/admin/inventory', title: 'Inventory', icon: 'inventory' },
   { to: '/admin/reports/sales', title: 'Sales Reports', icon: 'dashboard' },
+  {
+    to: '/admin/reports/inventory',
+    title: 'Inventory Reports',
+    icon: 'inventory',
+  },
   { to: '/admin/staff/new', title: 'Add Staff Member', icon: 'staff' },
   { to: '/admin/doctors/new', title: 'Add Doctor', icon: 'doctor' },
 ];
