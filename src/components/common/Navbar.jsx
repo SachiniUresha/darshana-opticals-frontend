@@ -223,6 +223,12 @@ function Navbar() {
                 </li>
               )}
 
+              {user?.role === BRANCH_MANAGER && (
+                <li>
+                  <Link to="/staff/reports/sales">Sales Reports</Link>
+                </li>
+              )}
+
               {(user?.role === BRANCH_MANAGER ||
                 user?.role === BRANCH_ASSISTANT) && (
                 <li className="navbar__staff-role">
