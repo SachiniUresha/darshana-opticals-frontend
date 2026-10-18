@@ -55,6 +55,7 @@ export default function OrderDetailsPage() {
   }, [refresh]);
   const history = order?.statusHistory;
   const items = order?.items ?? order?.orderItems;
+  const currentOrderId = orderId(order) ?? id;
   return (
     <OrderShell>
       <section className="orders-card" aria-labelledby="details-title">
@@ -130,6 +131,18 @@ export default function OrderDetailsPage() {
               <strong>Order Total</strong>
               <strong>{moneyLabel(orderTotal(order))}</strong>
             </div>
+
+            {order.status === 'ORDER_CREATED' ? (
+              <div className="orders-payment-actions">
+                <Link
+                  to={`/payments/${encodeURIComponent(currentOrderId)}`}
+                  className="orders-payment-link"
+                >
+                  Pay / Check Payment
+                </Link>
+              </div>
+            ) : null}
+
             <button type="button" onClick={() => refresh()}>
               » Refresh tracking
             </button>

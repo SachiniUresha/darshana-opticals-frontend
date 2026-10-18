@@ -258,7 +258,7 @@ describe('CheckoutEntryPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Order Confirmed!',
+        name: 'Order Created',
       }),
     ).toBeInTheDocument();
   });
@@ -278,7 +278,7 @@ describe('CheckoutEntryPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'Order Confirmed!',
+        name: 'Order Created',
       }),
     ).toBeInTheDocument();
 
@@ -291,6 +291,12 @@ describe('CheckoutEntryPage', () => {
      * authoritative total is Rs.29,000.
      */
     expect(screen.getByText('Rs.29,000')).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('link', {
+        name: 'Continue to Payment',
+      }),
+    ).toHaveAttribute('href', '/payments/507f1f77bcf86cd799439021');
 
     expect(refreshCart).toHaveBeenCalledTimes(1);
   });

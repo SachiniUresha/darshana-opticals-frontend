@@ -31,6 +31,9 @@ import CheckoutEntryPage from '../pages/CheckoutEntryPage';
 import AppointmentBookingPage from '../pages/AppointmentBookingPage';
 import AppointmentHistoryPage from '../pages/AppointmentHistoryPage';
 import AppointmentDetailsPage from '../pages/AppointmentDetailsPage';
+import PaymentEntryPage from '../pages/PaymentEntryPage';
+import PaymentReturnPage from '../pages/PaymentReturnPage';
+import PaymentResultPage from '../pages/PaymentResultPage';
 import StaffAppointmentsPage from '../pages/StaffAppointmentsPage';
 import InventoryPage from '../pages/InventoryPage';
 import StaffCreateDoctorSessionPage from '../pages/StaffCreateDoctorSessionPage';
@@ -75,6 +78,14 @@ function AppRoutes() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutEntryPage />} />
+
+          <Route path="/payments/:orderId" element={<PaymentEntryPage />} />
+          <Route path="/payments/return" element={<PaymentReturnPage />} />
+          <Route path="/payments/cancel" element={<PaymentReturnPage />} />
+          <Route
+            path="/payments/result/:orderId"
+            element={<PaymentResultPage />}
+          />
 
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/:id" element={<OrderDetailsPage />} />
