@@ -3,6 +3,7 @@ import './InventoryImageUpload.css';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const CLASSIFICATIONS = ['UNKNOWN', 'MERCHANDISE', 'CLINICAL'];
 
 function InventoryEditor({
   mode,
@@ -21,6 +22,7 @@ function InventoryEditor({
     brand: item?.brand ?? '',
     price: item?.price == null ? '' : String(item.price),
     quantity: creating ? '0' : '',
+    itemClassification: creating ? '' : (item?.itemClassification ?? 'UNKNOWN'),
   });
   const [validationError, setValidationError] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -85,7 +87,18 @@ function InventoryEditor({
       return;
     }
 
-    const payload = { itemName, category, brand, price };
+    if (!CLASSIFICATIONS.includes(values.itemClassification)) {
+      setValidationError('Select an item classification.');
+      return;
+    }
+
+    const payload = {
+      itemName,
+      category,
+      brand,
+      price,
+      itemClassification: values.itemClassification,
+    };
     if (creating) {
       const quantity = Number(values.quantity);
       if (
@@ -147,6 +160,21 @@ function InventoryEditor({
                 required
                 disabled={saving}
               />
+            </label>
+            <label>
+              Item Classification
+              <select
+                name="itemClassification"
+                value={values.itemClassification}
+                onChange={change}
+                required
+                disabled={saving}
+              >
+                <option value="">Select classification</option>
+                <option value="MERCHANDISE">Merchandise</option>
+                <option value="CLINICAL">Clinical</option>
+                <option value="UNKNOWN">Unknown / Unclassified</option>
+              </select>
             </label>
           </>
         )}

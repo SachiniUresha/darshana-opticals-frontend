@@ -47,6 +47,7 @@ export async function createInventoryItem(branchId, values, imageMetadata) {
     brand: values.brand,
     price: values.price,
     quantity: values.quantity,
+    itemClassification: values.itemClassification,
   };
   if (imageMetadata) {
     payload.imageUrl = imageMetadata.imageUrl;
@@ -70,6 +71,7 @@ export async function updateInventoryItem(id, values) {
       category: values.category,
       brand: values.brand,
       price: values.price,
+      itemClassification: values.itemClassification,
     },
   );
 
@@ -225,8 +227,8 @@ export async function removeInventoryImage(id) {
   const response = await apiClient.delete(
     `/inventory/${encodeURIComponent(id)}/image`,
   );
-  if (response?.success !== true || !response?.data) {
+  if (response?.success !== true) {
     throw new Error('Invalid inventory image removal response.');
   }
-  return response.data;
+  return response;
 }

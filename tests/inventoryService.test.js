@@ -52,6 +52,7 @@ describe('inventoryService mutations', () => {
       brand: 'Nova',
       price: 1200,
       quantity: 3,
+      itemClassification: 'MERCHANDISE',
     };
     apiClient.post.mockResolvedValueOnce({
       success: true,
@@ -81,6 +82,7 @@ describe('inventoryService mutations', () => {
       brand: 'Nova',
       price: 100,
       quantity: 99,
+      itemClassification: 'CLINICAL',
       alertStatus: 'RESOLVED',
       branchId: 'branch-2',
     });
@@ -89,6 +91,7 @@ describe('inventoryService mutations', () => {
       category: 'Men',
       brand: 'Nova',
       price: 100,
+      itemClassification: 'CLINICAL',
     });
   });
 

@@ -152,3 +152,30 @@ describe('global reorder threshold management', () => {
     expect(getGlobalReorderThreshold).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('Threshold session expiry', () => {
+  it('uses shared logout on threshold read 401', async () => {
+    const onUnauthorized = vi.fn();
+    getGlobalReorderThreshold.mockRejectedValueOnce(
+      Object.assign(new Error('expired'), { status: 401 }),
+    );
+    render(<InventoryThreshold onUnauthorized={onUnauthorized} />);
+    await waitFor(() => expect(onUnauthorized).toHaveBeenCalledTimes(1));
+  });
+
+  it('uses shared logout on threshold update 401', async () => {
+    const onUnauthorized = vi.fn();
+    updateGlobalReorderThreshold.mockRejectedValueOnce(
+      Object.assign(new Error('expired'), { status: 401 }),
+    );
+    render(<InventoryThreshold onUnauthorized={onUnauthorized} />);
+    const user = userEvent.setup();
+    const input = await screen.findByRole('spinbutton', {
+      name: 'New global threshold',
+    });
+    await user.clear(input);
+    await user.type(input, '9');
+    await user.click(screen.getByRole('button', { name: 'Update Threshold' }));
+    await waitFor(() => expect(onUnauthorized).toHaveBeenCalledTimes(1));
+  });
+});

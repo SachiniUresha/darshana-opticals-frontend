@@ -23,7 +23,7 @@ function safeMessage(error, action) {
     : 'Unable to update reorder threshold. Please try again.';
 }
 
-function InventoryThreshold({ onUpdated }) {
+function InventoryThreshold({ onUpdated, onUnauthorized }) {
   const [threshold, setThreshold] = useState(null);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -50,6 +50,7 @@ function InventoryThreshold({ onUpdated }) {
         setThreshold(null);
         setDraft('');
         setError(safeMessage(caught, 'load'));
+        if (caught?.status === 401) onUnauthorized?.();
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -58,7 +59,7 @@ function InventoryThreshold({ onUpdated }) {
     return () => {
       active = false;
     };
-  }, [retryCount]);
+  }, [retryCount, onUnauthorized]);
 
   async function submit(event) {
     event.preventDefault();
@@ -89,6 +90,7 @@ function InventoryThreshold({ onUpdated }) {
       onUpdated?.();
     } catch (caught) {
       setError(safeMessage(caught, 'update'));
+      if (caught?.status === 401) onUnauthorized?.();
     } finally {
       setSaving(false);
     }

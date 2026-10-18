@@ -9,7 +9,7 @@ function safeDate(value) {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-GB');
 }
 
-function InventoryReorderAlerts({ branchId, refreshCount }) {
+function InventoryReorderAlerts({ branchId, refreshCount, onUnauthorized }) {
   const [page, setPage] = useState(1);
   const [alerts, setAlerts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -41,6 +41,7 @@ function InventoryReorderAlerts({ branchId, refreshCount }) {
         setTotal(0);
         if (caught?.status === 401) {
           setError('Your session has expired. Please log in again.');
+          onUnauthorized?.();
         } else if (caught?.status === 403) {
           setError(
             'You do not have permission to view reorder alerts for this branch.',
@@ -56,7 +57,7 @@ function InventoryReorderAlerts({ branchId, refreshCount }) {
     return () => {
       active = false;
     };
-  }, [branchId, page, refreshCount, retryCount]);
+  }, [branchId, page, refreshCount, retryCount, onUnauthorized]);
 
   const canRetry =
     error &&

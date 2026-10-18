@@ -55,7 +55,7 @@ function InventoryImage({ item }) {
 
 function InventoryPage() {
   useDocumentTitle('Inventory Management | Darshana Opticals');
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const manager = user?.role === BRANCH_MANAGER;
   const admin = user?.role === SYSTEM_ADMIN;
   const {
@@ -85,6 +85,10 @@ function InventoryPage() {
   );
 
   useEffect(() => {
+    if (branchesUnauthorized) logout();
+  }, [branchesUnauthorized, logout]);
+
+  useEffect(() => {
     if (!canLoad) {
       setItems([]);
       setError('');
@@ -105,6 +109,7 @@ function InventoryPage() {
         if (!active) return;
         if (caught?.status === 401) {
           setError('Your session has expired. Please log in again.');
+          logout();
         } else if (caught?.status === 403) {
           setError(
             'You do not have permission to view inventory for this branch.',
@@ -120,7 +125,7 @@ function InventoryPage() {
     return () => {
       active = false;
     };
-  }, [branchId, canLoad, refreshCount]);
+  }, [branchId, canLoad, refreshCount, logout]);
 
   function selectBranch(id) {
     if (saving) return;
@@ -206,6 +211,7 @@ function InventoryPage() {
     } catch (caught) {
       if (caught?.status === 401) {
         setSaveError('Your session has expired. Please log in again.');
+        logout();
       } else if (imageUploadPending && caught?.status === 403) {
         setSaveError(
           'You do not have permission to upload an inventory image.',
@@ -479,11 +485,13 @@ function InventoryPage() {
           key={branchId}
           branchId={branchId}
           refreshCount={refreshCount}
+          onUnauthorized={logout}
         />
       )}
       {(manager || admin) && (
         <InventoryThreshold
           onUpdated={() => setRefreshCount((count) => count + 1)}
+          onUnauthorized={logout}
         />
       )}
     </div>

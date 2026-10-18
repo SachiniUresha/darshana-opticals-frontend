@@ -12,6 +12,8 @@ import {
 } from '../src/services/inventoryService';
 
 const state = vi.hoisted(() => ({
+  logout: vi.fn(),
+  branchesUnauthorized: false,
   user: { role: 'BRANCH_MANAGER', branchId: 'branch-1' },
   branches: [
     { id: 'branch-1', address: 'Kandy Road' },
@@ -20,7 +22,7 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock('../src/hooks/useAuth', () => ({
-  default: () => ({ user: state.user }),
+  default: () => ({ user: state.user, logout: state.logout }),
 }));
 vi.mock('../src/hooks/useBranches', () => ({
   useBranches: () => ({
@@ -28,7 +30,7 @@ vi.mock('../src/hooks/useBranches', () => ({
     loading: false,
     error: null,
     retry: vi.fn(),
-    unauthorized: false,
+    unauthorized: state.branchesUnauthorized,
   }),
 }));
 vi.mock('../src/services/inventoryService', () => ({
@@ -46,6 +48,7 @@ vi.mock('../src/services/inventoryService', () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  state.branchesUnauthorized = false;
   state.user = { role: 'BRANCH_MANAGER', branchId: 'branch-1' };
   state.branches = [
     { id: 'branch-1', address: 'Kandy Road' },
@@ -145,6 +148,7 @@ describe('Inventory create/edit permissions and operations', () => {
     brand: 'Nova',
     quantity: 7,
     price: 1500,
+    itemClassification: 'MERCHANDISE',
   };
 
   it('lets a manager create an item with approved fields and refreshes after backend confirmation', async () => {
@@ -179,6 +183,14 @@ describe('Inventory create/edit permissions and operations', () => {
       screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
       '3',
     );
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Item Classification' }),
+      'MERCHANDISE',
+    );
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Item Classification' }),
+      'MERCHANDISE',
+    );
     await user.click(screen.getByRole('button', { name: 'Add Item' }));
 
     await waitFor(() =>
@@ -188,6 +200,7 @@ describe('Inventory create/edit permissions and operations', () => {
         brand: 'Nova',
         price: 2500,
         quantity: 3,
+        itemClassification: 'MERCHANDISE',
       }),
     );
     expect(
@@ -238,11 +251,20 @@ describe('Inventory create/edit permissions and operations', () => {
     await user.clear(
       screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
     );
+
     await user.type(
       screen.getByRole('spinbutton', { name: 'Initial Quantity' }),
       '1.5',
     );
+
+    // Select classification before submitting
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Item Classification' }),
+      'MERCHANDISE',
+    );
+
     await user.click(screen.getByRole('button', { name: 'Add Item' }));
+
     expect(screen.getByRole('alert')).toHaveTextContent(
       'whole-number quantity',
     );
@@ -276,6 +298,10 @@ describe('Inventory create/edit permissions and operations', () => {
       screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
       '100',
     );
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Item Classification' }),
+      'MERCHANDISE',
+    );
     await user.click(screen.getByRole('button', { name: 'Add Item' }));
     expect(
       await screen.findByRole('button', { name: 'Saving...' }),
@@ -305,6 +331,10 @@ describe('Inventory create/edit permissions and operations', () => {
       screen.getByRole('spinbutton', { name: 'Price (LKR)' }),
       '1600',
     );
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Item Classification' }),
+      'CLINICAL',
+    );
     await user.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() =>
       expect(updateInventoryItem).toHaveBeenCalledWith('item-1', {
@@ -312,6 +342,7 @@ describe('Inventory create/edit permissions and operations', () => {
         category: 'Men',
         brand: 'Nova',
         price: 1600,
+        itemClassification: 'CLINICAL',
       }),
     );
     expect(createInventoryItem).not.toHaveBeenCalled();
@@ -339,6 +370,9 @@ describe('Inventory create/edit permissions and operations', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('textbox', { name: 'Category' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: 'Item Classification' }),
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole('spinbutton', { name: 'Initial Quantity' }),
@@ -408,5 +442,46 @@ describe('Inventory global threshold integration', () => {
     await waitFor(() => expect(getBranchInventory).toHaveBeenCalledTimes(2));
     expect(updateGlobalReorderThreshold).toHaveBeenCalledWith(6);
     expect(screen.getByText('6', { selector: 'strong' })).toBeInTheDocument();
+  });
+});
+
+describe('Inventory 401 session expiry', () => {
+  const unauthorized = () =>
+    Object.assign(new Error('expired'), { status: 401 });
+
+  it('logs out through shared auth when Branch lookup reports 401', async () => {
+    state.branchesUnauthorized = true;
+    render(<InventoryPage />);
+    await waitFor(() => expect(state.logout).toHaveBeenCalled());
+    expect(getBranchInventory).not.toHaveBeenCalled();
+  });
+
+  it('logs out through shared auth when Inventory read returns 401', async () => {
+    getBranchInventory.mockRejectedValueOnce(unauthorized());
+    render(<InventoryPage />);
+    await waitFor(() => expect(state.logout).toHaveBeenCalled());
+  });
+
+  it('logs out through shared auth when Inventory edit returns 401', async () => {
+    getBranchInventory.mockResolvedValueOnce([
+      {
+        _id: 'item-1',
+        itemName: 'Frame',
+        category: 'Men',
+        brand: 'Nova',
+        price: 100,
+        quantity: 2,
+        itemClassification: 'MERCHANDISE',
+      },
+    ]);
+    updateInventoryItem.mockRejectedValueOnce(unauthorized());
+    render(<InventoryPage />);
+    await userEvent
+      .setup()
+      .click(await screen.findByRole('button', { name: 'Edit Frame' }));
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: 'Save Changes' }));
+    await waitFor(() => expect(state.logout).toHaveBeenCalled());
   });
 });

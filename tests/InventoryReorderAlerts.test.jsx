@@ -169,3 +169,20 @@ describe('active reorder alert view', () => {
     expect(screen.queryByText('Page 2 of 2')).not.toBeInTheDocument();
   });
 });
+
+describe('Reorder alert session expiry', () => {
+  it('uses the supplied shared logout callback on backend 401', async () => {
+    const onUnauthorized = vi.fn();
+    getActiveReorderAlerts.mockRejectedValueOnce(
+      Object.assign(new Error('expired'), { status: 401 }),
+    );
+    render(
+      <InventoryReorderAlerts
+        branchId="branch-1"
+        refreshCount={0}
+        onUnauthorized={onUnauthorized}
+      />,
+    );
+    await waitFor(() => expect(onUnauthorized).toHaveBeenCalledTimes(1));
+  });
+});

@@ -73,6 +73,10 @@ async function fillCreationForm(user) {
   const quantity = screen.getByRole('spinbutton', { name: 'Initial Quantity' });
   await user.clear(quantity);
   await user.type(quantity, '2');
+  await user.selectOptions(
+    screen.getByRole('combobox', { name: 'Item Classification' }),
+    'MERCHANDISE',
+  );
 }
 
 describe('inventory image upload UI', () => {
@@ -139,6 +143,9 @@ describe('inventory image upload UI', () => {
     expect(
       screen.queryByLabelText('Inventory Image (optional)'),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: 'Item Classification' }),
+    ).not.toBeInTheDocument();
   });
 
   it('uploads first, then creates inventory with backend-returned image metadata', async () => {
@@ -169,7 +176,10 @@ describe('inventory image upload UI', () => {
     expect(uploadInventoryImage).toHaveBeenCalledWith(file);
     expect(createInventoryItem).toHaveBeenCalledWith(
       'branch-1',
-      expect.objectContaining({ itemName: 'Frame' }),
+      expect.objectContaining({
+        itemName: 'Frame',
+        itemClassification: 'MERCHANDISE',
+      }),
       metadata,
     );
     expect(

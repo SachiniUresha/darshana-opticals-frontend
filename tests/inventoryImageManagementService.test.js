@@ -42,10 +42,10 @@ describe('inventory image management service', () => {
   it('removes images through the dedicated backend endpoint', async () => {
     apiClient.delete.mockResolvedValueOnce({
       success: true,
-      data: { _id: 'item-1', imageUrl: null },
+      message: 'Inventory image removed.',
     });
     await expect(removeInventoryImage('item-1')).resolves.toMatchObject({
-      imageUrl: null,
+      success: true,
     });
     expect(apiClient.delete).toHaveBeenCalledWith('/inventory/item-1/image');
   });
