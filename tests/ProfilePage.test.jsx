@@ -284,4 +284,14 @@ describe('ProfilePage', () => {
 
     expect(appointmentsLink).toHaveAttribute('href', '/appointments');
   });
+
+  it('provides access to Loyalty from the profile sidebar', async () => {
+    renderProfilePage();
+
+    const loyaltyLink = await screen.findByRole('link', {
+      name: 'Loyalty',
+    });
+
+    expect(loyaltyLink).toHaveAttribute('href', '/profile/loyalty');
+  });
 });
