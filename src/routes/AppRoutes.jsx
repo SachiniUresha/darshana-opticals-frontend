@@ -36,6 +36,8 @@ import PaymentReturnPage from '../pages/PaymentReturnPage';
 import PaymentResultPage from '../pages/PaymentResultPage';
 import StaffAppointmentsPage from '../pages/StaffAppointmentsPage';
 import InventoryPage from '../pages/InventoryPage';
+import SalesReportPage from '../pages/SalesReportPage';
+import InventoryReportPage from '../pages/InventoryReportPage';
 import StaffCreateDoctorSessionPage from '../pages/StaffCreateDoctorSessionPage';
 import StaffDoctorSessionDetailsPage from '../pages/StaffDoctorSessionDetailsPage';
 import StaffEditDoctorSessionPage from '../pages/StaffEditDoctorSessionPage';
@@ -60,6 +62,11 @@ function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={[SYSTEM_ADMIN]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/inventory" element={<InventoryPage />} />
+          <Route path="/admin/reports/sales" element={<SalesReportPage />} />
+          <Route
+            path="/admin/reports/inventory"
+            element={<InventoryReportPage />}
+          />
           <Route path="/admin/staff/new" element={<AdminStaffCreatePage />} />
           <Route
             path="/admin/doctors/new"
@@ -105,6 +112,11 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[BRANCH_MANAGER]} />}>
           <Route path="/staff/inventory" element={<InventoryPage />} />
+          <Route path="/staff/reports/sales" element={<SalesReportPage />} />
+          <Route
+            path="/staff/reports/inventory"
+            element={<InventoryReportPage />}
+          />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[OPTOMETRIST]} />}>

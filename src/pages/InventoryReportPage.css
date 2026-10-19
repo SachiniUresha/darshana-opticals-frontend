@@ -1,0 +1,122 @@
+.inventory-report-page {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+  color: #1e293b;
+}
+.inventory-report-page__header {
+  margin-bottom: 1.5rem;
+}
+.inventory-report-page__header h1 {
+  margin: 0.35rem 0;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+}
+.inventory-report-page__header p {
+  color: #64748b;
+}
+.inventory-report-page__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.inventory-report-page__panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: 1.25rem;
+}
+.inventory-report-page__panel h2 {
+  font-size: 1.2rem;
+  margin: 0 0 1rem;
+}
+.inventory-report-page__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  align-items: end;
+  gap: 1rem;
+}
+.inventory-report-page__filters label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.inventory-report-page__filters input,
+.inventory-report-page__filters select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: white;
+  color: inherit;
+}
+.inventory-report-page__filters button,
+.inventory-report-page__section-heading button {
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: #173f70;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.inventory-report-page__filters button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.inventory-report-page__scope {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0;
+}
+.inventory-report-page__section-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.inventory-report-page__timestamp {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+.inventory-report-page__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.85rem;
+  margin: 0;
+}
+.inventory-report-page__metric {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+.inventory-report-page__metric dt {
+  color: #475569;
+  font-size: 0.9rem;
+}
+.inventory-report-page__metric dd {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+.inventory-report-page__error {
+  color: #9b1c1c;
+}
+.inventory-report-page__empty,
+.inventory-report-page__hint {
+  margin-top: 1rem;
+  color: #475569;
+}
+@media (max-width: 480px) {
+  .inventory-report-page__filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .inventory-report-page__metric dd {
+    font-size: 1.15rem;
+  }
+}
