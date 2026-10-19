@@ -49,7 +49,13 @@ export function reportQuery(filters = {}, allowedKeys = []) {
   return query ? `?${query}` : '';
 }
 
-async function getSummary(path, filters, allowedKeys, expectedBreakdowns) {
+async function getSummary(
+  path,
+  filters,
+  allowedKeys,
+  expectedBreakdowns,
+  optionalBreakdowns = [],
+) {
   const response = await apiClient.get(
     `${path}${reportQuery(filters, allowedKeys)}`,
   );
@@ -60,7 +66,12 @@ async function getSummary(path, filters, allowedKeys, expectedBreakdowns) {
     typeof data.summary !== 'object' ||
     data.summary === null ||
     !data.breakdowns ||
-    expectedBreakdowns.some((key) => !Array.isArray(data.breakdowns[key]))
+    expectedBreakdowns.some((key) => !Array.isArray(data.breakdowns[key])) ||
+    optionalBreakdowns.some(
+      (key) =>
+        data.breakdowns[key] !== undefined &&
+        !Array.isArray(data.breakdowns[key]),
+    )
   ) {
     throw new Error('Invalid reporting summary response.');
   }
@@ -88,12 +99,13 @@ async function getDetail(path, filters, allowedKeys, collectionKey) {
 }
 
 export function getSalesReport(filters = {}) {
-  return getSummary('/reports/sales', filters, SALES_SUMMARY_KEYS, [
-    'byTime',
-    'byBranch',
-    'byCategory',
-    'byPaymentMethod',
-  ]);
+  return getSummary(
+    '/reports/sales',
+    filters,
+    SALES_SUMMARY_KEYS,
+    ['byTime', 'byBranch', 'byCategory'],
+    ['byPaymentMethod'],
+  );
 }
 
 export function getSalesOrders(filters = {}) {

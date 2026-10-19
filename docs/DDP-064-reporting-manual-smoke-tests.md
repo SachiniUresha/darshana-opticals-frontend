@@ -48,3 +48,34 @@ This is a verification checklist, not evidence that manual tests have passed. Re
 - [ ] Existing inventory, loyalty, checkout/payment, order, appointment and prescription screens smoke-tested
 - [ ] PR opened against `develop`, references `Closes #30`, and describes RBAC/branch scope, backend authority, filters, masking, exports, charts and tests
 - [ ] CI passes and reviewer approval is received before merge
+
+## Manual verification results � 2026-10-19
+
+Environment: Local frontend with backend develop (PR #90 merged).
+
+### Verified PASS
+
+- System Admin Sales and Inventory reporting pages load.
+- Net Revenue progression and Order Volume visualizations display.
+- System Admin Payment Method Breakdown displays.
+- System Admin inventory valuation is visible.
+- Branch Manager Sales reporting loads with appropriate zero-sales state.
+- Branch Manager restricted financial KPIs are hidden.
+- Branch Manager has no cross-branch selector.
+- Admin Sales CSV and Excel exports download successfully.
+- Admin Inventory CSV and Excel exports download successfully.
+- Manager Inventory export excludes Retail Valuation.
+- Manager Sales Excel Executive Summary excludes Refund Deductions and Average Order Value.
+
+### Pending / Not manually verified
+
+- Complete filter, pagination and sorting combinations.
+- Manual 401/403 session and authorization scenarios.
+- Full keyboard, screen-reader and responsive checks.
+- Browser storage/log inspection and unrelated feature smoke tests.
+
+### Automated verification
+
+- 105 test files / 1237 tests passed before the final API response compatibility fix.
+- ESLint, Prettier and production build passed before that fix.
+- Final regression checks required after the compatibility fix.

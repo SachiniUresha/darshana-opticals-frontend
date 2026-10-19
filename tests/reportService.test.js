@@ -55,6 +55,28 @@ describe('authoritative reporting API integration', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/reports/sales');
   });
 
+  it('accepts a Branch Manager sales response without admin-only payment methods', async () => {
+    const managerSales = structuredClone(sales);
+    delete managerSales.summary.refundDeductions;
+    delete managerSales.summary.averageOrderValue;
+    delete managerSales.breakdowns.byPaymentMethod;
+    apiClient.get.mockResolvedValueOnce({ success: true, data: managerSales });
+    await expect(getSalesReport()).resolves.toEqual(managerSales);
+  });
+
+  it('rejects a malformed payment method breakdown when the backend includes it', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      success: true,
+      data: {
+        ...sales,
+        breakdowns: { ...sales.breakdowns, byPaymentMethod: {} },
+      },
+    });
+    await expect(getSalesReport()).rejects.toThrow(
+      'Invalid reporting summary response',
+    );
+  });
+
   it('uses only documented sales summary filters and escapes the query', async () => {
     apiClient.get.mockResolvedValueOnce({ success: true, data: sales });
     await getSalesReport({

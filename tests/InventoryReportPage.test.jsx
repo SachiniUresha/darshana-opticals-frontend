@@ -71,9 +71,11 @@ beforeEach(() => {
 describe('inventory reporting dashboard', () => {
   it('displays authoritative snapshot values and a reporting timestamp', async () => {
     show();
+    expect(await screen.findByText('Total stock on hand')).toBeInTheDocument();
+
     expect(
-      await screen.findByText('325,000.00', { exact: false }),
-    ).toBeInTheDocument();
+      screen.queryByText('Retail inventory valuation'),
+    ).not.toBeInTheDocument();
     expect(screen.getByText('Total stock on hand')).toBeInTheDocument();
     expect(screen.getByText('120')).toBeInTheDocument();
     expect(screen.getByText(/As of .*Asia\/Colombo/)).toBeInTheDocument();
@@ -212,5 +214,18 @@ describe('inventory reporting dashboard', () => {
       .click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('Total stock on hand')).toBeInTheDocument();
     expect(getInventoryReport).toHaveBeenCalledTimes(2);
+  });
+  it('shows retail inventory valuation to System Admin', async () => {
+    state.user = { role: 'SYSTEM_ADMIN' };
+
+    show();
+
+    expect(
+      await screen.findByText('Retail inventory valuation'),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText('325,000.00', { exact: false }),
+    ).toBeInTheDocument();
   });
 });

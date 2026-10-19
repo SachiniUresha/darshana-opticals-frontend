@@ -10,8 +10,28 @@ const count = new Intl.NumberFormat('en-LK', { maximumFractionDigits: 0 });
  * Only visualizes values provided by the authoritative reporting API.
  * Bar widths are presentation-only proportions, never reporting totals.
  */
-function viewFor(kind, groupBy, breakdowns) {
+function viewFor(kind, groupBy, breakdowns, metric = null) {
   if (kind === 'sales') {
+    if (metric === 'netRevenue' && ['day', 'week', 'month'].includes(groupBy)) {
+      return {
+        title: 'Net revenue progression',
+        valueTitle: 'Net revenue (LKR)',
+        rows: breakdowns?.byTime,
+        key: 'period',
+        value: 'netRevenue',
+        money: true,
+      };
+    }
+    if (groupBy === 'paymentMethod') {
+      return {
+        title: 'Payment method breakdown',
+        valueTitle: 'Payment volume (LKR)',
+        rows: breakdowns?.byPaymentMethod,
+        key: 'method',
+        value: 'volume',
+        money: true,
+      };
+    }
     if (groupBy === 'branch') {
       return {
         title: 'Gross revenue by branch',
@@ -32,13 +52,22 @@ function viewFor(kind, groupBy, breakdowns) {
         money: false,
       };
     }
+    {
+      groupBy === 'paymentMethod'
+        ? 'Payment method'
+        : kind === 'sales' && !['branch', 'category'].includes(groupBy)
+          ? 'Period'
+          : groupBy === 'category'
+            ? 'Category'
+            : 'Branch';
+    }
     return {
-      title: 'Gross revenue by payment period',
-      valueTitle: 'Gross revenue (LKR)',
+      title: 'Order volume by period',
+      valueTitle: 'Qualifying orders',
       rows: breakdowns?.byTime,
       key: 'period',
-      value: 'grossRevenue',
-      money: true,
+      value: 'orderCount',
+      money: false,
     };
   }
   return {
@@ -55,8 +84,13 @@ function viewFor(kind, groupBy, breakdowns) {
   };
 }
 
-export default function ReportBreakdown({ kind, groupBy, breakdowns }) {
-  const view = viewFor(kind, groupBy, breakdowns);
+export default function ReportBreakdown({
+  kind,
+  groupBy,
+  breakdowns,
+  metric = null,
+}) {
+  const view = viewFor(kind, groupBy, breakdowns, metric);
   const rows = Array.isArray(view.rows)
     ? view.rows.filter(
         (entry) =>
@@ -65,7 +99,10 @@ export default function ReportBreakdown({ kind, groupBy, breakdowns }) {
           Number.isFinite(entry[view.value]),
       )
     : [];
-  const scale = Math.max(0, ...rows.map((entry) => entry[view.value]));
+  const scale = Math.max(
+    0,
+    ...rows.map((entry) => Math.abs(entry[view.value])),
+  );
 
   return (
     <section className="report-breakdown" aria-label={view.title}>
@@ -91,12 +128,16 @@ export default function ReportBreakdown({ kind, groupBy, breakdowns }) {
             <thead>
               <tr>
                 <th scope="col">
-                  {kind === 'sales' && !['branch', 'category'].includes(groupBy)
-                    ? 'Period'
-                    : groupBy === 'category'
-                      ? 'Category'
-                      : 'Branch'}
+                  {groupBy === 'paymentMethod'
+                    ? 'Payment method'
+                    : kind === 'sales' &&
+                        !['branch', 'category'].includes(groupBy)
+                      ? 'Period'
+                      : groupBy === 'category'
+                        ? 'Category'
+                        : 'Branch'}
                 </th>
+
                 <th scope="col">{view.valueTitle}</th>
               </tr>
             </thead>
@@ -110,7 +151,7 @@ export default function ReportBreakdown({ kind, groupBy, breakdowns }) {
                 const value = entry[view.value];
                 const width =
                   scale > 0
-                    ? Math.max(0, Math.min(100, (value / scale) * 100))
+                    ? Math.min(100, (Math.abs(value) / scale) * 100)
                     : 0;
                 return (
                   <tr key={`${label}-${index}`}>
@@ -124,7 +165,7 @@ export default function ReportBreakdown({ kind, groupBy, breakdowns }) {
                         aria-hidden="true"
                       >
                         <span
-                          className="report-breakdown__bar"
+                          className={`report-breakdown__bar${value < 0 ? ' report-breakdown__bar--negative' : ''}`}
                           style={{ width: `${width}%` }}
                         />
                       </span>

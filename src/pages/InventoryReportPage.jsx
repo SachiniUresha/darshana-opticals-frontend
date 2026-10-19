@@ -30,6 +30,7 @@ const METRICS = [
   { key: 'totalStockOnHand', label: 'Total stock on hand', kind: 'count' },
   {
     key: 'totalRetailValuation',
+    adminOnly: true,
     label: 'Retail inventory valuation',
     kind: 'currency',
   },
@@ -275,12 +276,14 @@ export default function InventoryReportPage() {
         ) : report ? (
           <>
             <dl className="inventory-report-page__metrics">
-              {METRICS.map(({ key, label, kind }) => (
-                <div className="inventory-report-page__metric" key={key}>
-                  <dt>{label}</dt>
-                  <dd>{metric(report.summary?.[key], kind)}</dd>
-                </div>
-              ))}
+              {METRICS.filter(({ adminOnly }) => admin || !adminOnly).map(
+                ({ key, label, kind }) => (
+                  <div className="inventory-report-page__metric" key={key}>
+                    <dt>{label}</dt>
+                    <dd>{metric(report.summary?.[key], kind)}</dd>
+                  </div>
+                ),
+              )}
             </dl>
             {report.summary?.totalUniqueProducts === 0 && (
               <p role="status" className="inventory-report-page__empty">

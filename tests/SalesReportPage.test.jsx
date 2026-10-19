@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import SalesReportPage from '../src/pages/SalesReportPage';
@@ -81,6 +87,41 @@ beforeEach(() => {
 });
 
 describe('sales reporting dashboard', () => {
+  it('renders backend net revenue progression alongside order volume', async () => {
+    getSalesReport.mockResolvedValueOnce({
+      ...response,
+      breakdowns: {
+        ...response.breakdowns,
+        byTime: [
+          {
+            period: '2026-10-18',
+            grossRevenue: 1300,
+            netRevenue: 1100,
+            orderCount: 2,
+          },
+          {
+            period: '2026-10-19',
+            grossRevenue: 0,
+            netRevenue: -300,
+            orderCount: 0,
+          },
+        ],
+      },
+    });
+    show();
+    const net = await screen.findByRole('region', {
+      name: 'Net revenue progression table',
+    });
+    expect(within(net).getByText(/1,100\.00/)).toBeInTheDocument();
+    const refundRow = within(net)
+      .getByRole('rowheader', { name: '2026-10-19' })
+      .closest('tr');
+    expect(within(refundRow).getByText(/300\.00/)).toHaveTextContent('-');
+    expect(
+      screen.getByRole('region', { name: 'Order volume by period table' }),
+    ).toBeInTheDocument();
+  });
+
   it('renders authoritative backend KPIs and the approved date period', async () => {
     show();
     expect(await screen.findByText(/LKR\s*9,500\.00/)).toBeInTheDocument();
@@ -226,5 +267,131 @@ describe('sales reporting dashboard', () => {
       .click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('Gross revenue')).toBeInTheDocument();
     expect(getSalesReport).toHaveBeenCalledTimes(2);
+  });
+  it('hides restricted financial metrics from Branch Managers', async () => {
+    show();
+
+    expect(await screen.findByText('Net revenue')).toBeInTheDocument();
+    expect(screen.getByText('Gross revenue')).toBeInTheDocument();
+    expect(screen.getByText('Qualifying orders')).toBeInTheDocument();
+
+    expect(screen.queryByText('Refund deductions')).not.toBeInTheDocument();
+    expect(screen.queryByText('Average order value')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cancelled order value')).not.toBeInTheDocument();
+  });
+
+  it('shows complete financial metrics to System Admin', async () => {
+    state.user = { role: 'SYSTEM_ADMIN' };
+
+    show();
+
+    expect(await screen.findByText('Refund deductions')).toBeInTheDocument();
+    expect(screen.getByText('Average order value')).toBeInTheDocument();
+    expect(screen.getByText('Cancelled order value')).toBeInTheDocument();
+    expect(screen.getByText('Net revenue')).toBeInTheDocument();
+  });
+  it('immediately hides previous privileged sales data after role changes', async () => {
+    const adminReport = {
+      ...response,
+      summary: { ...response.summary, grossRevenue: 10000 },
+    };
+
+    const managerReport = {
+      ...response,
+      summary: {
+        ...response.summary,
+        grossRevenue: 2000,
+        netRevenue: 2000,
+      },
+    };
+
+    let resolveManagerRequest;
+
+    getSalesReport.mockResolvedValueOnce(adminReport).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveManagerRequest = resolve;
+        }),
+    );
+
+    state.user = { role: 'SYSTEM_ADMIN' };
+
+    const view = show();
+
+    expect(await screen.findByText('Refund deductions')).toBeInTheDocument();
+    expect(screen.getByText(/LKR\s*10,000\.00/)).toBeInTheDocument();
+
+    state.user = {
+      role: 'BRANCH_MANAGER',
+      branchId: '507f1f77bcf86cd799439011',
+    };
+
+    view.rerender(
+      <MemoryRouter>
+        <SalesReportPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText('Refund deductions')).not.toBeInTheDocument();
+    expect(screen.queryByText(/LKR\s*10,000\.00/)).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(getSalesReport).toHaveBeenCalledTimes(2);
+    });
+
+    resolveManagerRequest(managerReport);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/LKR\s*2,000\.00/)).toHaveLength(2);
+    });
+
+    expect(screen.queryByText('Refund deductions')).not.toBeInTheDocument();
+    expect(screen.queryByText(/LKR\s*10,000\.00/)).not.toBeInTheDocument();
+  });
+
+  it('shows payment method breakdown to System Admin', async () => {
+    state.user = { role: 'SYSTEM_ADMIN' };
+
+    getSalesReport.mockResolvedValueOnce({
+      ...response,
+      breakdowns: {
+        ...response.breakdowns,
+        byPaymentMethod: [{ method: 'PAYHERE_CARD', count: 2, volume: 1250 }],
+      },
+    });
+
+    show();
+
+    expect(
+      await screen.findByRole('region', {
+        name: 'Payment method breakdown',
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('rowheader', { name: 'PAYHERE_CARD' }),
+    ).toBeInTheDocument();
+  });
+
+  it('does not show payment method breakdown to Branch Manager', async () => {
+    getSalesReport.mockResolvedValueOnce({
+      ...response,
+      breakdowns: {
+        ...response.breakdowns,
+        byPaymentMethod: [{ method: 'PAYHERE_CARD', count: 2, volume: 1250 }],
+      },
+    });
+
+    show();
+
+    expect(await screen.findByText('Gross revenue')).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole('region', {
+        name: 'Payment method breakdown',
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(screen.queryByText('PAYHERE_CARD')).not.toBeInTheDocument();
   });
 });

@@ -36,14 +36,25 @@ const INITIAL_FILTERS = {
 
 const METRICS = [
   { key: 'grossRevenue', label: 'Gross revenue', kind: 'currency' },
-  { key: 'refundDeductions', label: 'Refund deductions', kind: 'currency' },
+  {
+    key: 'refundDeductions',
+    adminOnly: true,
+    label: 'Refund deductions',
+    kind: 'currency',
+  },
   { key: 'netRevenue', label: 'Net revenue', kind: 'currency' },
   { key: 'totalOrders', label: 'Qualifying orders', kind: 'count' },
-  { key: 'averageOrderValue', label: 'Average order value', kind: 'currency' },
+  {
+    key: 'averageOrderValue',
+    adminOnly: true,
+    label: 'Average order value',
+    kind: 'currency',
+  },
   { key: 'itemsSold', label: 'Items sold', kind: 'count' },
   { key: 'cancelledOrdersCount', label: 'Cancelled orders', kind: 'count' },
   {
     key: 'cancelledOrdersValue',
+    adminOnly: true,
     label: 'Cancelled order value',
     kind: 'currency',
   },
@@ -104,9 +115,12 @@ export default function SalesReportPage() {
   const [draft, setDraft] = useState(INITIAL_FILTERS);
   const [applied, setApplied] = useState(INITIAL_FILTERS);
   const [validationError, setValidationError] = useState('');
-  const [report, setReport] = useState(null);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const scopeKey = `${user?.role || ''}:${user?.branchId || ''}:${JSON.stringify(applied)}`;
+  const report = result?.scopeKey === scopeKey ? result.value : null;
+  const safeReportError = error?.scopeKey === scopeKey ? error.message : '';
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -118,8 +132,8 @@ export default function SalesReportPage() {
 
   useEffect(() => {
     let active = true;
-    setReport(null);
-    setError('');
+    setResult(null);
+    setError(null);
     setLoading(true);
 
     // Managers never choose or submit another branch. The backend enforces scope.
@@ -134,7 +148,7 @@ export default function SalesReportPage() {
 
     getSalesReport(filters)
       .then((result) => {
-        if (active) setReport(result);
+        if (active) setResult({ scopeKey, value: result });
       })
       .catch((caught) => {
         if (!active) return;
@@ -143,7 +157,7 @@ export default function SalesReportPage() {
           navigate('/login', { replace: true });
           return;
         }
-        setError(safeError(caught));
+        setError({ scopeKey, message: safeError(caught) });
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -152,7 +166,7 @@ export default function SalesReportPage() {
     return () => {
       active = false;
     };
-  }, [admin, applied, logout, navigate, retry, user?.role, user?.branchId]);
+  }, [admin, applied, logout, navigate, retry, scopeKey]);
 
   function changeFilter(name, value) {
     setDraft((current) => ({ ...current, [name]: value }));
@@ -287,7 +301,7 @@ export default function SalesReportPage() {
               </p>
             )}
           </div>
-          {!loading && error && (
+          {!loading && safeReportError && (
             <button
               type="button"
               onClick={() => setRetry((value) => value + 1)}
@@ -298,19 +312,21 @@ export default function SalesReportPage() {
         </div>
         {loading ? (
           <p role="status">Loading sales report...</p>
-        ) : error ? (
+        ) : safeReportError ? (
           <p role="alert" className="sales-report-page__error">
-            {error}
+            {safeReportError}
           </p>
         ) : report ? (
           <>
             <dl className="sales-report-page__metrics">
-              {METRICS.map(({ key, label, kind }) => (
-                <div className="sales-report-page__metric" key={key}>
-                  <dt>{label}</dt>
-                  <dd>{formatMetric(report.summary?.[key], kind)}</dd>
-                </div>
-              ))}
+              {METRICS.filter(({ adminOnly }) => admin || !adminOnly).map(
+                ({ key, label, kind }) => (
+                  <div className="sales-report-page__metric" key={key}>
+                    <dt>{label}</dt>
+                    <dd>{formatMetric(report.summary?.[key], kind)}</dd>
+                  </div>
+                ),
+              )}
             </dl>
             {report.summary?.totalOrders === 0 && (
               <p className="sales-report-page__empty" role="status">
@@ -322,13 +338,28 @@ export default function SalesReportPage() {
           <p role="status">No sales report is available.</p>
         )}
       </section>
-      {!loading && !error && report && (
+      {!loading && !safeReportError && report && (
         <>
           <ReportBreakdown
             kind="sales"
             groupBy={applied.groupBy}
             breakdowns={report.breakdowns}
           />
+          {['day', 'week', 'month'].includes(applied.groupBy) && (
+            <ReportBreakdown
+              kind="sales"
+              groupBy={applied.groupBy}
+              breakdowns={report.breakdowns}
+              metric="netRevenue"
+            />
+          )}
+          {admin && (
+            <ReportBreakdown
+              kind="sales"
+              groupBy="paymentMethod"
+              breakdowns={report.breakdowns}
+            />
+          )}
           <ReportDetails
             key={`${user?.role || ''}:${user?.branchId || ''}:${JSON.stringify(applied)}`}
             kind="sales"

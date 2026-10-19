@@ -69,6 +69,9 @@
   border-radius: 0.25rem;
   overflow: hidden;
 }
+.report-breakdown__bar.report-breakdown__bar--negative {
+  background: #b91c1c;
+}
 .report-breakdown__bar {
   display: block;
   height: 100%;
