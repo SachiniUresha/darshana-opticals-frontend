@@ -166,18 +166,21 @@ describe('backend detail reporting', () => {
     );
   });
 
-  it('uses authoritative inventory stock, value, and backend pagination', async () => {
+  it('shows authoritative inventory valuation only to System Admin', async () => {
     render(
       <ReportDetails
         kind="inventory"
         applied={stockApplied}
-        admin={false}
-        scopeId="m"
+        admin
+        scopeId="admin"
       />,
     );
     expect(await screen.findByText('Frame A')).toBeInTheDocument();
     expect(screen.getByText('LOW_STOCK')).toBeInTheDocument();
     expect(screen.getByText(/2,400\.00/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: 'Valuation' }),
+    ).toBeInTheDocument();
     expect(getInventoryItems).toHaveBeenCalledWith({
       category: 'Frames',
       reorderStatus: 'LOW_STOCK',
@@ -186,6 +189,31 @@ describe('backend detail reporting', () => {
       sortBy: 'quantity',
       sortOrder: 'desc',
     });
+  });
+
+  it('hides the valuation column from Branch Managers while retaining operational stock fields', async () => {
+    // The backend intentionally omits item-level retailValuation for Branch Managers.
+    getInventoryItems.mockResolvedValueOnce({
+      items: [{ ...stockRow, retailValuation: undefined }],
+      pagination: pages,
+    });
+    render(
+      <ReportDetails
+        kind="inventory"
+        applied={stockApplied}
+        admin={false}
+        scopeId="BRANCH_MANAGER:b1"
+      />,
+    );
+    expect(await screen.findByText('Frame A')).toBeInTheDocument();
+    expect(
+      screen.getByRole('columnheader', { name: 'Unit price' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('columnheader', { name: 'Valuation' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/1,200\.00/)).toBeInTheDocument();
+    expect(screen.queryByText(/2,400\.00/)).not.toBeInTheDocument();
   });
 
   it('passes admin branch filter through to backend listings and export', async () => {

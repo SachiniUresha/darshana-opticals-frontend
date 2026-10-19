@@ -331,7 +331,7 @@ export default function ReportDetails({ kind, applied, admin, scopeId }) {
                     <th scope="col">Stock</th>
                     <th scope="col">Status</th>
                     <th scope="col">Unit price</th>
-                    <th scope="col">Valuation</th>
+                    {admin && <th scope="col">Valuation</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -343,7 +343,7 @@ export default function ReportDetails({ kind, applied, admin, scopeId }) {
                       <td>{row.quantity ?? 'Unavailable'}</td>
                       <td>{display(row.reorderStatus)}</td>
                       <td>{money(row.unitPrice)}</td>
-                      <td>{money(row.retailValuation)}</td>
+                      {admin && <td>{money(row.retailValuation)}</td>}
                     </tr>
                   ))}
                 </tbody>

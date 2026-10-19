@@ -77,6 +77,8 @@ describe('inventory reporting dashboard', () => {
       screen.queryByText('Retail inventory valuation'),
     ).not.toBeInTheDocument();
     expect(screen.getByText('Total stock on hand')).toBeInTheDocument();
+    expect(screen.queryByText('Unique products')).not.toBeInTheDocument();
+    expect(screen.queryByText('Items with OK status')).not.toBeInTheDocument();
     expect(screen.getByText('120')).toBeInTheDocument();
     expect(screen.getByText(/As of .*Asia\/Colombo/)).toBeInTheDocument();
     expect(screen.getByText('Reporting threshold: 5')).toBeInTheDocument();
@@ -227,5 +229,7 @@ describe('inventory reporting dashboard', () => {
     expect(
       screen.getByText('325,000.00', { exact: false }),
     ).toBeInTheDocument();
+    expect(screen.queryByText('Unique products')).not.toBeInTheDocument();
+    expect(screen.queryByText('Items with OK status')).not.toBeInTheDocument();
   });
 });

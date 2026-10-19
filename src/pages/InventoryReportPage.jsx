@@ -34,14 +34,12 @@ const METRICS = [
     label: 'Retail inventory valuation',
     kind: 'currency',
   },
-  { key: 'totalUniqueProducts', label: 'Unique products', kind: 'count' },
   { key: 'lowStockCount', label: 'Low-stock items', kind: 'count' },
   {
     key: 'reorderTriggeredCount',
     label: 'Reorder-triggered items',
     kind: 'count',
   },
-  { key: 'okStockCount', label: 'Items with OK status', kind: 'count' },
 ];
 const currency = new Intl.NumberFormat('en-LK', {
   style: 'currency',

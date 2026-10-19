@@ -277,7 +277,7 @@ describe('sales reporting dashboard', () => {
 
     expect(screen.queryByText('Refund deductions')).not.toBeInTheDocument();
     expect(screen.queryByText('Average order value')).not.toBeInTheDocument();
-    expect(screen.queryByText('Cancelled order value')).not.toBeInTheDocument();
+    expect(screen.getByText('Cancelled order value')).toBeInTheDocument();
   });
 
   it('shows complete financial metrics to System Admin', async () => {

@@ -54,7 +54,6 @@ const METRICS = [
   { key: 'cancelledOrdersCount', label: 'Cancelled orders', kind: 'count' },
   {
     key: 'cancelledOrdersValue',
-    adminOnly: true,
     label: 'Cancelled order value',
     kind: 'currency',
   },
