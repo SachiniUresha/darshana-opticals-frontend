@@ -1,0 +1,205 @@
+.staff-management__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.staff-management__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e3e9f4;
+  border-radius: 12px;
+  background: #fff;
+}
+.staff-management__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 640px;
+}
+.staff-management__table caption {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  color: #526580;
+  font-weight: 650;
+}
+.staff-management__table th,
+.staff-management__table td {
+  padding: 0.8rem 1rem;
+  border-top: 1px solid #e3e9f4;
+  font-size: 0.89rem;
+  vertical-align: top;
+}
+.staff-management__table thead th {
+  background: #f0f4fc;
+  color: #1b2b58;
+}
+.staff-management__status {
+  font-weight: 700;
+}
+.staff-management__feedback {
+  padding: 1rem;
+  border: 1px solid #e3e9f4;
+  border-radius: 10px;
+  background: #fff;
+}
+.staff-management__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+}
+.staff-management__pagination button,
+.staff-management__feedback button {
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #1b2b58;
+  background: #fff;
+  color: #1b2b58;
+  cursor: pointer;
+  font: inherit;
+}
+.staff-management__pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.staff-management__table-wrap:focus-visible,
+.staff-management__pagination button:focus-visible,
+.staff-management__feedback button:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 3px;
+}
+.staff-management__note {
+  margin-top: 1rem;
+  color: #63748b;
+  font-size: 0.88rem;
+}
+@media (max-width: 650px) {
+  .staff-management__heading {
+    flex-direction: column;
+  }
+}
+
+.staff-management__edit {
+  min-height: 40px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #1b2b58;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2b58;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.staff-management__edit:hover {
+  background: #edf2ff;
+}
+.staff-management__edit:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 2px;
+}
+
+.staff-management__status-action {
+  min-height: 40px;
+  margin-left: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #8b3650;
+  border-radius: 8px;
+  background: #fff;
+  color: #752940;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.staff-management__status-action:hover {
+  background: #fff1f2;
+}
+.staff-management__status-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.staff-management__status-action:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 2px;
+}
+
+/* An action row must not split Edit and Deactivate onto different lines. */
+.staff-management__table {
+  min-width: 960px;
+}
+.staff-management__table td:last-child {
+  min-width: 205px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.staff-management__edit,
+.staff-management__status-action {
+  vertical-align: middle;
+}
+
+/* Phase 11: server-filtered Active/Inactive tabs with one persistent search field. */
+.staff-management__tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  margin: 1.1rem 0;
+  flex-wrap: wrap;
+}
+.staff-management__tabs {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.staff-management__tabs button {
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border: 1px solid #b4bfd3;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2b58;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.staff-management__tabs button[aria-pressed='true'] {
+  background: #ffca18;
+  border-color: #ffca18;
+  color: #162750;
+}
+.staff-management__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: min(100%, 300px);
+}
+.staff-management__search label {
+  font-weight: 700;
+  color: #1b2b58;
+}
+.staff-management__search input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #9ba9bf;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+.staff-management__search input:focus-visible,
+.staff-management__tabs button:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 2px;
+}
+.staff-management__table th:last-child,
+.staff-management__table td:last-child {
+  text-align: center;
+}
+@media (max-width: 650px) {
+  .staff-management__search {
+    width: 100%;
+  }
+}
