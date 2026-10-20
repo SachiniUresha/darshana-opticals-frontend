@@ -159,10 +159,6 @@ export default function InventoryReportPage() {
       <header className="inventory-report-page__header">
         <p className="inventory-report-page__eyebrow">BUSINESS REPORTING</p>
         <h1>Inventory Reports</h1>
-        <p>
-          Live stock snapshot supplied by the reporting service. Historical
-          inventory is not inferred.
-        </p>
       </header>
 
       <section

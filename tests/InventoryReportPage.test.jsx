@@ -159,11 +159,6 @@ describe('inventory reporting dashboard', () => {
     expect(
       await screen.findByText('No inventory items match the selected filters.'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('Historical inventory is not inferred.', {
-        exact: false,
-      }),
-    ).toBeInTheDocument();
   });
 
   it('does not show financial data when backend denies access', async () => {

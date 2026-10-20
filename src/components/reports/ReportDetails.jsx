@@ -24,8 +24,8 @@ const INVENTORY_SORTS = [
 ];
 const STATUSES = ['PROCESSING', 'READY_FOR_PICKUP', 'PICKED_UP', 'COMPLETED'];
 const currency = new Intl.NumberFormat('en-LK', {
-  style: 'currency',
-  currency: 'LKR',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 function money(value) {
@@ -304,7 +304,16 @@ export default function ReportDetails({ kind, applied, admin, scopeId }) {
                     <th scope="col">Branch</th>
                     <th scope="col">Status</th>
                     <th scope="col">Items</th>
-                    <th scope="col">Paid (LKR)</th>
+                    <th
+                      scope="col"
+                      aria-label="Paid"
+                      aria-describedby="report-paid-currency"
+                    >
+                      Paid
+                      <div id="report-paid-currency">
+                        <small>LKR</small>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -330,8 +339,28 @@ export default function ReportDetails({ kind, applied, admin, scopeId }) {
                     <th scope="col">Branch</th>
                     <th scope="col">Stock</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Unit price</th>
-                    {admin && <th scope="col">Valuation</th>}
+                    <th
+                      scope="col"
+                      aria-label="Unit price"
+                      aria-describedby="report-unit-price-currency"
+                    >
+                      Unit price
+                      <div id="report-unit-price-currency">
+                        <small>LKR</small>
+                      </div>
+                    </th>
+                    {admin && (
+                      <th
+                        scope="col"
+                        aria-label="Valuation"
+                        aria-describedby="report-valuation-currency"
+                      >
+                        Valuation
+                        <div id="report-valuation-currency">
+                          <small>LKR</small>
+                        </div>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
