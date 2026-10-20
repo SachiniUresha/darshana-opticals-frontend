@@ -1,0 +1,195 @@
+.doctor-management__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.doctor-management__table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: 1.25rem;
+  border: 1px solid #e3e9f4;
+  border-radius: 12px;
+}
+.doctor-management__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 590px;
+  background: white;
+}
+.doctor-management__table caption {
+  text-align: left;
+  padding: 0.8rem 1rem;
+  font-weight: 700;
+  color: #203d87;
+}
+.doctor-management__table th,
+.doctor-management__table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e3e9f4;
+  vertical-align: middle;
+}
+.doctor-management__table th {
+  font-weight: 700;
+}
+.doctor-management__buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.doctor-management__buttons button,
+.doctor-management__feedback button,
+.doctor-management__refresh {
+  min-height: 42px;
+  border: 1px solid #203d87;
+  background: white;
+  color: #203d87;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.doctor-management__buttons button:hover,
+.doctor-management__feedback button:hover,
+.doctor-management__refresh:hover {
+  background: #edf2ff;
+}
+.doctor-management button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.doctor-management button:focus-visible,
+.doctor-management input:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 2px;
+}
+.doctor-management__status {
+  font-weight: 700;
+}
+.doctor-management__feedback,
+.doctor-management__editor {
+  border: 1px solid #e3e9f4;
+  border-radius: 12px;
+  background: white;
+  margin-top: 1.25rem;
+  padding: 1.4rem;
+}
+.doctor-management__editor h3 {
+  margin-top: 0;
+}
+.doctor-management__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.doctor-management__fields label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.doctor-management__fields input {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid #95a3ba;
+  border-radius: 8px;
+  padding: 0.6rem;
+  font: inherit;
+}
+.doctor-management__notice {
+  padding: 0.8rem 1rem;
+  border-left: 4px solid #203d87;
+  background: #edf2ff;
+}
+.doctor-management__refresh {
+  margin-top: 1.2rem;
+}
+@media (max-width: 650px) {
+  .doctor-management__fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.doctor-management__table {
+  min-width: 720px;
+}
+.doctor-management__table td:last-child {
+  min-width: 205px;
+  white-space: nowrap;
+}
+.doctor-management__table .doctor-management__buttons {
+  flex-wrap: nowrap;
+}
+
+/* Phase 11: server-filtered Active/Inactive tabs with one persistent search field. */
+.doctor-management__tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  margin: 1.1rem 0;
+  flex-wrap: wrap;
+}
+.doctor-management__tabs {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.doctor-management__tabs button {
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border: 1px solid #b4bfd3;
+  border-radius: 8px;
+  background: #fff;
+  color: #1b2b58;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.doctor-management__tabs button[aria-pressed='true'] {
+  background: #ffca18;
+  border-color: #ffca18;
+  color: #162750;
+}
+.doctor-management__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: min(100%, 300px);
+}
+.doctor-management__search label {
+  font-weight: 700;
+  color: #1b2b58;
+}
+.doctor-management__search input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #9ba9bf;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+.doctor-management__search input:focus-visible,
+.doctor-management__tabs button:focus-visible {
+  outline: 3px solid #173d92;
+  outline-offset: 2px;
+}
+.doctor-management__table th:last-child,
+.doctor-management__table td:last-child {
+  text-align: center;
+}
+@media (max-width: 650px) {
+  .doctor-management__search {
+    width: 100%;
+  }
+}
+
+.doctor-management__table .doctor-management__buttons {
+  justify-content: center;
+}
