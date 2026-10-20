@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
 import HomePage from '../pages/HomePage';
 import AdminDashboardPage from '../pages/AdminDashboardPage';
+import AdminStaffManagementPage from '../pages/AdminStaffManagementPage';
+import AdminDoctorManagementPage from '../pages/AdminDoctorManagementPage';
 import AdminStaffCreatePage from '../pages/AdminStaffCreatePage';
 import AdminDoctorCreatePage from '../pages/AdminDoctorCreatePage';
 import SignupPage from '../pages/SignupPage';
@@ -61,6 +63,11 @@ function AppRoutes() {
 
         <Route element={<ProtectedRoute allowedRoles={[SYSTEM_ADMIN]} />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/staff" element={<AdminStaffManagementPage />} />
+          <Route
+            path="/admin/doctors"
+            element={<AdminDoctorManagementPage />}
+          />
           <Route path="/admin/inventory" element={<InventoryPage />} />
           <Route path="/admin/reports/sales" element={<SalesReportPage />} />
           <Route

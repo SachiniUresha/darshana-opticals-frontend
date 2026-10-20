@@ -37,6 +37,14 @@ vi.mock('../pages/LoginPage', () => ({
   default: () => <div>Login page</div>,
 }));
 
+vi.mock('../pages/AdminStaffManagementPage', () => ({
+  default: () => <h1>Staff Management</h1>,
+}));
+
+vi.mock('../pages/AdminDoctorManagementPage', () => ({
+  default: () => <h1>Doctor Management</h1>,
+}));
+
 vi.mock('../pages/AdminStaffCreatePage', () => ({
   default: () => <h1>Add New Staff Member</h1>,
 }));
@@ -336,4 +344,37 @@ describe('DDP-081 public forgot-password route regression', () => {
       '/forgot-password',
     );
   });
+});
+
+describe('DDP-094 Admin management route protection', () => {
+  it.each([
+    ['/admin/staff', 'Staff Management'],
+    ['/admin/doctors', 'Doctor Management'],
+  ])('permits SYSTEM_ADMIN on %s', (path, heading) => {
+    mockAuth.current = { isAuthenticated: true, user: { role: SYSTEM_ADMIN } };
+    show(path);
+    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    expect(screen.getByTestId('current-path')).toHaveTextContent(path);
+  });
+
+  it.each([CUSTOMER, BRANCH_MANAGER, BRANCH_ASSISTANT, OPTOMETRIST])(
+    'denies %s access to both management pages',
+    (role) => {
+      for (const path of ['/admin/staff', '/admin/doctors']) {
+        mockAuth.current = { isAuthenticated: true, user: { role } };
+        const view = show(path);
+        expect(screen.getByTestId('current-path')).toHaveTextContent('/');
+        view.unmount();
+      }
+    },
+  );
+
+  it.each(['/admin/staff', '/admin/doctors'])(
+    'redirects unauthenticated users from %s to login',
+    (path) => {
+      mockAuth.current = { isAuthenticated: false, user: null };
+      show(path);
+      expect(screen.getByTestId('current-path')).toHaveTextContent('/login');
+    },
+  );
 });

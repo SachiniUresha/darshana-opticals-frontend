@@ -58,6 +58,37 @@ function AdminDashboardPage() {
           ))}
         </div>
       </section>
+      <section
+        className="admin-page__section"
+        aria-labelledby="admin-manage-heading"
+      >
+        <div className="admin-page__section-title">
+          <h2 id="admin-manage-heading">Management</h2>
+          <p>View and maintain existing Staff and Doctor records.</p>
+        </div>
+        <div className="admin-page__cards">
+          <article className="admin-page__card">
+            <span className="admin-page__card-icon" aria-hidden="true">
+              03
+            </span>
+            <h3>Staff Management</h3>
+            <p>View staff, edit details, and manage roles and status.</p>
+            <Link className="admin-page__action" to="/admin/staff">
+              Manage Staff
+            </Link>
+          </article>
+          <article className="admin-page__card">
+            <span className="admin-page__card-icon" aria-hidden="true">
+              04
+            </span>
+            <h3>Doctor Management</h3>
+            <p>View doctors, edit details, and manage active status.</p>
+            <Link className="admin-page__action" to="/admin/doctors">
+              Manage Doctors
+            </Link>
+          </article>
+        </div>
+      </section>
     </div>
   );
 }

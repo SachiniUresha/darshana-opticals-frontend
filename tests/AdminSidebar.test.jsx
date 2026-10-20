@@ -27,7 +27,9 @@ function showAdminAt(path, role = 'SYSTEM_ADMIN') {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/admin" element={<h1>Admin home</h1>} />
+          <Route path="/admin/staff" element={<h1>Staff management</h1>} />
           <Route path="/admin/staff/new" element={<h1>Staff form</h1>} />
+          <Route path="/admin/doctors" element={<h1>Doctor management</h1>} />
           <Route path="/admin/doctors/new" element={<h1>Doctor form</h1>} />
           <Route path="/" element={<h1>Customer home</h1>} />
         </Route>
@@ -40,7 +42,9 @@ function showAdminAt(path, role = 'SYSTEM_ADMIN') {
 describe('Admin Sidebar', () => {
   it.each([
     ['/admin', 'Dashboard'],
+    ['/admin/staff', 'Staff Management'],
     ['/admin/staff/new', 'Add Staff Member'],
+    ['/admin/doctors', 'Doctor Management'],
     ['/admin/doctors/new', 'Add Doctor'],
   ])('shows the current navigation item on %s', (path, activeLink) => {
     showAdminAt(path);
@@ -103,4 +107,20 @@ describe('Admin Sidebar', () => {
     expect(screen.getByRole('searchbox')).toBeInTheDocument();
     expect(screen.getByText('Customer footer')).toBeInTheDocument();
   });
+});
+
+// DDP-094 Admin UI accessibility/polish regression.
+it.each([
+  ['/admin/staff/new', 'Add Staff Member', 'Staff Management'],
+  ['/admin/doctors/new', 'Add Doctor', 'Doctor Management'],
+])('highlights only the creation link on %s', (route, expected, parent) => {
+  showAdminAt(route);
+  expect(screen.getByRole('link', { name: expected })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  expect(screen.getByRole('link', { name: parent })).not.toHaveAttribute(
+    'aria-current',
+  );
+  expect(screen.queryByText('Admin Workspace')).not.toBeInTheDocument();
 });
