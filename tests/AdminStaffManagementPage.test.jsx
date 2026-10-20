@@ -13,6 +13,9 @@ const state = vi.hoisted(() => ({
   logout: vi.fn(),
   navigate: vi.fn(),
   branchesUnauthorized: false,
+  branchesLoading: false,
+  branchesError: null,
+  retryBranches: vi.fn(),
   branches: [{ id: 'branch-1', address: 'Gampaha Main Branch' }],
 }));
 vi.mock('../src/hooks/useAuth', () => ({
@@ -21,6 +24,9 @@ vi.mock('../src/hooks/useAuth', () => ({
 vi.mock('../src/hooks/useBranches', () => ({
   useBranches: () => ({
     branches: state.branches,
+    loading: state.branchesLoading,
+    error: state.branchesError,
+    retry: state.retryBranches,
     unauthorized: state.branchesUnauthorized,
   }),
 }));
@@ -67,6 +73,8 @@ function show() {
 beforeEach(() => {
   vi.clearAllMocks();
   state.branchesUnauthorized = false;
+  state.branchesLoading = false;
+  state.branchesError = null;
   state.branches = [{ id: 'branch-1', address: 'Gampaha Main Branch' }];
   listStaffMembers.mockResolvedValue({
     staff: entries,
@@ -381,4 +389,36 @@ it('searches staff on both status tabs via the paginated backend filter', async 
   expect(
     await screen.findByText('No staff members found.'),
   ).toBeInTheDocument();
+});
+
+it('shows branch-loading feedback without hiding staff records', async () => {
+  state.branchesLoading = true;
+  state.branches = [];
+  show();
+
+  expect(await screen.findByText('Nimal Perera')).toBeInTheDocument();
+  expect(
+    screen.getByRole('status', { name: 'Branch lookup status' }),
+  ).toHaveTextContent('Loading branch details...');
+  expect(
+    screen.queryByRole('button', { name: 'Retry branches' }),
+  ).not.toBeInTheDocument();
+});
+
+it('shows a branch-specific error and retries without losing staff records', async () => {
+  state.branchesLoading = false;
+  state.branchesError = 'We could not load branches. Please try again.';
+  state.branches = [];
+  show();
+
+  expect(await screen.findByText('Nimal Perera')).toBeInTheDocument();
+  expect(
+    screen.getByRole('alert', { name: 'Branch lookup failed' }),
+  ).toHaveTextContent('We could not load branches. Please try again.');
+
+  await userEvent
+    .setup()
+    .click(screen.getByRole('button', { name: 'Retry branches' }));
+  expect(state.retryBranches).toHaveBeenCalledTimes(1);
+  expect(screen.getByText('Nimal Perera')).toBeInTheDocument();
 });

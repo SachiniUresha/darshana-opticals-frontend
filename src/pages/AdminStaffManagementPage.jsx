@@ -44,7 +44,13 @@ export default function AdminStaffManagementPage() {
   useDocumentTitle('Staff Management | Darshana Opticals');
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { branches, unauthorized: branchesUnauthorized } = useBranches();
+  const {
+    branches,
+    loading: branchesLoading,
+    error: branchesError,
+    retry: retryBranches,
+    unauthorized: branchesUnauthorized,
+  } = useBranches();
   const [page, setPage] = useState(1);
   const [statusTab, setStatusTab] = useState('active');
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,6 +180,27 @@ export default function AdminStaffManagementPage() {
             Add Staff Member
           </Link>
         </div>
+        {!branchesUnauthorized && branchesLoading && (
+          <p
+            className="staff-management__feedback"
+            role="status"
+            aria-label="Branch lookup status"
+          >
+            Loading branch details...
+          </p>
+        )}
+        {!branchesUnauthorized && !branchesLoading && branchesError && (
+          <div
+            className="staff-management__feedback"
+            role="alert"
+            aria-label="Branch lookup failed"
+          >
+            <p>{branchesError}</p>
+            <button type="button" onClick={retryBranches}>
+              Retry branches
+            </button>
+          </div>
+        )}
         {selectedMember && (
           <AdminStaffEditor
             key={selectedMember.id}
