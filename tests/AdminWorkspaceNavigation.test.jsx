@@ -48,30 +48,29 @@ describe('Admin workspace navigation', () => {
     });
   });
 
-  it.each(['/admin', '/admin/staff/new', '/admin/doctors/new'])(
-    'hides storefront navigation on %s',
-    (path) => {
-      showNavbar(path);
-      expect(
-        screen.getByRole('link', { name: 'Admin Dashboard' }),
-      ).toHaveAttribute('href', '/admin');
-      expect(
-        screen.getByRole('link', {
-          name: /darshana opticals admin dashboard/i,
-        }),
-      ).toHaveAttribute('href', '/admin');
-      expect(
-        screen.getByRole('button', { name: 'Log Out' }),
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('link', { name: 'Men' }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('link', { name: 'Women' }),
-      ).not.toBeInTheDocument();
-    },
-  );
+  it.each([
+    '/admin',
+    '/admin/staff',
+    '/admin/staff/new',
+    '/admin/doctors',
+    '/admin/doctors/new',
+  ])('hides storefront navigation on %s', (path) => {
+    showNavbar(path);
+    expect(
+      screen.getByRole('link', { name: 'Admin Dashboard' }),
+    ).toHaveAttribute('href', '/admin');
+    expect(
+      screen.getByRole('link', {
+        name: /darshana opticals admin dashboard/i,
+      }),
+    ).toHaveAttribute('href', '/admin');
+    expect(screen.getByRole('button', { name: 'Log Out' })).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Men' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Women' }),
+    ).not.toBeInTheDocument();
+  });
 
   it('hides the storefront footer and chatbot for SYSTEM_ADMIN', () => {
     showLayout('/admin');

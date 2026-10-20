@@ -12,7 +12,14 @@ const adminLinks = [
     title: 'Inventory Reports',
     icon: 'inventory',
   },
+  { to: '/admin/staff', title: 'Staff Management', end: true, icon: 'staff' },
   { to: '/admin/staff/new', title: 'Add Staff Member', icon: 'staff' },
+  {
+    to: '/admin/doctors',
+    title: 'Doctor Management',
+    end: true,
+    icon: 'doctor',
+  },
   { to: '/admin/doctors/new', title: 'Add Doctor', icon: 'doctor' },
 ];
 
@@ -103,8 +110,6 @@ function AdminSidebar() {
           <small>Eyewear Studio</small>
         </span>
       </Link>
-
-      <div className="admin-sidebar__heading">Admin Workspace</div>
       <nav className="admin-sidebar__nav" aria-label="Admin workspace">
         {adminLinks.map(({ to, title, end, icon }) => (
           <NavLink

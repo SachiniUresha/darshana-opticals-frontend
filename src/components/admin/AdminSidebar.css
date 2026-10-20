@@ -207,3 +207,26 @@
     font-size: 0.63rem;
   }
 }
+
+/* Keep identity and logout accessible at ordinary laptop-height viewports. */
+@media (min-width: 761px) {
+  .admin-sidebar {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .admin-sidebar__brand {
+    margin-bottom: 0.85rem;
+    flex-shrink: 0;
+  }
+  .admin-sidebar__nav {
+    flex-shrink: 0;
+    gap: 0.22rem;
+  }
+  .admin-sidebar__link {
+    min-height: 42px;
+    padding: 0.55rem 0.75rem;
+  }
+  .admin-sidebar__bottom {
+    flex-shrink: 0;
+  }
+}
