@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../../assets/darshana-logo.jpg';
 import useAuth from '../../hooks/useAuth';
+import { useBranches } from '../../hooks/useBranches';
 import {
   CUSTOMER,
   OPTOMETRIST,
@@ -14,6 +15,107 @@ import './Navbar.css';
 import useCart from '../../hooks/useCart';
 
 const categoryLinks = ['Men', 'Women', 'Kids', 'Sunglasses'];
+
+/** Read-only identity details; mounted only for Branch Manager / Branch Assistant. */
+function StaffIdentityDropdown({ staff, onUnauthorized }) {
+  const { branches, loading, error, retry, unauthorized } = useBranches();
+  const { pathname, search } = useLocation();
+  const containerRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname, search]);
+
+  useEffect(() => {
+    if (unauthorized) onUnauthorized();
+  }, [unauthorized, onUnauthorized]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    function closeOnOutsideClick(event) {
+      if (!containerRef.current?.contains(event.target)) setIsOpen(false);
+    }
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setIsOpen(false);
+    }
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isOpen]);
+
+  const staffRole =
+    staff.role === BRANCH_MANAGER ? 'Branch Manager' : 'Branch Assistant';
+  const name = staff.name?.trim() || 'Unavailable';
+  const assignedBranch = staff.branchId
+    ? branches.find((branch) => branch.id === staff.branchId)?.address ||
+      'Assigned branch unavailable'
+    : 'Not assigned';
+
+  return (
+    <div className="navbar__staff-identity" ref={containerRef}>
+      <button
+        type="button"
+        className="navbar__staff-identity-trigger"
+        aria-label="View staff identity"
+        aria-expanded={isOpen}
+        aria-controls="navbar-staff-identity-panel"
+        onClick={() => setIsOpen((previous) => !previous)}
+      >
+        <span>{staffRole}</span>
+        <span aria-hidden="true">{'\u25BE'}</span>
+      </button>
+      {isOpen && (
+        <div
+          id="navbar-staff-identity-panel"
+          className="navbar__staff-identity-panel"
+          role="region"
+          aria-label="Staff identity details"
+        >
+          <strong className="navbar__staff-identity-heading">
+            Logged-in Staff
+          </strong>
+          <dl className="navbar__staff-identity-details">
+            <div>
+              <dt>Name</dt>
+              <dd>{name}</dd>
+            </div>
+            <div>
+              <dt>Role</dt>
+              <dd>{staffRole}</dd>
+            </div>
+            <div>
+              <dt>Assigned Branch</dt>
+              <dd>
+                {!staff.branchId ? (
+                  assignedBranch
+                ) : loading ? (
+                  <span role="status">Loading assigned branch...</span>
+                ) : error ? (
+                  <>
+                    <span role="alert">{error}</span>
+                    <button
+                      type="button"
+                      className="navbar__staff-identity-retry"
+                      onClick={retry}
+                    >
+                      Retry branches
+                    </button>
+                  </>
+                ) : (
+                  assignedBranch
+                )}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Navbar() {
   const location = useLocation();
@@ -238,9 +340,10 @@ function Navbar() {
               {(user?.role === BRANCH_MANAGER ||
                 user?.role === BRANCH_ASSISTANT) && (
                 <li className="navbar__staff-role">
-                  {user.role === BRANCH_MANAGER
-                    ? 'Branch Manager'
-                    : 'Branch Assistant'}
+                  <StaffIdentityDropdown
+                    staff={user}
+                    onUnauthorized={handleLogout}
+                  />
                 </li>
               )}
 

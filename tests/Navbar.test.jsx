@@ -1,10 +1,11 @@
-﻿import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Navbar from '../src/components/common/Navbar';
 import useAuth from '../src/hooks/useAuth';
 import useCart from '../src/hooks/useCart';
+import { useBranches } from '../src/hooks/useBranches';
 import {
   BRANCH_ASSISTANT,
   BRANCH_MANAGER,
@@ -15,6 +16,7 @@ import {
 
 vi.mock('../src/hooks/useAuth');
 vi.mock('../src/hooks/useCart');
+vi.mock('../src/hooks/useBranches');
 
 function renderNavbar(initialEntry = '/') {
   return render(
@@ -45,6 +47,13 @@ describe('Navbar authentication controls', () => {
 
     useCart.mockReturnValue({
       cartCount: 0,
+    });
+    useBranches.mockReturnValue({
+      branches: [{ id: 'branch-1', address: 'Gampaha Main Branch' }],
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+      unauthorized: false,
     });
   });
 
@@ -562,4 +571,117 @@ describe('Navbar authentication controls', () => {
       ).not.toBeInTheDocument();
     },
   );
+});
+
+// Read-only staff identity dropdown: no new backend routes or editable profile.
+describe('Staff identity dropdown', () => {
+  it.each([
+    [BRANCH_MANAGER, 'Branch Manager'],
+    [BRANCH_ASSISTANT, 'Branch Assistant'],
+  ])(
+    'shows the logged-in name, role, and assigned branch for %s',
+    async (role, label) => {
+      useAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { role, name: 'Nimal Perera', branchId: 'branch-1' },
+        logout: vi.fn(),
+      });
+      renderNavbar();
+      const trigger = screen.getByRole('button', {
+        name: 'View staff identity',
+      });
+      expect(trigger).toHaveTextContent(label);
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(
+        screen.queryByRole('region', { name: 'Staff identity details' }),
+      ).not.toBeInTheDocument();
+
+      await userEvent.setup().click(trigger);
+      const panel = screen.getByRole('region', {
+        name: 'Staff identity details',
+      });
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(panel).toHaveTextContent('Nimal Perera');
+      expect(panel).toHaveTextContent(label);
+      expect(panel).toHaveTextContent('Gampaha Main Branch');
+      expect(panel.querySelector('input, select, textarea')).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: /edit profile/i }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it('shows an unassigned branch and closes with Escape', async () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: BRANCH_ASSISTANT, name: 'Saman', branchId: null },
+      logout: vi.fn(),
+    });
+    renderNavbar();
+    const user = userEvent.setup();
+    const trigger = screen.getByRole('button', { name: 'View staff identity' });
+    await user.click(trigger);
+    expect(
+      screen.getByRole('region', { name: 'Staff identity details' }),
+    ).toHaveTextContent('Not assigned');
+    await user.keyboard('{Escape}');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(
+      screen.queryByRole('region', { name: 'Staff identity details' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows a loading state and supports retry on branch lookup failure', async () => {
+    const retry = vi.fn();
+    const branchState = {
+      branches: [],
+      loading: true,
+      error: null,
+      retry,
+      unauthorized: false,
+    };
+    useBranches.mockImplementation(() => branchState);
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: BRANCH_MANAGER, name: 'Nimal', branchId: 'branch-1' },
+      logout: vi.fn(),
+    });
+    const user = userEvent.setup();
+    renderNavbar();
+    const trigger = screen.getByRole('button', { name: 'View staff identity' });
+    await user.click(trigger);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Loading assigned branch...',
+    );
+
+    branchState.loading = false;
+    branchState.error = 'We could not load branches. Please try again.';
+    await user.click(trigger);
+    await user.click(trigger);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'We could not load branches',
+    );
+    await user.click(screen.getByRole('button', { name: 'Retry branches' }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
+
+  it('closes when clicking outside the staff identity dropdown', async () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: BRANCH_MANAGER, name: 'Nimal', branchId: 'branch-1' },
+      logout: vi.fn(),
+    });
+    renderNavbar();
+    const user = userEvent.setup();
+    await user.click(
+      screen.getByRole('button', { name: 'View staff identity' }),
+    );
+    expect(
+      screen.getByRole('region', { name: 'Staff identity details' }),
+    ).toBeInTheDocument();
+    await user.click(document.body);
+    expect(
+      screen.queryByRole('region', { name: 'Staff identity details' }),
+    ).not.toBeInTheDocument();
+  });
 });
