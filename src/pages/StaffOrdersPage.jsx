@@ -63,7 +63,7 @@ export default function StaffOrdersPage() {
   return (
     <section className="orders-page">
       <header className="orders-heading">
-        <h1>Staff Order Management</h1>
+        <h1>Order Management</h1>
         <p>View and track customer orders.</p>
       </header>
 

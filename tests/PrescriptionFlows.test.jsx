@@ -103,7 +103,7 @@ describe('Prescription frontend integration', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: 'Record Prescription',
+        name: 'Prescription Handling',
       }),
     ).toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe('Prescription frontend integration', () => {
 
       expect(
         screen.queryByRole('heading', {
-          name: 'Record Prescription',
+          name: 'Prescription Handling',
         }),
       ).not.toBeInTheDocument();
     },
@@ -225,6 +225,13 @@ describe('Prescription frontend integration', () => {
     expect(
       await screen.findByText('Prescription recorded successfully.'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('searchbox')).toHaveValue('');
+    expect(
+      screen.queryByRole('heading', { name: 'New Prescription' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Record Another Prescription' }),
+    ).not.toBeInTheDocument();
 
     expect(prescriptionService.createPrescription).toHaveBeenCalledWith({
       customerId: customer.id,

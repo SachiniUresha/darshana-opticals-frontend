@@ -51,3 +51,46 @@
     padding: 1rem;
   }
 }
+
+/* Approved Staff and Optometrist workspace: same left-column dimensions as Admin. */
+.app-shell--role {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.app-shell--role > .role-sidebar {
+  grid-column: 1;
+  grid-row: 1 / -1;
+}
+
+.app-shell--role > .app-main--role {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 1.5rem clamp(1rem, 3vw, 3rem) 2rem;
+  background: #f7f8fb;
+}
+
+/* Retain existing footer content/functionality without placing it over the sidebar. */
+.app-shell--role > .footer {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .app-shell--role {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-shell--role > .app-main--role {
+    padding: 1rem;
+  }
+}

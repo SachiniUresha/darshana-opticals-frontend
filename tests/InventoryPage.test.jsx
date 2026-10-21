@@ -315,6 +315,42 @@ describe('Inventory create/edit permissions and operations', () => {
     ).toBeInTheDocument();
   });
 
+  it.each([
+    ['BRANCH_MANAGER', 'Edit Blue Frame'],
+    ['SYSTEM_ADMIN', 'Edit price for Blue Frame'],
+  ])('scrolls to the visible editor for %s', async (role, actionLabel) => {
+    state.user = { role, branchId: 'branch-1' };
+    getBranchInventory.mockResolvedValue([item]);
+    const previous = HTMLElement.prototype.scrollIntoView;
+    const scrollSpy = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollSpy;
+    try {
+      render(<InventoryPage />);
+      const user = userEvent.setup();
+      if (role === 'SYSTEM_ADMIN') {
+        await user.selectOptions(
+          screen.getByRole('combobox', { name: 'Branch' }),
+          'branch-2',
+        );
+      }
+      await user.click(
+        await screen.findByRole('button', { name: actionLabel }),
+      );
+      await waitFor(() =>
+        expect(scrollSpy).toHaveBeenCalledWith({
+          behavior: 'smooth',
+          block: 'start',
+        }),
+      );
+    } finally {
+      if (previous === undefined) {
+        delete HTMLElement.prototype.scrollIntoView;
+      } else {
+        HTMLElement.prototype.scrollIntoView = previous;
+      }
+    }
+  });
+
   it('lets a manager edit metadata but not quantity within this form', async () => {
     getBranchInventory.mockResolvedValue([item]);
     updateInventoryItem.mockResolvedValue({ ...item, price: 1600 });

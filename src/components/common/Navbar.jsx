@@ -17,7 +17,7 @@ import useCart from '../../hooks/useCart';
 const categoryLinks = ['Men', 'Women', 'Kids', 'Sunglasses'];
 
 /** Read-only identity details; mounted only for Branch Manager / Branch Assistant. */
-function StaffIdentityDropdown({ staff, onUnauthorized }) {
+export function StaffIdentityDropdown({ staff, onUnauthorized }) {
   const { branches, loading, error, retry, unauthorized } = useBranches();
   const { pathname, search } = useLocation();
   const containerRef = useRef(null);
@@ -128,7 +128,9 @@ function Navbar() {
   const { cartCount } = useCart();
   const isStaffWorkspace =
     isAuthenticated &&
-    (user?.role === BRANCH_MANAGER || user?.role === BRANCH_ASSISTANT);
+    (user?.role === BRANCH_MANAGER ||
+      user?.role === BRANCH_ASSISTANT ||
+      user?.role === OPTOMETRIST);
   const currentParams = new URLSearchParams(location.search);
 
   const currentSearch = location.pathname.startsWith('/products')
@@ -289,7 +291,7 @@ function Navbar() {
               {user?.role === OPTOMETRIST ? (
                 <li>
                   <Link to="/clinical/prescriptions/new">
-                    Record Prescription
+                    Prescription Handling
                   </Link>
                 </li>
               ) : null}
@@ -303,7 +305,7 @@ function Navbar() {
               {(user?.role === BRANCH_ASSISTANT ||
                 user?.role === BRANCH_MANAGER) && (
                 <li>
-                  <Link to="/staff/orders">Staff Orders</Link>
+                  <Link to="/staff/orders">Order Management</Link>
                 </li>
               )}
 

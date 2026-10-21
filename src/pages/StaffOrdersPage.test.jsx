@@ -45,6 +45,9 @@ describe('StaffOrdersPage', () => {
 
     showPage();
 
+    expect(
+      screen.getByRole('heading', { name: 'Order Management' }),
+    ).toBeInTheDocument();
     expect(await screen.findByText(`Order #${sampleOrder.id}`)).toBeTruthy();
 
     expect(screen.getByText('PROCESSING')).toBeTruthy();

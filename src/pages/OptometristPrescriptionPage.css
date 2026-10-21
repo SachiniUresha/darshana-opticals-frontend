@@ -125,3 +125,13 @@
     padding: 1rem;
   }
 }
+
+/* Confirmation remains visible after returning to the initial customer search. */
+.clinical-page__save-notice {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid #a6e0c2;
+  border-radius: 0.75rem;
+  background: #ecfdf3;
+  color: #067647;
+}

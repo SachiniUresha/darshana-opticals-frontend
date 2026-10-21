@@ -292,7 +292,7 @@ describe('Navbar authentication controls', () => {
 
     expect(
       screen.getByRole('link', {
-        name: 'Record Prescription',
+        name: 'Prescription Handling',
       }),
     ).toHaveAttribute('href', '/clinical/prescriptions/new');
   });
@@ -310,7 +310,7 @@ describe('Navbar authentication controls', () => {
 
       expect(
         screen.queryByRole('link', {
-          name: 'Record Prescription',
+          name: 'Prescription Handling',
         }),
       ).not.toBeInTheDocument();
     },
@@ -427,7 +427,7 @@ describe('Navbar authentication controls', () => {
       renderNavbar();
 
       expect(
-        screen.getByRole('link', { name: 'Staff Orders' }),
+        screen.getByRole('link', { name: 'Order Management' }),
       ).toHaveAttribute('href', '/staff/orders');
     },
   );
@@ -444,7 +444,7 @@ describe('Navbar authentication controls', () => {
       renderNavbar();
 
       expect(
-        screen.queryByRole('link', { name: 'Staff Orders' }),
+        screen.queryByRole('link', { name: 'Order Management' }),
       ).not.toBeInTheDocument();
     },
   );
@@ -510,7 +510,7 @@ describe('Navbar authentication controls', () => {
 
     expect(
       screen.getByRole('link', {
-        name: 'Staff Orders',
+        name: 'Order Management',
       }),
     ).toHaveAttribute('href', '/staff/orders');
 

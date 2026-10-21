@@ -1,0 +1,51 @@
+/* Extend, rather than modify, the existing Admin left-sidebar styling. */
+.role-sidebar .role-sidebar__identity {
+  align-items: flex-start;
+}
+
+.role-sidebar .role-sidebar__identity-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.role-sidebar .role-sidebar__identity-copy strong {
+  overflow-wrap: anywhere;
+}
+
+.role-sidebar .navbar__staff-identity-trigger {
+  margin-top: 0.25rem;
+  color: #b5c3dc;
+  font-size: 0.72rem;
+  text-align: left;
+}
+
+.role-sidebar .navbar__staff-identity-trigger:hover {
+  color: #ffffff;
+}
+
+.role-sidebar .navbar__staff-identity-trigger:focus-visible {
+  outline-color: #ffca18;
+}
+
+/* Show the existing read-only dropdown above the bottom identity; no clipping. */
+.role-sidebar .navbar__staff-identity-panel {
+  position: fixed;
+  top: auto;
+  right: auto;
+  bottom: 7.4rem;
+  left: 1rem;
+  width: 216px;
+  max-width: calc(100vw - 2rem);
+  z-index: 100;
+}
+
+@media (max-width: 760px) {
+  .role-sidebar .navbar__staff-identity-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: auto;
+    bottom: auto;
+    left: 0;
+    width: min(260px, calc(100vw - 2rem));
+  }
+}
