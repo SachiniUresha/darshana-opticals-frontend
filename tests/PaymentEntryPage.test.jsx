@@ -143,6 +143,10 @@ describe('PaymentEntryPage', () => {
 
     expect(screen.getByText('Rs.29,000')).toBeInTheDocument();
     expect(screen.getByText('Classic Black Frame')).toBeInTheDocument();
+    expect(
+      screen.getByText('Order', { selector: '.payment-step--complete strong' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Shipping')).not.toBeInTheDocument();
   });
 
   it('does not render raw card credential fields', async () => {

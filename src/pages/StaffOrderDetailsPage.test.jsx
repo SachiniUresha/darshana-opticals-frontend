@@ -25,6 +25,7 @@ const sampleOrder = {
   status: 'PROCESSING',
   orderDate: '2026-10-08T10:30:00Z',
   orderAmount: 18500,
+  customer: { name: 'Kamal Perera', phone: '+94771234567' },
   statusHistory: [
     {
       status: 'PROCESSING',
@@ -69,10 +70,23 @@ describe('StaffOrderDetailsPage', () => {
     ).toBeTruthy();
 
     expect(screen.getByText('Classic Black Frame')).toBeTruthy();
+    expect(screen.getByText('Name: Kamal Perera')).toBeInTheDocument();
+    expect(screen.getByText('Phone: +94771234567')).toBeInTheDocument();
     expect(screen.getAllByText('PROCESSING').length).toBeGreaterThan(0);
     expect(screen.getAllByText('LKR 18,500.00')).toHaveLength(2);
 
     expect(getOrder).toHaveBeenCalledWith(sampleOrder.id);
+  });
+
+  it('shows a safe fallback for missing customer contact', async () => {
+    getOrder.mockResolvedValue({ ...sampleOrder, customer: null });
+    showPage();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Customer Information' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Name: Not available')).toBeInTheDocument();
+    expect(screen.getByText('Phone: Not available')).toBeInTheDocument();
   });
 
   it('displays authoritative tracking history', async () => {
@@ -145,6 +159,7 @@ describe('StaffOrderDetailsPage', () => {
     const confirmedOrder = {
       ...sampleOrder,
       status: 'READY_FOR_PICKUP',
+      customer: null,
       statusHistory: [
         {
           status: 'PROCESSING',
@@ -204,5 +219,8 @@ describe('StaffOrderDetailsPage', () => {
     expect(historyEntries[0]).not.toHaveTextContent(
       dateTimeLabel(sampleOrder.statusHistory[0].changedAt),
     );
+
+    expect(screen.getByText('Name: Kamal Perera')).toBeInTheDocument();
+    expect(screen.getByText('Phone: +94771234567')).toBeInTheDocument();
   });
 });

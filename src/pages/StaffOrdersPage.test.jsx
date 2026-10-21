@@ -33,6 +33,7 @@ const sampleOrder = {
   orderDate: '2026-10-08T10:30:00Z',
   orderAmount: 18500,
   status: 'PROCESSING',
+  customer: { name: 'Kamal Perera', phone: '+94771234567' },
 };
 
 describe('StaffOrdersPage', () => {
@@ -52,10 +53,22 @@ describe('StaffOrdersPage', () => {
 
     expect(screen.getByText('PROCESSING')).toBeTruthy();
     expect(screen.getByText('LKR 18,500.00')).toBeTruthy();
+    expect(screen.getByText('Customer: Kamal Perera')).toBeInTheDocument();
+    expect(screen.getByText('Phone: +94771234567')).toBeInTheDocument();
 
     expect(
       screen.getByRole('link', { name: /view details/i }).getAttribute('href'),
     ).toBe(`/staff/orders/${sampleOrder.id}`);
+  });
+
+  it('handles missing customer contact safely', async () => {
+    getOrders.mockResolvedValue([{ ...sampleOrder, customer: null }]);
+    showPage();
+    expect(
+      await screen.findByText(`Order #${sampleOrder.id}`),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Customer: Not available')).toBeInTheDocument();
+    expect(screen.getByText('Phone: Not available')).toBeInTheDocument();
   });
 
   it('shows an empty state when no orders exist', async () => {

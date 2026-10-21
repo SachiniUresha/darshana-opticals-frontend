@@ -293,7 +293,7 @@ function PaymentEntryPage() {
       <div className="payment-stepper" aria-label="Checkout progress">
         <div className="payment-step payment-step--complete">
           <span aria-hidden="true">✓</span>
-          <strong>Shipping</strong>
+          <strong>Order</strong>
         </div>
 
         <div className="payment-step__line payment-step__line--active" />
