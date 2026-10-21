@@ -113,6 +113,16 @@ export default function StaffOrderDetailsPage() {
               <span className="orders-status">{statusLabel(order.status)}</span>
             </div>
 
+            <div className="orders-section" aria-label="Customer Information">
+              <h3>Customer Information</h3>
+              <p className="orders-muted">
+                Name: {order.customer?.name || 'Not available'}
+              </p>
+              <p className="orders-muted">
+                Phone: {order.customer?.phone || 'Not available'}
+              </p>
+            </div>
+
             <div className="orders-section">
               <h3>Order Tracking History</h3>
               <p className="orders-muted">
@@ -159,7 +169,12 @@ export default function StaffOrderDetailsPage() {
             </div>
             <StaffOrderStatusControl
               order={order}
-              onUpdated={(updatedOrder) => setOrder(updatedOrder)}
+              onUpdated={(updatedOrder) =>
+                setOrder((current) => ({
+                  ...updatedOrder,
+                  customer: updatedOrder.customer ?? current?.customer ?? null,
+                }))
+              }
             />
             <button
               type="button"

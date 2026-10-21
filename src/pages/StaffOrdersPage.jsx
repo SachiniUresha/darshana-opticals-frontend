@@ -105,6 +105,8 @@ export default function StaffOrdersPage() {
                     <h3>Order {id == null ? 'Unavailable' : `#${id}`}</h3>
                     <p>{dateLabel(orderDate(order))}</p>
                     <p>{moneyLabel(orderTotal(order))}</p>
+                    <p>Customer: {order.customer?.name || 'Not available'}</p>
+                    <p>Phone: {order.customer?.phone || 'Not available'}</p>
                   </div>
 
                   <div className="orders-order-actions">
