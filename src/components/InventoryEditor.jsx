@@ -3,7 +3,7 @@ import './InventoryImageUpload.css';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const CLASSIFICATIONS = ['UNKNOWN', 'MERCHANDISE', 'CLINICAL'];
+const CLASSIFICATIONS = ['MERCHANDISE', 'CLINICAL'];
 
 function InventoryEditor({
   mode,
@@ -22,7 +22,10 @@ function InventoryEditor({
     brand: item?.brand ?? '',
     price: item?.price == null ? '' : String(item.price),
     quantity: creating ? '0' : '',
-    itemClassification: creating ? '' : (item?.itemClassification ?? 'UNKNOWN'),
+    itemClassification:
+      !creating && CLASSIFICATIONS.includes(item?.itemClassification)
+        ? item.itemClassification
+        : '',
   });
   const [validationError, setValidationError] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -173,7 +176,6 @@ function InventoryEditor({
                 <option value="">Select classification</option>
                 <option value="MERCHANDISE">Merchandise</option>
                 <option value="CLINICAL">Clinical</option>
-                <option value="UNKNOWN">Unknown / Unclassified</option>
               </select>
             </label>
           </>
