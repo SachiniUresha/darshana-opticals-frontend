@@ -1,6 +1,14 @@
-import { isCanonicalRole, OPTOMETRIST, SYSTEM_ADMIN } from '../config/roles';
+import {
+  isCanonicalRole,
+  OPTOMETRIST,
+  SYSTEM_ADMIN,
+  BRANCH_MANAGER,
+  BRANCH_ASSISTANT,
+} from '../config/roles';
 
 export const ROLE_DESTINATIONS = Object.freeze({
+  [BRANCH_MANAGER]: '/staff/orders',
+  [BRANCH_ASSISTANT]: '/staff/orders',
   [OPTOMETRIST]: '/clinical/prescriptions/new',
   [SYSTEM_ADMIN]: '/admin',
 });

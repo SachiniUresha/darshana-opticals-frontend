@@ -149,6 +149,21 @@ function InventoryPage() {
     setEditor({ type, item });
   }
 
+  useEffect(() => {
+    if (
+      (editor?.type !== 'edit' && editor?.type !== 'price') ||
+      !canLoad ||
+      loading ||
+      error
+    ) {
+      return;
+    }
+    const form = document.querySelector('.inventory-page__editor');
+    if (typeof form?.scrollIntoView === 'function') {
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [editor, canLoad, loading, error]);
+
   async function saveItem(values) {
     if (!editor || !canLoad || loading || error || saving) return;
     const { type, item } = editor;

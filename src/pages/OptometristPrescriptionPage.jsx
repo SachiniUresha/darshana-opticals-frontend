@@ -16,9 +16,11 @@ export default function OptometristPrescriptionPage() {
   const [searching, setSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [saveNotice, setSaveNotice] = useState('');
 
   function handleQueryChange(event) {
     lookupVersion.current += 1;
+    setSaveNotice('');
     setQuery(event.target.value);
     setCustomers([]);
     setSelectedCustomer(null);
@@ -72,12 +74,29 @@ export default function OptometristPrescriptionPage() {
     }
   }
 
+  function handlePrescriptionSaved() {
+    lookupVersion.current += 1;
+    setQuery('');
+    setCustomers([]);
+    setSelectedCustomer(null);
+    setSearching(false);
+    setErrorMessage('');
+    setHasSearched(false);
+    setSaveNotice('Prescription recorded successfully.');
+  }
+
   return (
     <main className="clinical-page">
       <header className="clinical-page__header">
-        <h1>Record Prescription</h1>
+        <h1>Prescription Handling</h1>
         <p>Find a customer before recording a new optical prescription.</p>
       </header>
+
+      {saveNotice && (
+        <p role="status" className="clinical-page__save-notice">
+          {saveNotice}
+        </p>
+      )}
 
       <section
         className="clinical-panel"
@@ -162,6 +181,7 @@ export default function OptometristPrescriptionPage() {
         <PrescriptionEntryForm
           key={selectedCustomer.id}
           customer={selectedCustomer}
+          onSaved={handlePrescriptionSaved}
         />
       )}
     </main>

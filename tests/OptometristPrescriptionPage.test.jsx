@@ -52,7 +52,7 @@ describe('Optometrist customer selection', () => {
     renderPage();
 
     expect(
-      screen.getByRole('heading', { name: /record prescription/i }),
+      screen.getByRole('heading', { name: /prescription handling/i }),
     ).toBeInTheDocument();
 
     expect(
@@ -230,6 +230,38 @@ describe('Optometrist customer selection', () => {
 
     expect(submittedPayload.customerId).toBe(customers[1].id);
     expect(submittedPayload.customerId).not.toBe(customers[0].id);
+  });
+
+  it('returns to initial customer search after a successful prescription save', async () => {
+    const user = userEvent.setup();
+    prescriptionService.createPrescription.mockResolvedValue({
+      id: 'new-prescription-1',
+    });
+    renderPage();
+    const searchBox = screen.getByRole('searchbox');
+    await user.type(searchBox, 'Kamal');
+    await user.click(screen.getByRole('button', { name: 'Search' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Select Kamal Perera' }),
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'Record Prescription' }),
+    );
+
+    expect(
+      await screen.findByText('Prescription recorded successfully.'),
+    ).toBeInTheDocument();
+    expect(searchBox).toHaveValue('');
+    expect(
+      screen.queryByRole('heading', { name: 'Selected Customer' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'New Prescription' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Record Another Prescription' }),
+    ).not.toBeInTheDocument();
+    expect(prescriptionService.createPrescription).toHaveBeenCalledOnce();
   });
 
   it('handles a lookup network failure without retaining stale customer selection', async () => {

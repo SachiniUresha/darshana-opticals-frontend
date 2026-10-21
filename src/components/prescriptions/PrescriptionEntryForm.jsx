@@ -95,7 +95,7 @@ function buildValidatedPayload(values, customerId) {
   return { payload, errors };
 }
 
-export default function PrescriptionEntryForm({ customer }) {
+export default function PrescriptionEntryForm({ customer, onSaved }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -142,7 +142,11 @@ export default function PrescriptionEntryForm({ customer }) {
         result.payload,
       );
 
-      setSavedPrescription(recorded);
+      if (onSaved) {
+        onSaved(recorded);
+      } else {
+        setSavedPrescription(recorded);
+      }
     } catch (error) {
       if (error?.status === 401) {
         logout();

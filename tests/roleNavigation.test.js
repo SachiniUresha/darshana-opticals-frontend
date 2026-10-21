@@ -35,11 +35,21 @@ describe('canonical roles', () => {
 describe('post-login routing', () => {
   it.each(
     canonicalRoles.filter(
-      (role) => ![OPTOMETRIST, SYSTEM_ADMIN].includes(role),
+      (role) =>
+        ![OPTOMETRIST, SYSTEM_ADMIN, BRANCH_MANAGER, BRANCH_ASSISTANT].includes(
+          role,
+        ),
     ),
   )('safely falls back to Home for %s', (role) => {
     expect(getPostLoginRoute(role)).toBe('/');
   });
+
+  it.each([BRANCH_MANAGER, BRANCH_ASSISTANT])(
+    'directs %s to Order Management without adding a dashboard',
+    (role) => {
+      expect(getPostLoginRoute(role)).toBe('/staff/orders');
+    },
+  );
 
   it('directs SYSTEM_ADMIN to the protected Admin Dashboard', () => {
     expect(getPostLoginRoute(SYSTEM_ADMIN)).toBe('/admin');
