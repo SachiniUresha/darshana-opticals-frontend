@@ -9,6 +9,7 @@
   margin-bottom: 1.5rem;
 }
 .sales-report-page__header h1 {
+  font-family: 'Playfair Display', Georgia, serif;
   margin: 0.35rem 0;
   font-size: clamp(1.65rem, 3vw, 2.2rem);
 }
