@@ -2,7 +2,14 @@ import apiClient from '../apiClient';
 import authStorage from './authStorage';
 import { clearChatHistory } from '../chatHistoryStorage';
 
-async function register({ firstName, lastName, email, phone, password }) {
+async function register({
+  firstName,
+  lastName,
+  email,
+  phone,
+  address,
+  password,
+}) {
   const name = `${firstName.trim()} ${lastName.trim()}`.trim();
 
   const response = await apiClient.post(
@@ -11,6 +18,7 @@ async function register({ firstName, lastName, email, phone, password }) {
       name,
       email,
       phone,
+      address: address.trim(),
       password,
     },
     {

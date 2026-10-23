@@ -30,6 +30,10 @@ async function fillValidFormExceptAgreement(user) {
   await user.type(screen.getByLabelText(/^last name$/i), 'Doe');
   await user.type(screen.getByLabelText(/email address/i), 'jane@example.com');
   await user.type(screen.getByLabelText(/phone number/i), '0771234567');
+  await user.type(
+    screen.getByLabelText(/registered address/i),
+    '  12 Main Street, Colombo  ',
+  );
   await user.type(screen.getByLabelText(/^password$/i), 'Password123');
   await user.type(screen.getByLabelText(/confirm password/i), 'Password123');
 }
@@ -55,6 +59,7 @@ describe('SignupPage', () => {
     expect(screen.getByLabelText(/^last name$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone number/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/registered address/i)).toBeRequired();
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
 
@@ -103,8 +108,37 @@ describe('SignupPage', () => {
       'true',
     );
 
+    expect(screen.getByLabelText(/registered address/i)).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+
     expect(authService.register).not.toHaveBeenCalled();
   });
+
+  it.each(['', '   '])(
+    'rejects an empty or whitespace-only address (%j)',
+    async (address) => {
+      const user = userEvent.setup();
+      renderSignupPage();
+
+      await fillValidFormExceptAgreement(user);
+      const addressField = screen.getByLabelText(/registered address/i);
+      await user.clear(addressField);
+      if (address) {
+        await user.type(addressField, address);
+      }
+      await user.click(
+        screen.getByRole('checkbox', {
+          name: /i agree to the terms of service and privacy policy/i,
+        }),
+      );
+      await user.click(screen.getByRole('button', { name: /create account/i }));
+
+      expect(addressField).toHaveAttribute('aria-invalid', 'true');
+      expect(authService.register).not.toHaveBeenCalled();
+    },
+  );
 
   it('rejects an invalid email format', async () => {
     const user = userEvent.setup();
@@ -205,6 +239,7 @@ describe('SignupPage', () => {
         lastName: 'Doe',
         email: 'jane@example.com',
         phone: '0771234567',
+        address: '12 Main Street, Colombo',
         password: 'Password123',
       });
     });
