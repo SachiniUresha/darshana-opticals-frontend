@@ -121,6 +121,10 @@ export default function StaffOrderDetailsPage() {
               <p className="orders-muted">
                 Phone: {order.customer?.phone || 'Not available'}
               </p>
+              <p className="orders-muted">
+                Registered Address:{' '}
+                {order.customer?.address?.trim() || 'Not available'}
+              </p>
             </div>
 
             <div className="orders-section">
