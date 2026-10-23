@@ -103,6 +103,53 @@ describe('Navbar authentication controls', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('polishes customer action links without changing destinations or cart count', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: { role: CUSTOMER },
+      logout: vi.fn(),
+    });
+    useCart.mockReturnValue({ cartCount: 3 });
+
+    renderNavbar();
+
+    expect(
+      screen.getByRole('navigation', { name: 'Main navigation' }),
+    ).toHaveClass('navbar--customer');
+    for (const [name, destination] of [
+      ['Cart', '/cart'],
+      ['Appointments', '/appointments'],
+      ['Profile', '/profile'],
+    ]) {
+      const link = screen.getByRole('link', { name: new RegExp(name, 'i') });
+      expect(link).toHaveAttribute('href', destination);
+      expect(link).toHaveClass('navbar__customer-action');
+      expect(link.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    }
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Log Out' })).toHaveClass(
+      'navbar__logout-button',
+    );
+  });
+
+  it('indicates only the selected catalog category as active', () => {
+    useAuth.mockReturnValue({
+      isAuthenticated: false,
+      user: null,
+      logout: vi.fn(),
+    });
+
+    renderNavbar('/products?category=Men');
+
+    const men = screen.getByRole('link', { name: 'Men' });
+    expect(men).toHaveAttribute('aria-current', 'page');
+    expect(men).toHaveClass('navbar__category-link--active');
+    for (const name of ['Women', 'Kids', 'Sunglasses']) {
+      const link = screen.getByRole('link', { name });
+      expect(link).not.toHaveAttribute('aria-current');
+      expect(link).not.toHaveClass('navbar__category-link--active');
+    }
+  });
   it('shows the synchronized cart count for a customer', () => {
     useAuth.mockReturnValue({
       isAuthenticated: true,
