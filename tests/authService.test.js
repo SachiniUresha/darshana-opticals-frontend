@@ -39,6 +39,7 @@ describe('authService', () => {
       lastName: 'Doe',
       email: 'jane@example.com',
       phone: '0771234567',
+      address: '  12 Main Street, Colombo  ',
       password: 'Password123',
     });
 
@@ -48,6 +49,7 @@ describe('authService', () => {
         name: 'Jane Doe',
         email: 'jane@example.com',
         phone: '0771234567',
+        address: '12 Main Street, Colombo',
         password: 'Password123',
       },
       {
