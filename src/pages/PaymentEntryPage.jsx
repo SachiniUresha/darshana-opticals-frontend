@@ -105,6 +105,9 @@ function PaymentEntryPage() {
 
   const [order, setOrder] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const registeredAddress =
+    typeof user?.address === 'string' ? user.address.trim() : '';
+  const [useRegisteredAddress, setUseRegisteredAddress] = useState(true);
 
   const [billing, setBilling] = useState({
     firstName: defaultName.firstName,
@@ -119,6 +122,8 @@ function PaymentEntryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [uncertainInitiation, setUncertainInitiation] = useState(false);
   const [pageError, setPageError] = useState('');
+  const confirmedOrderAddress =
+    typeof order?.orderAddress === 'string' ? order.orderAddress.trim() : '';
 
   const loadPaymentContext = useCallback(
     async ({ refreshing = false } = {}) => {
@@ -192,6 +197,19 @@ function PaymentEntryPage() {
       return;
     }
 
+    const effectiveAddress =
+      confirmedOrderAddress ||
+      (useRegisteredAddress ? registeredAddress : billing.address.trim());
+
+    if (!effectiveAddress) {
+      setPageError(
+        useRegisteredAddress
+          ? 'No registered address is available. Uncheck the option and enter a custom address.'
+          : 'Enter your custom address to continue.',
+      );
+      return;
+    }
+
     setIsPreparing(true);
     setPageError('');
 
@@ -203,7 +221,7 @@ function PaymentEntryPage() {
     const optionalValues = {
       firstName: billing.firstName.trim(),
       lastName: billing.lastName.trim(),
-      address: billing.address.trim(),
+      address: effectiveAddress,
     };
 
     for (const [key, value] of Object.entries(optionalValues)) {
@@ -454,10 +472,35 @@ function PaymentEntryPage() {
               <h2>Billing Information</h2>
 
               <p className="payment-form__hint">
-                Name and address can use the details already saved on your
-                customer profile. Enter them here only if you need to provide or
-                override them for this payment.
+                Choose one address for both billing and delivery. The selected
+                address is saved to this order when payment is first prepared.
               </p>
+
+              {confirmedOrderAddress ? (
+                <div className="payment-form__confirmed-address">
+                  <strong>Order Address (confirmed)</strong>
+                  <p>{confirmedOrderAddress}</p>
+                  <p>
+                    This order address was already saved and cannot be changed
+                    for this order.
+                  </p>
+                </div>
+              ) : (
+                <label className="payment-form__address-choice">
+                  <input
+                    type="checkbox"
+                    checked={useRegisteredAddress}
+                    onChange={(event) => {
+                      setUseRegisteredAddress(event.target.checked);
+                      setPageError('');
+                    }}
+                    disabled={isPreparing}
+                  />
+                  <span>
+                    Use my registered address for billing and delivery
+                  </span>
+                </label>
+              )}
 
               <div className="payment-form__grid">
                 <label>
@@ -487,15 +530,36 @@ function PaymentEntryPage() {
                 </label>
 
                 <label className="payment-form__wide">
-                  <span>Address</span>
+                  <span>
+                    {confirmedOrderAddress
+                      ? 'Order Address'
+                      : useRegisteredAddress
+                        ? 'Registered Address'
+                        : 'Custom Address'}
+                  </span>
                   <input
                     type="text"
                     name="address"
-                    value={billing.address}
+                    value={
+                      confirmedOrderAddress ||
+                      (useRegisteredAddress
+                        ? registeredAddress
+                        : billing.address)
+                    }
                     onChange={handleBillingChange}
                     maxLength={120}
                     autoComplete="street-address"
+                    readOnly={Boolean(
+                      confirmedOrderAddress || useRegisteredAddress,
+                    )}
                     disabled={isPreparing}
+                    placeholder={
+                      !confirmedOrderAddress &&
+                      useRegisteredAddress &&
+                      !registeredAddress
+                        ? 'No registered address available. Uncheck to enter one.'
+                        : undefined
+                    }
                   />
                 </label>
 
