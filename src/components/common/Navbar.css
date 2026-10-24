@@ -425,3 +425,211 @@
   font: inherit;
   cursor: pointer;
 }
+
+/* DDP-103 customer navbar polish: keep existing routes and staff/admin styles. */
+.navbar__category-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding-bottom: 4px;
+  white-space: nowrap;
+}
+
+.navbar__category-link::after {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  left: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: #2457a7;
+  content: '';
+  transform: scaleX(0);
+  transition: transform 160ms ease;
+}
+
+.navbar__category-link--active {
+  color: #173d92;
+  font-weight: 600;
+}
+
+.navbar__category-link:focus-visible {
+  outline: 2px solid #2457a7;
+  outline-offset: 3px;
+}
+
+.navbar__category-link--active::after,
+.navbar__category-link:hover::after,
+.navbar__category-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.navbar--customer {
+  grid-template-columns: auto auto minmax(140px, 1fr) auto;
+  gap: 0.7rem;
+}
+
+.navbar--customer .navbar__categories {
+  gap: 0.8rem;
+}
+
+.navbar--customer .navbar__account-links {
+  gap: 0.4rem;
+}
+
+.navbar--customer .navbar__customer-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #e4ebf6;
+  border-radius: 999px;
+  background: #f0f4fa;
+  color: #173d92;
+  font-size: 0.79rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar--customer .navbar__customer-action:hover,
+.navbar--customer .navbar__customer-action:focus-visible {
+  border-color: #acc2e4;
+  background: #e6edf8;
+  color: #173d92;
+}
+
+.navbar--customer .navbar__customer-action:focus-visible {
+  outline: 2px solid #2457a7;
+  outline-offset: 2px;
+}
+
+.navbar__customer-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+}
+
+.navbar--customer .navbar__logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  margin-left: 0.2rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid #173d92;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #173d92;
+  font-size: 0.79rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navbar--customer .navbar__logout-button:hover,
+.navbar--customer .navbar__logout-button:focus-visible {
+  background: #f0f4fa;
+  color: #173d92;
+  text-decoration: none;
+}
+
+.navbar--customer .navbar__logout-button:focus-visible {
+  outline: 2px solid #2457a7;
+  outline-offset: 2px;
+}
+
+@media (min-width: 901px) {
+  .navbar--customer .navbar__account-links {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1250px) {
+  .navbar--customer {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.75rem 1rem;
+    padding: 0.65rem 0;
+  }
+
+  .navbar--customer .navbar__brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .navbar--customer .navbar__account-links {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .navbar--customer .navbar__categories {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .navbar--customer .navbar__search {
+    grid-column: 2 / 4;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar--customer {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+@media (min-width: 521px) and (max-width: 900px) {
+  .navbar--customer .navbar__account-links {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: end;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar--customer .navbar__account-links {
+    gap: 0.45rem;
+  }
+
+  .navbar--customer .navbar__customer-action,
+  .navbar--customer .navbar__logout-button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: flex-start;
+    margin-left: 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+  }
+}
+
+/* DDP-103 desktop navbar spacing refinement */
+@media (min-width: 1251px) {
+  .navbar--customer {
+    width: min(1320px, calc(100% - 2rem));
+    gap: 1.25rem;
+  }
+
+  .navbar--customer .navbar__categories {
+    gap: 1rem;
+  }
+
+  .navbar--customer .navbar__account-links {
+    gap: 0.5rem;
+  }
+
+  .navbar--customer .navbar__customer-action {
+    padding-inline: 0.55rem;
+  }
+
+  .navbar--customer .navbar__logout-button {
+    margin-left: 0.25rem;
+    padding-inline: 0.6rem;
+  }
+}
