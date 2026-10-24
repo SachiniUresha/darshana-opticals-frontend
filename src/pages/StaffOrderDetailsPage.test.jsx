@@ -112,6 +112,31 @@ describe('StaffOrderDetailsPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('displays confirmed Order Address separately from the live registered address', async () => {
+    getOrder.mockResolvedValue({
+      ...sampleOrder,
+      orderAddress: '99 Test Road, Kandy',
+    });
+
+    showPage();
+
+    expect(
+      await screen.findByText('Order Address: 99 Test Road, Kandy'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Registered Address: 25 Main Street, Colombo 05'),
+    ).toBeInTheDocument();
+  });
+
+  it('labels legacy or uninitiated Orders without a saved address as unconfirmed', async () => {
+    getOrder.mockResolvedValue({ ...sampleOrder, orderAddress: '   ' });
+    showPage();
+
+    expect(
+      await screen.findByText('Order Address: Not confirmed yet'),
+    ).toBeInTheDocument();
+  });
+
   it('displays authoritative tracking history', async () => {
     getOrder.mockResolvedValue(sampleOrder);
 
@@ -197,6 +222,10 @@ describe('StaffOrderDetailsPage', () => {
 
     getOrder.mockResolvedValue(sampleOrder);
     updateOrderStatus.mockResolvedValue(confirmedOrder);
+    getOrder.mockResolvedValue({
+      ...sampleOrder,
+      orderAddress: '99 Test Road, Kandy',
+    });
 
     showPage();
 
@@ -245,5 +274,8 @@ describe('StaffOrderDetailsPage', () => {
 
     expect(screen.getByText('Name: Kamal Perera')).toBeInTheDocument();
     expect(screen.getByText('Phone: +94771234567')).toBeInTheDocument();
+    expect(
+      screen.getByText('Order Address: 99 Test Road, Kandy'),
+    ).toBeInTheDocument();
   });
 });

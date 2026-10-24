@@ -164,6 +164,34 @@
   line-height: 1.5;
 }
 
+.payment-form label.payment-form__address-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.payment-form input[type='checkbox'] {
+  width: auto;
+  min-height: auto;
+  accent-color: #173d92;
+}
+
+.payment-form__confirmed-address {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.8rem;
+}
+
+.payment-form__confirmed-address p {
+  margin: 0.35rem 0 0;
+  color: #475467;
+}
+
 .payment-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
