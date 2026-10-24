@@ -121,6 +121,14 @@ export default function StaffOrderDetailsPage() {
               <p className="orders-muted">
                 Phone: {order.customer?.phone || 'Not available'}
               </p>
+              <p className="orders-muted">
+                Registered Address:{' '}
+                {order.customer?.address?.trim() || 'Not available'}
+              </p>
+              <p className="orders-muted">
+                Order Address:{' '}
+                {order.orderAddress?.trim() || 'Not confirmed yet'}
+              </p>
             </div>
 
             <div className="orders-section">
@@ -173,6 +181,10 @@ export default function StaffOrderDetailsPage() {
                 setOrder((current) => ({
                   ...updatedOrder,
                   customer: updatedOrder.customer ?? current?.customer ?? null,
+                  orderAddress:
+                    updatedOrder.orderAddress?.trim() ||
+                    current?.orderAddress ||
+                    '',
                 }))
               }
             />

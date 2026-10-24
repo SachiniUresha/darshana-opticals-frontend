@@ -118,6 +118,7 @@ describe('PaymentEntryPage', () => {
       user: {
         id: '507f1f77bcf86cd799439001',
         name: 'Sachini Uresha',
+        address: '123 Main Street',
         role: 'CUSTOMER',
       },
       logout,
@@ -198,7 +199,12 @@ describe('PaymentEntryPage', () => {
       name: 'Payment Details',
     });
 
-    await user.type(screen.getByLabelText('Address'), '123 Main Street');
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'Use my registered address for billing and delivery',
+      }),
+    );
+    await user.type(screen.getByLabelText('Custom Address'), '123 Main Street');
     await user.type(screen.getByLabelText(/billing city/i), 'Colombo');
 
     await user.click(

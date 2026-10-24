@@ -16,6 +16,49 @@ import useCart from '../../hooks/useCart';
 
 const categoryLinks = ['Men', 'Women', 'Kids', 'Sunglasses'];
 
+// Decorative line icons only; preserve the existing navigation links and handlers.
+function CustomerNavIcon({ name }) {
+  return (
+    <svg
+      className="navbar__customer-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {name === 'cart' ? (
+        <>
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 2h4l2.2 11.7a2 2 0 0 0 2 1.6H19a2 2 0 0 0 2-1.6L23 6H6" />
+        </>
+      ) : null}
+      {name === 'calendar' ? (
+        <>
+          <rect x="3" y="5" width="18" height="16" rx="2" />
+          <path d="M8 3v4M16 3v4M3 10h18" />
+        </>
+      ) : null}
+      {name === 'profile' ? (
+        <>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+        </>
+      ) : null}
+      {name === 'logout' ? (
+        <>
+          <path d="m10 17 5-5-5-5M15 12H3" />
+          <path d="M12 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-6" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 /** Read-only identity details; mounted only for Branch Manager / Branch Assistant. */
 export function StaffIdentityDropdown({ staff, onUnauthorized }) {
   const { branches, loading, error, retry, unauthorized } = useBranches();
@@ -188,7 +231,9 @@ function Navbar() {
             ? 'navbar navbar--admin'
             : isStaffWorkspace
               ? 'navbar navbar--staff'
-              : 'navbar'
+              : isAuthenticated && user?.role === CUSTOMER
+                ? 'navbar navbar--customer'
+                : 'navbar'
         }
         aria-label="Main navigation"
       >
@@ -228,16 +273,23 @@ function Navbar() {
         {!isAdminWorkspace && !isStaffWorkspace ? (
           <>
             <ul className="navbar__categories">
-              {categoryLinks.map((category) => (
-                <li key={category}>
-                  <Link
-                    to={`/products?category=${encodeURIComponent(category)}`}
-                    className="navbar__category-link"
-                  >
-                    {category}
-                  </Link>
-                </li>
-              ))}
+              {categoryLinks.map((category) => {
+                const active =
+                  location.pathname === '/products' &&
+                  currentParams.get('category') === category;
+
+                return (
+                  <li key={category}>
+                    <Link
+                      to={`/products?category=${encodeURIComponent(category)}`}
+                      className={`navbar__category-link${active ? ' navbar__category-link--active' : ''}`}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {category}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="navbar__search">
@@ -265,7 +317,11 @@ function Navbar() {
               {user?.role === CUSTOMER ? (
                 <>
                   <li>
-                    <Link className="navbar__cart-link" to="/cart">
+                    <Link
+                      className="navbar__cart-link navbar__customer-action"
+                      to="/cart"
+                    >
+                      <CustomerNavIcon name="cart" />
                       Cart
                       {cartCount > 0 ? (
                         <span
@@ -279,11 +335,20 @@ function Navbar() {
                   </li>
 
                   <li>
-                    <Link to="/appointments">Appointments</Link>
+                    <Link
+                      className="navbar__customer-action"
+                      to="/appointments"
+                    >
+                      <CustomerNavIcon name="calendar" />
+                      Appointments
+                    </Link>
                   </li>
 
                   <li>
-                    <Link to="/profile">Profile</Link>
+                    <Link className="navbar__customer-action" to="/profile">
+                      <CustomerNavIcon name="profile" />
+                      Profile
+                    </Link>
                   </li>
                 </>
               ) : null}
@@ -355,6 +420,9 @@ function Navbar() {
                   className="navbar__logout-button"
                   onClick={handleLogout}
                 >
+                  {user?.role === CUSTOMER ? (
+                    <CustomerNavIcon name="logout" />
+                  ) : null}
                   Log Out
                 </button>
               </li>

@@ -30,6 +30,7 @@ const initialFormState = {
   lastName: '',
   email: '',
   phone: '',
+  address: '',
   password: '',
   confirmPassword: '',
   agreedToTerms: false,
@@ -69,6 +70,10 @@ function validateSignupForm(values) {
     errors.phone = validationMessages.required;
   } else if (!isValidPhone(values.phone)) {
     errors.phone = validationMessages.phone;
+  }
+
+  if (!isRequired(values.address)) {
+    errors.address = validationMessages.required;
   }
 
   if (!isRequired(values.password)) {
@@ -146,6 +151,7 @@ function SignupPage() {
         lastName: values.lastName,
         email: values.email,
         phone: values.phone,
+        address: values.address.trim(),
         password: values.password,
       });
 
@@ -220,6 +226,16 @@ function SignupPage() {
               autoComplete="tel"
               placeholder="+94 77 123 4567"
               icon={PhoneIcon}
+            />
+
+            <FormField
+              id="address"
+              label="Registered Address"
+              value={values.address}
+              onChange={handleChange('address')}
+              error={errors.address}
+              autoComplete="street-address"
+              placeholder="House number, street, city"
             />
 
             <FormField
